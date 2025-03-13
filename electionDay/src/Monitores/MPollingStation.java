@@ -1,71 +1,128 @@
 package Monitores;
 
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import Interfaces.IPollingStation;
+import Threads.TVoter;
 
 public class MPollingStation implements IPollingStation{
+
+    private static MPollingStation instance;
+
     private final int capacity;
     private boolean isOpen;
-    private final Set<Integer> usedIds;
-    private final Queue<Integer> votersInside;
-    private final ReentrantLock lock;
-    private final Condition stationNotFull;
+    // private final Set<Integer> usedIds;
+    private boolean isAproved;
+
+    private final Integer[] votersInside;
+    private int front;
+    private int rear;
+    private int count;
+    private final ReentrantLock queue_lock;
+    private final Condition notEmpty;
+    private final Condition notFull;
     private final Condition stationOpen;
+
+   
+
     
-    public MPollingStation(int capacity) {
+    private MPollingStation(int capacity) {
         this.capacity = capacity;
         this.isOpen = false;
-        this.usedIds = new HashSet<>();
-        this.votersInside = new LinkedList<>();
-        this.lock = new ReentrantLock();
-        this.stationNotFull = lock.newCondition();
-        this.stationOpen = lock.newCondition();
+        // this.usedIds = new HashSet<>();
+
+        this.isAproved = true;
+
+        votersInside = new Integer[capacity];
+        front = 0;
+        rear = -1;
+        count = 0;
+
+        this.queue_lock = new ReentrantLock();
+        this.notEmpty = queue_lock.newCondition();
+        this.notFull = queue_lock.newCondition();
+        this.stationOpen = queue_lock.newCondition();
+
+        // this.messageBoard = new HashMap<>();
+        // this.hash_lock = new ReentrantLock();
+        // this.newMessage = queue_lock.newCondition();
     }
     
-    public IPollingStation getInstance() {
-        return this;
+    public static MPollingStation getInstance(int maxCapacity) {
+        if (instance == null) {
+            instance = new MPollingStation(maxCapacity);
+        }
+        return instance;
     }
     
+
     @Override
     public boolean enterPollingStation(int voterId) {
-        lock.lock();
+        queue_lock.lock();
         try {
             while (!isOpen) {
                 stationOpen.await();
             }
             
-            while (votersInside.size() >= capacity) {
-                stationNotFull.await();
+            while (count >= capacity) {
+                notFull.await();
             }
             
-            votersInside.add(voterId);
+            rear = (rear + 1) % votersInside.length;
+            votersInside[rear] = voterId;
+            count++;
+            notEmpty.signal();
             return true;
+
         } catch (InterruptedException e) {
             return false;
         } finally {
-            lock.unlock();
+            queue_lock.unlock();
         }
     }
-    
+
     @Override
-    public void exitPollingStation(int voterId) {
-        lock.lock();
+    public int callNextVoter(){
+        queue_lock.lock();
         try {
-            votersInside.remove(voterId);
-            stationNotFull.signal();
+            if (count == 0) {
+                notEmpty.await();
+            }
+            int id = votersInside[front];
+            front = (front + 1) % votersInside.length;
+            count--;
+            return id;
+        } catch (InterruptedException e) {
+            return -1;
         } finally {
-            lock.unlock();
+            queue_lock.unlock();
         }
     }
+
+
+    
+    // @Override
+    // public void exitPollingStation(int voterId) {
+    //     lock.lock();
+    //     try {
+    //         votersInside.remove(voterId);
+    //         stationNotFull.signal();
+    //     } finally {
+    //         lock.unlock();
+    //     }
+    // }
+
+    // @Override
+    // boolean validateID(int voterId);
+
     
     @Override
-    public boolean validateID(int voterId) {
+    public boolean waitIdValidation(int voterId) {
         lock.lock();
         try {
             if (usedIds.contains(voterId)) {
