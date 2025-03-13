@@ -48,13 +48,12 @@
 
 ## 3. Define Information Sharing Regions
 ### **Data Structures & Operations**
-- `Queue<Voter>` for waiting area (review: probably ConcurrentQueue as well):
+- `Queue<Voter.id>` for waiting area (review: probably ConcurrentQueue as well):
   - `enqueue()`, `dequeue()`
-- `HashSet<Integer>` for used voter IDs:
-  - `add()`, `contains()`
-- 2x `HashMap<String, Integer>` for votes (voting booth & pollster):
-  - `updateVote()`
-- `ConcurrentQueue<Voter>` for exit polling:
+- `HashSet` idValidation
+ - `add()`, `contains()`
+- 2x`Structures` for votes (voting booth & pollster)
+- `Queue<Voter.id>` for exit polling:
   - `addResponse()`
 
 ### **Synchronization Points**
