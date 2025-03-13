@@ -1,62 +1,116 @@
 package Monitores;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import Interfaces.IPollingStation;
-import Threads.*;
 
 public class MPollingStation implements IPollingStation{
-
-    private static MPollingStation instance;
-
-    private final Lock lock = new ReentrantLock();
-    private final Condition notEmpty = lock.newCondition();
-    private final Condition notFull = lock.newCondition();
-
-    private final TVoter[] queue;
-    private int front;
-    private int rear;
-    private int count;
-
-
+    private final int capacity;
+    private boolean isOpen;
+    private final Set<Integer> usedIds;
+    private final Queue<Integer> votersInside;
+    private final ReentrantLock lock;
+    private final Condition stationNotFull;
+    private final Condition stationOpen;
     
-    private MPollingStation(int maxCapacity) {
-        queue = new TVoter[maxCapacity];
-        front = 0;
-        rear = -1;
-        count = 0;
-
+    public MPollingStation(int capacity) {
+        this.capacity = capacity;
+        this.isOpen = false;
+        this.usedIds = new HashSet<>();
+        this.votersInside = new LinkedList<>();
+        this.lock = new ReentrantLock();
+        this.stationNotFull = lock.newCondition();
+        this.stationOpen = lock.newCondition();
     }
-
-    public static synchronized MPollingStation getInstance(int maxCapacity) {
-        if (instance == null) {
-            instance = new MPollingStation(maxCapacity);
-        }
-        return instance;
+    
+    public IPollingStation getInstance() {
+        return this;
     }
-
-    public void enterStation(TVoter voter) {
+    
+    @Override
+    public boolean enterPollingStation(int voterId) {
         lock.lock();
         try {
-            if (count == queue.length) {
-                // alguma coisa 
+            while (!isOpen) {
+                stationOpen.await();
             }
-            rear = (rear + 1) % queue.length;
-            queue[rear] = voter;
-            count++;
-            // System.out.println(c.getCustomerName() + " is waiting inside the barber shop");
-            notEmpty.signal(); // notify sleeping ...
+            
+            while (votersInside.size() >= capacity) {
+                stationNotFull.await();
+            }
+            
+            votersInside.add(voterId);
+            return true;
+        } catch (InterruptedException e) {
+            return false;
         } finally {
             lock.unlock();
         }
     }
-
+    
+    @Override
+    public void exitPollingStation(int voterId) {
+        lock.lock();
+        try {
+            votersInside.remove(voterId);
+            stationNotFull.signal();
+        } finally {
+            lock.unlock();
+        }
     }
-
-    public synchronized void exitStation(TVoter voter) {
-        currentVoters--;
-        notifyAll();
+    
+    @Override
+    public boolean validateID(int voterId) {
+        lock.lock();
+        try {
+            if (usedIds.contains(voterId)) {
+                return false;
+            }
+            
+            // Simulate ID validation time (5-10ms)
+            Thread.sleep(5 + (int)(Math.random() * 6));
+            usedIds.add(voterId);
+            return true;
+        } catch (InterruptedException e) {
+            return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    @Override
+    public void openPollingStation() {
+        lock.lock();
+        try {
+            isOpen = true;
+            stationOpen.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    @Override
+    public void closePollingStation() {
+        lock.lock();
+        try {
+            isOpen = false;
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    @Override
+    public boolean isOpen() {
+        lock.lock();
+        try {
+            return isOpen;
+        } finally {
+            lock.unlock();
+        }
     }
 }
