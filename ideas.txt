@@ -1,0 +1,16 @@
+Monitors:
+- Polling Station
+
+Threads:
+- Voter
+- Clerk
+- Pollster
+
+Shared Interfaces:
+- E-Voting Booth
+- Exit Poll
+- Logging System
+
+Details:
+- Total of votes - 3 to 10
+- Votes in station - 2 to 5
