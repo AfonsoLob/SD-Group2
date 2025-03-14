@@ -3,9 +3,11 @@ package Interfaces;
 public interface IPollingStation {
     boolean enterPollingStation(int voterId);
     int callNextVoter();
-    void exitPollingStation(int voterId);
+    // void exitPollingStation(int voterId);
 
-    boolean validateID(int voterId);
+    int waitIdValidation(int voterId);
+    void sendSignal(boolean response);
+
     void openPollingStation();
     void closePollingStation();
 

@@ -13,30 +13,34 @@ import Threads.TVoter;
 public class MPollingStation implements IPollingStation{
 
     private static MPollingStation instance;
-
     private final int capacity;
     private boolean isOpen;
     // private final Set<Integer> usedIds;
-    private boolean isAproved;
+    private int isAproved;
+    private final ReentrantLock aprovedLock;
+    private final Condition aprovalReady;
 
+
+    //queue
     private final Integer[] votersInside;
     private int front;
     private int rear;
     private int count;
+    //queue lock
     private final ReentrantLock queue_lock;
     private final Condition notEmpty;
     private final Condition notFull;
+    //station lock
     private final Condition stationOpen;
 
    
-
     
     private MPollingStation(int capacity) {
         this.capacity = capacity;
         this.isOpen = false;
         // this.usedIds = new HashSet<>();
 
-        this.isAproved = true;
+        this.isAproved = -1;
 
         votersInside = new Integer[capacity];
         front = 0;
@@ -48,6 +52,9 @@ public class MPollingStation implements IPollingStation{
         this.notFull = queue_lock.newCondition();
         this.stationOpen = queue_lock.newCondition();
 
+        this.aprovedLock = new ReentrantLock();
+        this.aprovalReady = aprovedLock.newCondition();
+
         // this.messageBoard = new HashMap<>();
         // this.hash_lock = new ReentrantLock();
         // this.newMessage = queue_lock.newCondition();
@@ -58,6 +65,15 @@ public class MPollingStation implements IPollingStation{
             instance = new MPollingStation(maxCapacity);
         }
         return instance;
+    }
+
+    private boolean isIdInQueue(int voterId){
+        for(int i = 0; i < votersInside.length; i++){
+            if(votersInside[i] == voterId){
+                return true;
+            }
+        }
+        return false;
     }
     
 
@@ -87,6 +103,42 @@ public class MPollingStation implements IPollingStation{
     }
 
     @Override
+    public int waitIdValidation(int voterId) {
+        // return 0 if still in queue
+        // return 1 if aproved
+        // return -1 if not aproved
+        aprovedLock.lock();
+        try {
+            while(isAproved < 0){
+                aprovalReady.await();
+            }
+
+            queue_lock.lock();
+            try{
+                if(isIdInQueue(voterId)){
+                    return 0;
+                } else {
+                    if (isAproved == 1) {
+                        isAproved = -1;
+                        return 1;
+                    } else {
+                        isAproved = -1;
+                        return -1;
+                    }
+                }
+            } finally {
+                queue_lock.unlock();
+            }
+
+
+        } catch (InterruptedException e) {
+            return 0;
+        } finally {
+            aprovedLock.unlock();
+        }
+    }
+
+    @Override
     public int callNextVoter(){
         queue_lock.lock();
         try {
@@ -104,7 +156,16 @@ public class MPollingStation implements IPollingStation{
         }
     }
 
-
+    @Override
+    public void sendSignal(boolean response) {
+        aprovedLock.lock();
+        try{
+            isAproved = response ? 1 : 0;
+            aprovalReady.signalAll();
+        } finally {
+            aprovedLock.unlock();
+        }
+    }
     
     // @Override
     // public void exitPollingStation(int voterId) {
@@ -121,53 +182,35 @@ public class MPollingStation implements IPollingStation{
     // boolean validateID(int voterId);
 
     
-    @Override
-    public boolean waitIdValidation(int voterId) {
-        lock.lock();
-        try {
-            if (usedIds.contains(voterId)) {
-                return false;
-            }
-            
-            // Simulate ID validation time (5-10ms)
-            Thread.sleep(5 + (int)(Math.random() * 6));
-            usedIds.add(voterId);
-            return true;
-        } catch (InterruptedException e) {
-            return false;
-        } finally {
-            lock.unlock();
-        }
-    }
-    
+
     @Override
     public void openPollingStation() {
-        lock.lock();
+        queue_lock.lock();
         try {
             isOpen = true;
             stationOpen.signalAll();
         } finally {
-            lock.unlock();
+            queue_lock.unlock();
         }
     }
     
     @Override
     public void closePollingStation() {
-        lock.lock();
+        queue_lock.lock();
         try {
             isOpen = false;
         } finally {
-            lock.unlock();
+            queue_lock.unlock();
         }
     }
     
     @Override
     public boolean isOpen() {
-        lock.lock();
+        queue_lock.lock();
         try {
             return isOpen;
         } finally {
-            lock.unlock();
+            queue_lock.unlock();
         }
     }
 }
