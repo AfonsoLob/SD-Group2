@@ -111,7 +111,7 @@ public class Logger {
         addEntry("Cl", "", "", "", "", "");
     }
     
-    public synchronized void printState() {
+    public synchronized void printState() { // TODO: Review if we want it like this or keep writing in a file (real-time)
         // Print the header information
         System.out.println("Total of Voters:" + totalVoters + 
                           ", Total Voters in Stations:" + totalInStation + 
