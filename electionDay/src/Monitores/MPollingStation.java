@@ -10,6 +10,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import Interfaces.IPollingStation;
 // import Threads.TVoter;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
+
 public class MPollingStation implements IPollingStation{
 
     private static MPollingStation instance;
@@ -23,10 +26,7 @@ public class MPollingStation implements IPollingStation{
 
 
     //queue
-    private final Integer[] votersInside;
-    private int front;
-    private int rear;
-    private int count;
+    private final Queue<Integer> votersQueue;
     //queue lock
     private final ReentrantLock queue_lock;
     private final Condition notEmpty;
@@ -44,10 +44,7 @@ public class MPollingStation implements IPollingStation{
         this.isAproved = true;
         this.aprovalFlag = false;
 
-        votersInside = new Integer[capacity];
-        front = 0;
-        rear = -1;
-        count = 0;
+        this.votersQueue = new ArrayDeque<Integer>();
 
         this.queue_lock = new ReentrantLock();
         this.notEmpty = queue_lock.newCondition();
@@ -69,16 +66,6 @@ public class MPollingStation implements IPollingStation{
         return instance;
     }
 
-    private boolean isIdInQueue(int voterId){
-        for(int i = 0; i < votersInside.length; i++){
-            if(votersInside[i] == voterId){
-                return true;
-            }
-        }
-        return false;
-    }
-    
-
     @Override
     public boolean enterPollingStation(int voterId) {
         queue_lock.lock();
@@ -87,13 +74,11 @@ public class MPollingStation implements IPollingStation{
                 stationOpen.await();
             }
             
-            while (count >= capacity) {
+            while (votersQueue.size() >= capacity) {
                 notFull.await();
             }
             
-            rear = (rear + 1) % votersInside.length;
-            votersInside[rear] = voterId;
-            count++;
+            votersQueue.offer(voterId);
             notEmpty.signal();
             return true;
 
@@ -102,6 +87,10 @@ public class MPollingStation implements IPollingStation{
         } finally {
             queue_lock.unlock();
         }
+    }
+
+    private boolean isIdInQueue(int voterId) {
+        return votersQueue.contains(voterId);
     }
 
     @Override
@@ -118,8 +107,10 @@ public class MPollingStation implements IPollingStation{
             queue_lock.lock();
             try{
                 if(isIdInQueue(voterId)){
+                    System.out.println("ID validation was not for Voter " + voterId);
                     return 0;
                 } else {
+                    System.out.println("ID validation was for Voter " + voterId);
                     aprovalFlag = false;
                     if (isAproved) {
                         return 1;
@@ -130,7 +121,6 @@ public class MPollingStation implements IPollingStation{
             } finally {
                 queue_lock.unlock();
             }
-
 
         } catch (InterruptedException e) {
             return 0;
@@ -143,12 +133,11 @@ public class MPollingStation implements IPollingStation{
     public int callNextVoter(){
         queue_lock.lock();
         try {
-            if (count == 0) {
+            if (votersQueue.isEmpty()) {
                 notEmpty.await();
             }
-            int id = votersInside[front];
-            front = (front + 1) % votersInside.length;
-            count--;
+            int id = votersQueue.poll();
+            notFull.signal();
             return id;
         } catch (InterruptedException e) {
             return -1;

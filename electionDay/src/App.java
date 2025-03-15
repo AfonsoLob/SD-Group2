@@ -27,7 +27,15 @@ public class App {
             voters.add(voter);
         }
 
-        TClerk clerk = TClerk.getInstance();
-        clerk.setPollingStation(pollingStation);
+        TClerk clerk = new TClerk(1, pollingStation);
+        
+        //run threads
+        Thread clerkThread = new Thread(clerk);
+        clerkThread.start();
+        for (TVoter voter : voters) {
+            Thread voterThread = new Thread(voter);
+            voterThread.start();
+        }
+
     }
 }
