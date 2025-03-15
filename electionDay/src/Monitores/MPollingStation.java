@@ -104,24 +104,18 @@ public class MPollingStation implements IPollingStation{
                 aprovalReady.await();
             }
 
-            queue_lock.lock();
-            try{
-                if(isIdInQueue(voterId)){
-                    System.out.println("ID validation was not for Voter " + voterId);
-                    return 0;
+            if(isIdInQueue(voterId)){
+                // System.out.println("ID validation was not for Voter " + voterId);
+                return 0;
+            } else {
+                // System.out.println("ID validation was for Voter " + voterId);
+                aprovalFlag = false;
+                if (isAproved) {
+                    return 1;
                 } else {
-                    System.out.println("ID validation was for Voter " + voterId);
-                    aprovalFlag = false;
-                    if (isAproved) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
+                    return -1;
                 }
-            } finally {
-                queue_lock.unlock();
             }
-
         } catch (InterruptedException e) {
             return 0;
         } finally {
@@ -200,6 +194,16 @@ public class MPollingStation implements IPollingStation{
         queue_lock.lock();
         try {
             return isOpen;
+        } finally {
+            queue_lock.unlock();
+        }
+    }
+
+    @Override
+    public boolean stillVotersInQueue() {
+        queue_lock.lock();
+        try {
+            return !votersQueue.isEmpty();
         } finally {
             queue_lock.unlock();
         }

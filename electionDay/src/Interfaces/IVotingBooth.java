@@ -1,5 +1,7 @@
 package Interfaces;
 
-public class IVotingBooth {
-    
+public interface IVotingBooth {
+    void voteA();
+    void voteB();
+    void printFinalResults();
 }

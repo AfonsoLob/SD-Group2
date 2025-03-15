@@ -12,4 +12,5 @@ public interface IPollingStation {
     void closePollingStation();
 
     boolean isOpen();
+    boolean stillVotersInQueue();
 }
