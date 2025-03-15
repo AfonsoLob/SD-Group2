@@ -28,10 +28,20 @@ public class TVoter implements Runnable {
         while (pollingStation.isOpen()) {
             // Try to enter the polling station
             if (pollingStation.enterPollingStation(voterId)) {
-                logger.log("Voter " + voterId + " entered polling station");
+                // logger.log("Voter " + voterId + " entered polling station");
+                System.out.println("Voter " + voterId + " entered polling station");
 
                 // Validate ID
-                boolean idValid = pollingStation.waitIdValidation(voterId);
+                while (true) {
+                    // Wait for ID validation
+                    int response = pollingStation.waitIdValidation(voterId);
+                    if (response != 0) {
+                        // ID verified
+                        break;
+                    }
+                }
+
+
                 logger.log("Voter " + voterId + " ID validation: " + (idValid ? "valid" : "invalid"));
 
                 if (idValid) {

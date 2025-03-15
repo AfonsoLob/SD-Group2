@@ -1,14 +1,14 @@
 package Monitores;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+// import java.util.HashMap;
+// import java.util.HashSet;
+// import java.util.Set;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
+// import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import Interfaces.IPollingStation;
-import Threads.TVoter;
+// import Threads.TVoter;
 
 public class MPollingStation implements IPollingStation{
 
@@ -16,7 +16,8 @@ public class MPollingStation implements IPollingStation{
     private final int capacity;
     private boolean isOpen;
     // private final Set<Integer> usedIds;
-    private int isAproved;
+    private boolean isAproved;
+    private boolean aprovalFlag;
     private final ReentrantLock aprovedLock;
     private final Condition aprovalReady;
 
@@ -40,7 +41,8 @@ public class MPollingStation implements IPollingStation{
         this.isOpen = false;
         // this.usedIds = new HashSet<>();
 
-        this.isAproved = -1;
+        this.isAproved = true;
+        this.aprovalFlag = false;
 
         votersInside = new Integer[capacity];
         front = 0;
@@ -109,7 +111,7 @@ public class MPollingStation implements IPollingStation{
         // return -1 if not aproved
         aprovedLock.lock();
         try {
-            while(isAproved < 0){
+            while(aprovalFlag == false){
                 aprovalReady.await();
             }
 
@@ -118,11 +120,10 @@ public class MPollingStation implements IPollingStation{
                 if(isIdInQueue(voterId)){
                     return 0;
                 } else {
-                    if (isAproved == 1) {
-                        isAproved = -1;
+                    aprovalFlag = false;
+                    if (isAproved) {
                         return 1;
                     } else {
-                        isAproved = -1;
                         return -1;
                     }
                 }
@@ -160,7 +161,8 @@ public class MPollingStation implements IPollingStation{
     public void sendSignal(boolean response) {
         aprovedLock.lock();
         try{
-            isAproved = response ? 1 : 0;
+            isAproved = response;
+            aprovalFlag = true;
             aprovalReady.signalAll();
         } finally {
             aprovedLock.unlock();
