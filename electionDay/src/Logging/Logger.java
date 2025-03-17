@@ -1,6 +1,5 @@
 package Logging;
 
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,7 @@ public class Logger {
     // Delimiter for the table
     private static final String DELIMITER = "----------------------------------------------------------------------------------------------------------";
     
-    public Logger(int maxVoters, int maxCapacity, int maxVotes) {
+    private Logger(int maxVoters, int maxCapacity, int maxVotes) {
         this.logEntries = new ArrayList<>();
         this.votersProcessed = 0;
         this.scoreA = 0;
@@ -58,6 +57,10 @@ public class Logger {
         }
     }
     
+    public static Logger getInstance(int maxVoters, int maxCapacity, int maxVotes) {
+        return new Logger(maxVoters, maxCapacity, maxVotes);
+    }
+
     /**
      * Add a new log entry
      * @param door activity at the door

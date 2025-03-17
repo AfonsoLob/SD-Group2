@@ -1,10 +1,9 @@
-import java.util.ArrayList;
-import java.util.List;
-
 import Interfaces.*;
+import Logging.*;
 import Monitores.*;
 import Threads.*;
-import Logging.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class App {
@@ -13,7 +12,7 @@ public class App {
         int maxVoters = 5;
         int maxCapacity = 2;
         int maxVotes = 10;
-        Logger logger = new Logger(maxVoters, maxCapacity, maxVotes);
+        Logger logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
 
         IPollingStation pollingStation = MPollingStation.getInstance(maxCapacity, logger);
         IVotingBooth votingBooth = MVotingBooth.getInstance();
@@ -26,11 +25,11 @@ public class App {
         List<Thread> voterThreads = new ArrayList<>();
 
         for (int i = 0; i < maxVoters; i++) {
-            TVoter voter = new TVoter(i, pollingStation, votingBooth, exitPoll, logger);
+            TVoter voter = TVoter.getInstance(i, pollingStation, votingBooth, exitPoll, logger);
             voters.add(voter);
         }
 
-        TClerk clerk = new TClerk(maxVotes, pollingStation, logger);
+        TClerk clerk = TClerk.getInstance(maxVotes, pollingStation, logger);
         
         //run threads
         Thread clerkThread = new Thread(clerk);

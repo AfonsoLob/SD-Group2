@@ -1,7 +1,7 @@
 package Threads;
+import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
 import Interfaces.IVotingBooth;
-import Interfaces.IExitPoll;
 import Logging.Logger;
 
 
@@ -12,7 +12,7 @@ public class TVoter implements Runnable {
     // private final IExitPoll exitPoll;
     private final Logger logger;
 
-    public TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
+    private TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
         this.voterId = id;
         // this.name = "Voter-" + id;
         this.pollingStation = pollingStation;
@@ -20,6 +20,10 @@ public class TVoter implements Runnable {
         // this.exitPoll = exitPoll;
         this.logger = logger;
         // this.myVote = -1;
+    }
+    
+    public static TVoter getInstance(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
+        return new TVoter(id, pollingStation, votingBooth, exitPoll, logger);
     }
 
     @Override
