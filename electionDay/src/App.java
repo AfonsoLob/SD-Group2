@@ -12,24 +12,25 @@ public class App {
         System.out.println("ElectionSimulation started");
         int maxVoters = 5;
         int maxCapacity = 2;
+        int maxVotes = 10;
+        Logger logger = new Logger(maxVoters, maxCapacity, maxVotes);
 
-        IPollingStation pollingStation = MPollingStation.getInstance(maxCapacity);
+        IPollingStation pollingStation = MPollingStation.getInstance(maxCapacity, logger);
         IVotingBooth votingBooth = MVotingBooth.getInstance();
 
         // Mock variables
         IExitPoll exitPoll = new IExitPoll();
-        Logger logger = new Logger(1,2,3);
 
 
         List<TVoter> voters = new ArrayList<>();
         List<Thread> voterThreads = new ArrayList<>();
 
         for (int i = 0; i < maxVoters; i++) {
-            TVoter voter = new TVoter(i, pollingStation, votingBooth,exitPoll,logger);
+            TVoter voter = new TVoter(i, pollingStation, votingBooth, exitPoll, logger);
             voters.add(voter);
         }
 
-        TClerk clerk = new TClerk(10, pollingStation);
+        TClerk clerk = new TClerk(maxVotes, pollingStation, logger);
         
         //run threads
         Thread clerkThread = new Thread(clerk);
@@ -48,5 +49,6 @@ public class App {
 
         votingBooth.printFinalResults();
         System.out.println("ElectionSimulation finished");
+        logger.saveCloseFile();
     }
 }

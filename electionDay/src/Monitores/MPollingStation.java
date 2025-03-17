@@ -13,6 +13,8 @@ import Interfaces.IPollingStation;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import Logging.Logger;
+
 public class MPollingStation implements IPollingStation{
 
     private static MPollingStation instance;
@@ -23,6 +25,7 @@ public class MPollingStation implements IPollingStation{
     private boolean aprovalFlag;
     private final ReentrantLock aprovedLock;
     private final Condition aprovalReady;
+    private final Logger logger;
 
 
     //queue
@@ -36,7 +39,8 @@ public class MPollingStation implements IPollingStation{
 
    
     
-    private MPollingStation(int capacity) {
+    private MPollingStation(int capacity, Logger logger) {
+        this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
         // this.usedIds = new HashSet<>();
@@ -59,9 +63,9 @@ public class MPollingStation implements IPollingStation{
         // this.newMessage = queue_lock.newCondition();
     }
     
-    public static MPollingStation getInstance(int maxCapacity) {
+    public static MPollingStation getInstance(int maxCapacity, Logger logger) {
         if (instance == null) {
-            instance = new MPollingStation(maxCapacity);
+            instance = new MPollingStation(maxCapacity, logger);
         }
         return instance;
     }
@@ -69,6 +73,7 @@ public class MPollingStation implements IPollingStation{
     @Override
     public boolean enterPollingStation(int voterId) {
         queue_lock.lock();
+        logger.voterAtDoor(voterId);
         try {
             while (!isOpen) {
                 stationOpen.await();

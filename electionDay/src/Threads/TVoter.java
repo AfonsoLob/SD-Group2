@@ -10,7 +10,7 @@ public class TVoter implements Runnable {
     private final IPollingStation pollingStation;
     private final IVotingBooth votingBooth;
     // private final IExitPoll exitPoll;
-    // private final Logger logger;
+    private final Logger logger;
     // private int myVote;
     // private String name;
 
@@ -20,7 +20,7 @@ public class TVoter implements Runnable {
         this.pollingStation = pollingStation;
         this.votingBooth = votingBooth;
         // this.exitPoll = exitPoll;
-        // this.logger = logger;
+        this.logger = logger;
         // this.myVote = -1;
     }
 
@@ -29,8 +29,7 @@ public class TVoter implements Runnable {
         while (pollingStation.isOpen()) {
             // Try to enter the polling station
             pollingStation.enterPollingStation(voterId);
-            // logger.log("Voter " + voterId + " entered polling station");
-            System.out.println("Voter " + voterId + " entered polling station");
+            logger.voterEnteringQueue(voterId);
 
             // Validate ID
             int response = 0;
@@ -47,23 +46,25 @@ public class TVoter implements Runnable {
                 System.out.println("Voter " + voterId + " ID validation correct!");
                 if (Math.random() < 0.4) {
                     votingBooth.voteA();
+                    logger.voterInBooth(voterId, true); // vote A
                 } else {
                     votingBooth.voteB();
+                    logger.voterInBooth(voterId, false); // vote B
                 }
             }
-
+            
             else{
                 System.out.println("Voter " + voterId + " ID validation incorrect!");
             }
-
-        
+            
+            
+            logger.voterExiting(voterId, false);
             // Exit polling station
             // pollingStation.exitPollingStation(voterId);
             // logger.log("Voter " + voterId + " exited polling station");
 
             // Exit poll
             // if (myVote != -1 && exitPoll.approachVoter(voterId)) {
-            //     logger.log("Voter " + voterId + " approached for exit poll");
             //     boolean response = exitPoll.reportVote(voterId, myVote, true);
             //     logger.log("Voter " + voterId + " responded to exit poll: " + response);
             // }
@@ -83,7 +84,6 @@ public class TVoter implements Runnable {
                 break;
             }
         }
-
         System.out.println("Voter " + voterId + " terminated");
     }
 }

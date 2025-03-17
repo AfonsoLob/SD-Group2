@@ -2,6 +2,8 @@ package Threads;
 import java.util.HashSet;
 
 import Interfaces.IPollingStation;
+import Logging.Logger;
+
 // import Monitores.MPollingStation;
 
 
@@ -11,6 +13,7 @@ public class TClerk implements Runnable {
     // private MPollingStation pollingStation;
     private final IPollingStation pollingStation;
     private HashSet<Integer> validatedIDs;
+    private Logger logger;
     private final int maxVotes;
     
     // Class to store voter ID and validation status
@@ -41,24 +44,27 @@ public class TClerk implements Runnable {
     //     }
     // }
 
-    public TClerk(int maxVotes, IPollingStation pollingStation) {
+    public TClerk(int maxVotes, IPollingStation pollingStation, Logger logger) {
         this.pollingStation = pollingStation;
         this.validatedIDs = new HashSet<>();
         this.maxVotes = maxVotes;
+        this.logger = logger;
     }
 
     @Override
     public void run() {
         System.out.println("Clerk running");
         pollingStation.openPollingStation();
-        System.out.println("Clerk opened polling station");
+        logger.stationOpening();
         int votes = 0;
         while (votes < maxVotes) {
             // instance.openStation();
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
+
                 boolean response = validateID(pollingStation, voterId);
+                logger.validatingVoter(voterId, response);
                 if (response) {votes++;}
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -66,13 +72,13 @@ public class TClerk implements Runnable {
             }
         }
         pollingStation.closePollingStation();
-        System.out.println("Clerk closed polling station");
+        logger.stationClosing();
 
         while (pollingStation.stillVotersInQueue()) {
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
-                validateID(pollingStation, voterId);
+                logger.validatingVoter(voterId, validateID(pollingStation, voterId)); // validateID corre apesar de ser chamada como argumento de logger (don't worry guys)
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
