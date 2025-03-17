@@ -77,7 +77,7 @@ public class TClerk implements Runnable {
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
-                validateID(pollingStation, voterId); // validateID corre apesar de ser chamada como argumento de logger (don't worry guys)
+                validateID(pollingStation, voterId);
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -94,7 +94,7 @@ public class TClerk implements Runnable {
         // check if voterid is in hashset, if not add it and mark it as positive, and if yes mark it as negative
         // VoterRecord voterRecord= new VoterRecord(voterId, false);
         boolean response = false;
-        if (!validatedIDs.contains(voterId)) {
+        if (!validatedIDs.contains(voterId) && pollingStation.isOpen()) {
             response = true;
             validatedIDs.add(voterId);
         }

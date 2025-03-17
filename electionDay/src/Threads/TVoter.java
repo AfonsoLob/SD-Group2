@@ -11,8 +11,6 @@ public class TVoter implements Runnable {
     private final IVotingBooth votingBooth;
     // private final IExitPoll exitPoll;
     private final Logger logger;
-    // private int myVote;
-    // private String name;
 
     public TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
         this.voterId = id;
@@ -26,18 +24,16 @@ public class TVoter implements Runnable {
 
     @Override
     public void run() {
-        while (pollingStation.isOpen()) {
+        do {
             // Try to enter the polling station
             pollingStation.enterPollingStation(voterId);
             logger.voterEnteringQueue(voterId);
 
             // Validate ID
             int response = 0;
-            if (pollingStation.isOpen()) {
-                while (response == 0) {
-                    // Wait for ID validation
-                    response = pollingStation.waitIdValidation(voterId);
-                }
+            while (response == 0) {
+                // Wait for ID validation
+                response = pollingStation.waitIdValidation(voterId);
             }
 
             if(pollingStation.isOpen()){
@@ -82,7 +78,7 @@ public class TVoter implements Runnable {
             } catch (InterruptedException e) {
                 break;
             }
-        }
+        } while ((pollingStation.isOpen()));
         System.out.println("Voter " + voterId + " terminated");
     }
 }
