@@ -33,28 +33,27 @@ public class TVoter implements Runnable {
 
             // Validate ID
             int response = 0;
-            while (response == 0) {
-                // Wait for ID validation
-                response = pollingStation.waitIdValidation(voterId);
-            }
-
-
-            if (response == 1) {
-                // Cast vote
-                // myVote = votingBooth.castVote(voterId);
-                // logger.log("Voter " + voterId + " voted for candidate " + myVote);
-                System.out.println("Voter " + voterId + " ID validation correct!");
-                if (Math.random() < 0.4) {
-                    votingBooth.voteA();
-                    logger.voterInBooth(voterId, true); // vote A
-                } else {
-                    votingBooth.voteB();
-                    logger.voterInBooth(voterId, false); // vote B
+            if (pollingStation.isOpen()) {
+                while (response == 0) {
+                    // Wait for ID validation
+                    response = pollingStation.waitIdValidation(voterId);
                 }
             }
-            
-            else{
-                System.out.println("Voter " + voterId + " ID validation incorrect!");
+
+            if(pollingStation.isOpen()){
+                if (response == 1) {
+                    // Cast vote
+                    System.out.println("Voter " + voterId + " ID validation correct!");
+                    if (Math.random() < 0.4) {
+                        votingBooth.voteA();
+                        logger.voterInBooth(voterId, true); // vote A
+                    } else {
+                        votingBooth.voteB();
+                        logger.voterInBooth(voterId, false); // vote B
+                    }
+                } else{
+                    System.out.println("Voter " + voterId + " ID validation incorrect!");
+                }
             }
             
             
