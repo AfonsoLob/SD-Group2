@@ -64,7 +64,6 @@ public class TClerk implements Runnable {
                 int voterId = pollingStation.callNextVoter();
 
                 boolean response = validateID(pollingStation, voterId);
-                logger.validatingVoter(voterId, response);
                 if (response) {votes++;}
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -78,7 +77,7 @@ public class TClerk implements Runnable {
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
-                logger.validatingVoter(voterId, validateID(pollingStation, voterId)); // validateID corre apesar de ser chamada como argumento de logger (don't worry guys)
+                validateID(pollingStation, voterId); // validateID corre apesar de ser chamada como argumento de logger (don't worry guys)
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -99,7 +98,7 @@ public class TClerk implements Runnable {
             response = true;
             validatedIDs.add(voterId);
         }
-        // System.out.println("Clerk validated voter " + voterId + " with response " + response);
+        logger.validatingVoter(voterId, response);
         pollingStation.sendSignal(response);
         return response;
     }
