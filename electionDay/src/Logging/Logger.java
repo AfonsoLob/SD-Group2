@@ -75,8 +75,10 @@ public class Logger {
         entry[2] = clerk;
         entry[3] = validation;
         entry[4] = booth;
-        entry[5] = String.valueOf(scoreA);
-        entry[6] = String.valueOf(scoreB);
+        if(!booth.isEmpty()) {
+            entry[5] = String.format("%02d", scoreA);
+            entry[6] = String.format("%02d", scoreB);
+        }
         entry[7] = exit;
         
         printStateToFile(entry);
