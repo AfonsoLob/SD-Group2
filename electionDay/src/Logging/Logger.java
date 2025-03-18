@@ -101,11 +101,11 @@ public class Logger {
     }
     
     public synchronized void voterAtDoor(int voterId) {
-        currentQueueSize++;
         addEntry("", String.valueOf(voterId), "", "", "", "");
     }
     
     public synchronized void voterEnteringQueue(int voterId) {
+        currentQueueSize++;
         addEntry("", "", String.valueOf(voterId), "", "", "");
     }
         
