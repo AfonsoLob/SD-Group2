@@ -26,6 +26,11 @@ public class Logger {
     // Delimiter for the table
     private static final String DELIMITER = "----------------------------------------------------------------------------------------------------------";
     
+    // Additional state tracking
+    private boolean isStationOpen = false;
+    private String currentVoterInBooth = "";
+    private int currentQueueSize = 0;
+    
     private Logger(int maxVoters, int maxCapacity, int maxVotes) {
         this.logEntries = new ArrayList<>();
         this.votersProcessed = 0;
@@ -96,6 +101,7 @@ public class Logger {
     }
     
     public synchronized void voterAtDoor(int voterId) {
+        currentQueueSize++;
         addEntry("", String.valueOf(voterId), "", "", "", "");
     }
     
@@ -110,6 +116,8 @@ public class Logger {
     
     public synchronized void voterInBooth(int voterId, boolean voteA) {
         String boothStr = String.valueOf(voterId) + (voteA ? "A" : "B");
+        currentVoterInBooth = boothStr;
+        
         // Update scores
         if (voteA) {
             incrementScoreA();
@@ -118,20 +126,23 @@ public class Logger {
         }
 
         addEntry("", "", "", "", boothStr, "");
-        
     }
     
     public synchronized void voterExiting(int voterId, boolean exitPoll) {
         String exitStr = exitPoll ? "P" + voterId : String.valueOf(voterId);
+        currentQueueSize = Math.max(0, currentQueueSize - 1);
+        currentVoterInBooth = ""; // Clear booth
         addEntry("", "", "", "", "", exitStr);
         votersProcessed++;
     }
     
     public synchronized void stationOpening() {
+        isStationOpen = true;
         addEntry("Op", "", "", "", "", "");
     }
     
     public synchronized void stationClosing() {
+        isStationOpen = false;
         addEntry("Cl", "", "", "", "", "");
     }
     
@@ -164,5 +175,17 @@ public class Logger {
     
     public int getVotersProcessed() {
         return votersProcessed;
+    }
+
+    public boolean isStationOpen() {
+        return isStationOpen;
+    }
+    
+    public String getCurrentVoterInBooth() {
+        return currentVoterInBooth;
+    }
+    
+    public int getCurrentQueueSize() {
+        return currentQueueSize;
     }
 }
