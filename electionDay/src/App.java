@@ -5,7 +5,9 @@ import Interfaces.IVotingBooth;
 import Logging.Logger;
 import Monitores.MPollingStation;
 import Monitores.MVotingBooth;
+import Monitores.MExitPoll;
 import Threads.TClerk;
+import Threads.TPollster;
 import Threads.TVoter;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,8 @@ public class App {
     private static List<Thread> voterThreads;
     private static TClerk clerk;
     private static Thread clerkThread;
+    private static TPollster pollster;
+    private static Thread pollsterThread;
     private static Thread guiUpdateThread;
     private static boolean simulationRunning = false;
     
@@ -34,7 +38,7 @@ public class App {
         logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
         pollingStation = MPollingStation.getInstance(maxCapacity, logger);
         votingBooth = MVotingBooth.getInstance();
-        exitPoll = new IExitPoll();
+        exitPoll = MExitPoll.getInstance(50,logger);
         
         // Launch the GUI
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -66,7 +70,10 @@ public class App {
         }
         
         // Create clerk
-        clerk = TClerk.getInstance(maxVotes, pollingStation, logger);
+        clerk = TClerk.getInstance(maxVotes, pollingStation, exitPoll,logger);
+
+        // Create pollster
+        pollster = TPollster.getInstance(exitPoll);
         
         // Start the periodic GUI update thread with more comprehensive updates
         guiUpdateThread = new Thread(() -> {
@@ -90,6 +97,9 @@ public class App {
         // Run threads
         clerkThread = new Thread(clerk);
         clerkThread.start();
+
+        pollsterThread = new Thread(pollster);
+        pollsterThread.start();
         
         for (TVoter voter : voters) {
             Thread voterThread = new Thread(voter);
@@ -101,6 +111,7 @@ public class App {
         new Thread(() -> {
             try {
                 clerkThread.join();
+                pollsterThread.join();
                 for (Thread thread : voterThreads) {
                     thread.join();
                 }

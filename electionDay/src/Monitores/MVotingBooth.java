@@ -1,4 +1,5 @@
 package Monitores;
+
 import Interfaces.IVotingBooth;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -26,19 +27,26 @@ public class MVotingBooth implements IVotingBooth {
     public void voteA() {
         lock.lock();
         try {
+            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
             candidateA++;
-            System.out.println("Voted for candidate A, total votes: " + candidateA);
+            System.out.println("A total votes: " + candidateA);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
+        
     }
 
     @Override
     public void voteB() {
         lock.lock();
         try {
+            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
             candidateB++;
-            System.out.println("Voted for candidate B, total votes: " + candidateB);
+            System.out.println("B total votes: " + candidateA);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }

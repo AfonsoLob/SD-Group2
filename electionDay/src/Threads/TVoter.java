@@ -9,15 +9,16 @@ public class TVoter implements Runnable {
     private int voterId;
     private final IPollingStation pollingStation;
     private final IVotingBooth votingBooth;
-    // private final IExitPoll exitPoll;
+    private final IExitPoll exitPoll;
     private final Logger logger;
+    private boolean myVote;
 
     private TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
         this.voterId = id;
         // this.name = "Voter-" + id;
         this.pollingStation = pollingStation;
         this.votingBooth = votingBooth;
-        // this.exitPoll = exitPoll;
+        this.exitPoll = exitPoll;
         this.logger = logger;
         // this.myVote = -1;
     }
@@ -40,33 +41,28 @@ public class TVoter implements Runnable {
                 response = pollingStation.waitIdValidation(voterId);
             }
 
-            if(pollingStation.isOpen()){
-                if (response == 1) {
-                    // Cast vote
-                    System.out.println("Voter " + voterId + " ID validation correct!");
-                    if (Math.random() < 0.4) {
-                        votingBooth.voteA();
-                        logger.voterInBooth(voterId, true); // vote A
-                    } else {
-                        votingBooth.voteB();
-                        logger.voterInBooth(voterId, false); // vote B
-                    }
-                } else{
-                    System.out.println("Voter " + voterId + " ID validation incorrect!");
+            if (response == 1) {
+                // Cast vote
+                System.out.println("Voter " + voterId + " ID validation correct!");
+                
+                if (Math.random() < 0.4) {
+                    System.out.println(voterId + " voted for candidate A");
+                    votingBooth.voteA();
+                    logger.voterInBooth(voterId, true); // vote A
+                    this.myVote = true; // 1 for A
+                } else {
+                    System.out.println(voterId + " voted for candidate b");
+                    votingBooth.voteB();
+                    logger.voterInBooth(voterId, false); // vote B
+                    this.myVote = false; // 0 for B
                 }
-            }
-            
-            
-            logger.voterExiting(voterId, false);
-            // Exit polling station
-            // pollingStation.exitPollingStation(voterId);
-            // logger.log("Voter " + voterId + " exited polling station");
+                // Exit polling station 
+                exitPoll.exitPollingStation(voterId, myVote);
 
-            // Exit poll
-            // if (myVote != -1 && exitPoll.approachVoter(voterId)) {
-            //     boolean response = exitPoll.reportVote(voterId, myVote, true);
-            //     logger.log("Voter " + voterId + " responded to exit poll: " + response);
-            // }
+            } else{
+                System.out.println("Voter " + voterId + " ID validation incorrect!");
+                logger.voterExiting(voterId, false);
+            }
 
             // Reborn with probability or exit
             if (Math.random() < 0.5) {
@@ -82,6 +78,7 @@ public class TVoter implements Runnable {
             } catch (InterruptedException e) {
                 break;
             }
+
         } while ((pollingStation.isOpen()));
         System.out.println("Voter " + voterId + " terminated");
     }

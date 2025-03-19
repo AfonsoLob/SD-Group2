@@ -1,4 +1,5 @@
 package Threads;
+import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
 import Logging.Logger;
 import java.util.HashSet;
@@ -10,16 +11,19 @@ public class TClerk implements Runnable {
 
     private static TClerk instance;
     private final IPollingStation pollingStation;
+    private final IExitPoll exitPoll;
     private HashSet<Integer> validatedIDs;
     private Logger logger;
     private final int maxVotes;
+
     
 
-    private TClerk(int maxVotes, IPollingStation pollingStation, Logger logger) {
+    private TClerk(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll ,Logger logger) {
         this.pollingStation = pollingStation;
         this.validatedIDs = new HashSet<>();
         this.maxVotes = maxVotes;
         this.logger = logger;
+        this.exitPoll = exitPoll;
     }
 
     @Override
@@ -33,10 +37,10 @@ public class TClerk implements Runnable {
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
-
                 boolean response = validateID(pollingStation, voterId);
                 if (response) {votes++;}
-                Thread.sleep(500);
+                Thread.sleep((long) (Math.random() * 5) + 5); // 5-10 ms
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -44,22 +48,31 @@ public class TClerk implements Runnable {
         pollingStation.closePollingStation();
         logger.stationClosing();
 
-        while (pollingStation.stillVotersInQueue()) {
+        int stillVotersInQueue = pollingStation.numberVotersInQueue(); 
+
+        System.out.println("Day ended but there are " + stillVotersInQueue + " inside");
+
+        exitPoll.closeIn(stillVotersInQueue);
+
+        for (int i = 0; i < stillVotersInQueue; i++) {
             try {
                 System.out.println("Clerk calling next voter");
                 int voterId = pollingStation.callNextVoter();
                 validateID(pollingStation, voterId);
-                Thread.sleep(500);
+                // System.out.println("Clerk validated ID");
+                Thread.sleep((long) (Math.random() * 5) + 5); // 5-10 ms
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+
         System.out.println("Clerk terminated");
     }
 
-    public static TClerk getInstance(int maxVotes, IPollingStation pollingStation, Logger logger) {
+    public static TClerk getInstance(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll, Logger logger) {
         if (instance == null) {
-            instance = new TClerk(maxVotes, pollingStation, logger);
+            instance = new TClerk(maxVotes, pollingStation, exitPoll, logger);
         }
         return instance;
     }

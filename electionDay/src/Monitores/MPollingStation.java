@@ -15,7 +15,7 @@ import java.util.Queue;
 
 import Logging.Logger;
 
-public class MPollingStation implements IPollingStation{
+public class MPollingStation implements IPollingStation {
 
     private static MPollingStation instance;
     private final int capacity;
@@ -27,18 +27,15 @@ public class MPollingStation implements IPollingStation{
     private final Condition aprovalReady;
     private final Logger logger;
 
-
-    //queue
+    // queue
     private final Queue<Integer> votersQueue;
-    //queue lock
+    // queue lock
     private final ReentrantLock queue_lock;
     private final Condition notEmpty;
     private final Condition notFull;
-    //station lock
+    // station lock
     private final Condition stationOpen;
 
-   
-    
     private MPollingStation(int capacity, Logger logger) {
         this.logger = logger;
         this.capacity = capacity;
@@ -62,7 +59,7 @@ public class MPollingStation implements IPollingStation{
         // this.hash_lock = new ReentrantLock();
         // this.newMessage = queue_lock.newCondition();
     }
-    
+
     public static MPollingStation getInstance(int maxCapacity, Logger logger) {
         if (instance == null) {
             instance = new MPollingStation(maxCapacity, logger);
@@ -78,11 +75,11 @@ public class MPollingStation implements IPollingStation{
             while (!isOpen) {
                 stationOpen.await();
             }
-            
+
             while (votersQueue.size() >= capacity) {
                 notFull.await();
             }
-            
+
             votersQueue.offer(voterId);
             notEmpty.signal();
             return true;
@@ -105,11 +102,11 @@ public class MPollingStation implements IPollingStation{
         // return -1 if not aproved
         aprovedLock.lock();
         try {
-            while(aprovalFlag == false){
+            while (aprovalFlag == false) {
                 aprovalReady.await();
             }
 
-            if(isIdInQueue(voterId)){
+            if (isIdInQueue(voterId)) {
                 // System.out.println("ID validation was not for Voter " + voterId);
                 return 0;
             } else {
@@ -129,7 +126,7 @@ public class MPollingStation implements IPollingStation{
     }
 
     @Override
-    public int callNextVoter(){
+    public int callNextVoter() {
         queue_lock.lock();
         try {
             if (votersQueue.isEmpty()) {
@@ -148,7 +145,7 @@ public class MPollingStation implements IPollingStation{
     @Override
     public void sendSignal(boolean response) {
         aprovedLock.lock();
-        try{
+        try {
             isAproved = response;
             aprovalFlag = true;
             aprovalReady.signalAll();
@@ -156,22 +153,20 @@ public class MPollingStation implements IPollingStation{
             aprovedLock.unlock();
         }
     }
-    
+
     // @Override
     // public void exitPollingStation(int voterId) {
-    //     lock.lock();
-    //     try {
-    //         votersInside.remove(voterId);
-    //         stationNotFull.signal();
-    //     } finally {
-    //         lock.unlock();
-    //     }
+    // lock.lock();
+    // try {
+    // votersInside.remove(voterId);
+    // stationNotFull.signal();
+    // } finally {
+    // lock.unlock();
+    // }
     // }
 
     // @Override
     // boolean validateID(int voterId);
-
-    
 
     @Override
     public void openPollingStation() {
@@ -183,7 +178,7 @@ public class MPollingStation implements IPollingStation{
             queue_lock.unlock();
         }
     }
-    
+
     @Override
     public void closePollingStation() {
         queue_lock.lock();
@@ -193,7 +188,7 @@ public class MPollingStation implements IPollingStation{
             queue_lock.unlock();
         }
     }
-    
+
     @Override
     public boolean isOpen() {
         queue_lock.lock();
@@ -204,13 +199,24 @@ public class MPollingStation implements IPollingStation{
         }
     }
 
+    // @Override
+    // public boolean stillVotersInQueue() {
+    //     queue_lock.lock();
+    //     try {
+    //         return !votersQueue.isEmpty();
+    //     } finally {
+    //         queue_lock.unlock();
+    //     }
+    // }
+
     @Override
-    public boolean stillVotersInQueue() {
+    public int numberVotersInQueue() {
         queue_lock.lock();
         try {
-            return !votersQueue.isEmpty();
+            return votersQueue.size();
         } finally {
             queue_lock.unlock();
         }
     }
+
 }
