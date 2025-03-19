@@ -47,14 +47,14 @@ public class MExitPoll implements IExitPoll{
 
             if (Math.random() * 100 >= percentage) { // percentage chance of being selected
                 System.out.println("Voter " + voterId + " leaving polling station (not selected for questioning)");
-                logger.voterExiting(voterId, false);
+                logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
 
             if (Math.random() >= 0.6) { // 40% don't want to answer
                 System.out.println("Voter " + voterId + " leaving polling station (doesn't want to answer)");
-                logger.voterExiting(voterId, false);
+                logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
@@ -66,11 +66,11 @@ public class MExitPoll implements IExitPoll{
             if (Math.random()>= 0.2){ // 80% tell the truth
                 theVote = myVote;
                 System.out.println("Voter " + voterId + " leaving polling station (telling the truth)");
-                logger.voterExiting(voterId, true);
+                logger.exitPollVote(voterId, theVote ? "A" : "B");
             } else { // rest lie
                 theVote = !myVote;
                 System.out.println("Voter " + voterId + " leaving polling station (lying)");
-                logger.voterExiting(voterId, true);
+                logger.exitPollVote(voterId, theVote ? "A" : "B");
             }
             newVoteReady = true;
             voterReady.signal();

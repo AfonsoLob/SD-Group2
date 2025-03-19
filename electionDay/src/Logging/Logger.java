@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Logger {
     // Constants for column headers
-    private static final String[] HEADERS = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit"};
+    private static final String[] HEADERS = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit", "ExitPollA", "ExitPollB"};
     private static final int NUM_COLUMNS = HEADERS.length;
     private PrintWriter writer;
     
@@ -17,6 +17,8 @@ public class Logger {
     private Integer votersProcessed;
     private Integer scoreA;
     private Integer scoreB;
+    private Integer exitPollScoreA;
+    private Integer exitPollScoreB;
 
     // Election properties
     private int maxVoters;
@@ -24,7 +26,7 @@ public class Logger {
     private int maxVotes;
     
     // Delimiter for the table
-    private static final String DELIMITER = "----------------------------------------------------------------------------------------------------------";
+    private static final String DELIMITER = "-----------------------------------------------------------------------------------------------------------------------------------";
     
     // Additional state tracking
     private boolean isStationOpen = false;
@@ -36,6 +38,8 @@ public class Logger {
         this.votersProcessed = 0;
         this.scoreA = 0;
         this.scoreB = 0;
+        this.exitPollScoreA = 0;
+        this.exitPollScoreB = 0;
         this.maxVoters = maxVoters;
         this.maxCapacity = maxCapacity;
         this.maxVotes = maxVotes;
@@ -88,6 +92,10 @@ public class Logger {
             entry[6] = String.format("%02d", scoreB);
         }
         entry[7] = exit;
+        if(!exit.isEmpty()) {
+            entry[8] = String.format("%02d", exitPollScoreA);
+            entry[9] = String.format("%02d", exitPollScoreB);
+        }
         
         printStateToFile(entry);
     }
@@ -128,8 +136,13 @@ public class Logger {
         addEntry("", "", "", "", boothStr, "");
     }
     
-    public synchronized void voterExiting(int voterId, boolean exitPoll) {
-        String exitStr = exitPoll ? "P" + voterId : String.valueOf(voterId);
+    public synchronized void exitPollVote(int voterId, String vote) {
+        String exitStr = voterId + vote;
+        if (vote.equals("A")) {
+            exitPollScoreA++;
+        } else if (vote.equals("B")) {
+            exitPollScoreB++;
+        }
         currentQueueSize = Math.max(0, currentQueueSize - 1);
         currentVoterInBooth = ""; // Clear booth
         addEntry("", "", "", "", "", exitStr);

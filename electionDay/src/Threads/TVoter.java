@@ -58,10 +58,6 @@ public class TVoter implements Runnable {
                 }
                 // Exit polling station 
                 exitPoll.exitPollingStation(voterId, myVote);
-
-            } else{
-                System.out.println("Voter " + voterId + " ID validation incorrect!");
-                logger.voterExiting(voterId, false);
             }
 
             // Reborn with probability or exit
