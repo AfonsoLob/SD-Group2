@@ -50,7 +50,7 @@ public class TClerk implements Runnable {
 
         int stillVotersInQueue = pollingStation.numberVotersInQueue(); 
 
-        System.out.println("Day ended but there are " + stillVotersInQueue + " inside");
+        System.out.println("Day ended but there are still" + stillVotersInQueue + " voters inside");
 
         exitPoll.closeIn(stillVotersInQueue);
 

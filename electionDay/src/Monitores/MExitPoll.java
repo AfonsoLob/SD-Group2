@@ -86,7 +86,7 @@ public class MExitPoll implements IExitPoll{
         lock.lock();
         try {
             while (newVoteReady == false && isOpen) {
-                System.out.println("Pollster waiting...");
+                // System.out.println("Pollster waiting...");
                 voterReady.await();
             }
             newVoteReady = false;
@@ -138,7 +138,7 @@ public class MExitPoll implements IExitPoll{
     public void tryClosingExitPoll(){
         if(aboutToClose){
             closeIn--;
-            System.out.println("Closing in " + closeIn);
+            // System.out.println("Closing in " + closeIn);
             if(closeIn <= 0){isOpen = false;} 
         }
     }

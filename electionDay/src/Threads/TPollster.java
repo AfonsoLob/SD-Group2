@@ -56,5 +56,7 @@ public class TPollster implements Runnable {
         } else {
             System.out.println("No votes were recorded in the exit poll");
         }
+
+        System.out.println("Pollster terminated");
     }
 }
