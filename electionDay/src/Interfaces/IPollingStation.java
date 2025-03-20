@@ -5,8 +5,8 @@ public interface IPollingStation {
     int callNextVoter();
     // void exitPollingStation(int voterId);
 
-    int waitIdValidation(int voterId);
-    void sendSignal(boolean response);
+    boolean waitIdValidation(int voterId);
+    void sendSignal(int voterId, boolean response);
 
     void openPollingStation();
     void closePollingStation();

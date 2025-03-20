@@ -20,9 +20,11 @@ public class MPollingStation implements IPollingStation {
     private static MPollingStation instance;
     private final int capacity;
     private boolean isOpen;
-    // private final Set<Integer> usedIds;
+  
     private boolean isAproved;
     private boolean aprovalFlag;
+    private int aprovalId;
+
     private final ReentrantLock aprovedLock;
     private final Condition aprovalReady;
     private final Logger logger;
@@ -44,6 +46,7 @@ public class MPollingStation implements IPollingStation {
 
         this.isAproved = true;
         this.aprovalFlag = false;
+        this.aprovalId = -1;
 
         this.votersQueue = new ArrayDeque<Integer>();
 
@@ -92,18 +95,15 @@ public class MPollingStation implements IPollingStation {
         }
     }
 
-    private boolean isIdInQueue(int voterId) {
-        return votersQueue.contains(voterId);
-    }
+    // private boolean isIdInQueue(int voterId) {
+    //     return votersQueue.contains(voterId);
+    // }
 
     @Override
-    public int waitIdValidation(int voterId) {
-        // return 0 if still in queue
-        // return 1 if aproved
-        // return -1 if not aproved
+    public boolean waitIdValidation(int voterId) {
         aprovedLock.lock();
         try {
-            while (aprovalFlag == false) {
+            while (aprovalFlag == false || aprovalId != voterId) {
                 aprovalReady.await();
             }
 
@@ -122,7 +122,8 @@ public class MPollingStation implements IPollingStation {
                 }
             }
         } catch (InterruptedException e) {
-            return 0;
+            return false;
+
         } finally {
             aprovedLock.unlock();
         }
@@ -146,11 +147,12 @@ public class MPollingStation implements IPollingStation {
     }
 
     @Override
-    public void sendSignal(boolean response) {
+    public void sendSignal(int voterId, boolean response) {
         aprovedLock.lock();
         try {
             isAproved = response;
             aprovalFlag = true;
+            aprovalId = voterId;
             aprovalReady.signalAll();
         } finally {
             aprovedLock.unlock();

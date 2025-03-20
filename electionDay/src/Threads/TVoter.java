@@ -29,14 +29,10 @@ public class TVoter implements Runnable {
             // Try to enter the polling station
             pollingStation.enterPollingStation(voterId);
 
-            // Validate ID
-            int response = 0;
-            while (response == 0) {
-                // Wait for ID validation
-                response = pollingStation.waitIdValidation(voterId);
-            }
-
-            if (response == 1) {
+            // Validate ID    
+            boolean response = pollingStation.waitIdValidation(voterId);
+            
+            if (response) {
                 // Cast vote
                 System.out.println("Voter " + voterId + " ID validation correct!");
                 

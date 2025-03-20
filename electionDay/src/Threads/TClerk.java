@@ -45,7 +45,7 @@ public class TClerk implements Runnable {
 
         int stillVotersInQueue = pollingStation.numberVotersInQueue(); 
 
-        System.out.println("Day ended but there are still" + stillVotersInQueue + " voters inside");
+        System.out.println("Day ended but there are still " + stillVotersInQueue + " voters inside");
 
         exitPoll.closeIn(stillVotersInQueue);
 
@@ -76,11 +76,11 @@ public class TClerk implements Runnable {
         // check if voterid is in hashset, if not add it and mark it as positive, and if yes mark it as negative
         // VoterRecord voterRecord= new VoterRecord(voterId, false);
         boolean response = false;
-        if (!validatedIDs.contains(voterId) && pollingStation.isOpen()) {
+        if (!validatedIDs.contains(voterId)) {
             response = true;
             validatedIDs.add(voterId);
         }
-        pollingStation.sendSignal(response);
+        pollingStation.sendSignal(voterId, response);
         return response;
     }
 
