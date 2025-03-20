@@ -1,7 +1,6 @@
 package Threads;
 import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
-import Logging.Logger;
 import java.util.HashSet;
 
 // import Monitores.MPollingStation;
@@ -13,16 +12,14 @@ public class TClerk implements Runnable {
     private final IPollingStation pollingStation;
     private final IExitPoll exitPoll;
     private HashSet<Integer> validatedIDs;
-    private Logger logger;
     private final int maxVotes;
 
     
 
-    private TClerk(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll ,Logger logger) {
+    private TClerk(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll) {
         this.pollingStation = pollingStation;
         this.validatedIDs = new HashSet<>();
         this.maxVotes = maxVotes;
-        this.logger = logger;
         this.exitPoll = exitPoll;
     }
 
@@ -30,7 +27,6 @@ public class TClerk implements Runnable {
     public void run() {
         System.out.println("Clerk running");
         pollingStation.openPollingStation();
-        logger.stationOpening();
         int votes = 0;
         while (votes < maxVotes) {
             // instance.openStation();
@@ -46,7 +42,6 @@ public class TClerk implements Runnable {
             }
         }
         pollingStation.closePollingStation();
-        logger.stationClosing();
 
         int stillVotersInQueue = pollingStation.numberVotersInQueue(); 
 
@@ -70,9 +65,9 @@ public class TClerk implements Runnable {
         System.out.println("Clerk terminated");
     }
 
-    public static TClerk getInstance(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll, Logger logger) {
+    public static TClerk getInstance(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll) {
         if (instance == null) {
-            instance = new TClerk(maxVotes, pollingStation, exitPoll, logger);
+            instance = new TClerk(maxVotes, pollingStation, exitPoll);
         }
         return instance;
     }
@@ -85,7 +80,6 @@ public class TClerk implements Runnable {
             response = true;
             validatedIDs.add(voterId);
         }
-        logger.validatingVoter(voterId, response);
         pollingStation.sendSignal(response);
         return response;
     }

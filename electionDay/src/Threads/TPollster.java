@@ -1,6 +1,5 @@
 package Threads;
 import Interfaces.IExitPoll;
-import Logging.Logger;
 
 
 public class TPollster implements Runnable {

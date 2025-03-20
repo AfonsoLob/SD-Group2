@@ -1,7 +1,7 @@
 package Interfaces;
 
 public interface IVotingBooth {
-    void voteA();
-    void voteB();
+    void voteA(int voterId);
+    void voteB(int voterId);
     void printFinalResults();
 }

@@ -75,18 +75,19 @@ public class MPollingStation implements IPollingStation {
             while (!isOpen) {
                 stationOpen.await();
             }
-
+            
             while (votersQueue.size() >= capacity) {
                 notFull.await();
             }
-
+            
             votersQueue.offer(voterId);
             notEmpty.signal();
             return true;
-
+            
         } catch (InterruptedException e) {
             return false;
         } finally {
+            logger.voterEnteringQueue(voterId);
             queue_lock.unlock();
         }
     }
@@ -112,6 +113,8 @@ public class MPollingStation implements IPollingStation {
             } else {
                 // System.out.println("ID validation was for Voter " + voterId);
                 aprovalFlag = false;
+                logger.validatingVoter(voterId, isAproved);
+
                 if (isAproved) {
                     return 1;
                 } else {
@@ -175,6 +178,7 @@ public class MPollingStation implements IPollingStation {
             isOpen = true;
             stationOpen.signalAll();
         } finally {
+            logger.stationOpening();
             queue_lock.unlock();
         }
     }
@@ -185,6 +189,7 @@ public class MPollingStation implements IPollingStation {
         try {
             isOpen = false;
         } finally {
+            logger.stationClosing();
             queue_lock.unlock();
         }
     }

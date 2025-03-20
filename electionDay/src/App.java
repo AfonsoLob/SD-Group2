@@ -37,7 +37,7 @@ public class App {
         // Initialize components
         logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
         pollingStation = MPollingStation.getInstance(maxCapacity, logger);
-        votingBooth = MVotingBooth.getInstance();
+        votingBooth = MVotingBooth.getInstance(logger);
         exitPoll = MExitPoll.getInstance(50,logger);
         
         // Launch the GUI
@@ -65,12 +65,12 @@ public class App {
         voterThreads = new ArrayList<>();
         
         for (int i = 0; i < maxVoters; i++) {
-            TVoter voter = TVoter.getInstance(i, pollingStation, votingBooth, exitPoll, logger);
+            TVoter voter = TVoter.getInstance(i, pollingStation, votingBooth, exitPoll);
             voters.add(voter);
         }
         
         // Create clerk
-        clerk = TClerk.getInstance(maxVotes, pollingStation, exitPoll,logger);
+        clerk = TClerk.getInstance(maxVotes, pollingStation, exitPoll);
 
         // Create pollster
         pollster = TPollster.getInstance(exitPoll);

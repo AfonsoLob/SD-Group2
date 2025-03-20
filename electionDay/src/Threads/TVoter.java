@@ -2,29 +2,25 @@ package Threads;
 import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
 import Interfaces.IVotingBooth;
-import Logging.Logger;
-
 
 public class TVoter implements Runnable {
     private int voterId;
     private final IPollingStation pollingStation;
     private final IVotingBooth votingBooth;
     private final IExitPoll exitPoll;
-    private final Logger logger;
     private boolean myVote;
 
-    private TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
+    private TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll) {
         this.voterId = id;
         // this.name = "Voter-" + id;
         this.pollingStation = pollingStation;
         this.votingBooth = votingBooth;
         this.exitPoll = exitPoll;
-        this.logger = logger;
         // this.myVote = -1;
     }
     
-    public static TVoter getInstance(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll, Logger logger) {
-        return new TVoter(id, pollingStation, votingBooth, exitPoll, logger);
+    public static TVoter getInstance(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll) {
+        return new TVoter(id, pollingStation, votingBooth, exitPoll);
     }
 
     @Override
@@ -32,7 +28,6 @@ public class TVoter implements Runnable {
         do {
             // Try to enter the polling station
             pollingStation.enterPollingStation(voterId);
-            logger.voterEnteringQueue(voterId);
 
             // Validate ID
             int response = 0;
@@ -47,13 +42,11 @@ public class TVoter implements Runnable {
                 
                 if (Math.random() < 0.4) {
                     System.out.println(voterId + " voted for candidate A");
-                    votingBooth.voteA();
-                    logger.voterInBooth(voterId, true); // vote A
+                    votingBooth.voteA(voterId);
                     this.myVote = true; // 1 for A
                 } else {
                     System.out.println(voterId + " voted for candidate b");
-                    votingBooth.voteB();
-                    logger.voterInBooth(voterId, false); // vote B
+                    votingBooth.voteB(voterId);
                     this.myVote = false; // 0 for B
                 }
                 // Exit polling station 
