@@ -26,7 +26,6 @@ public class TPollster implements Runnable {
     @Override
     public void run() {
         System.out.println("Pollster running");
-        // loger do something 
         int query;
         do {
             try {

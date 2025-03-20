@@ -107,24 +107,14 @@ public class MPollingStation implements IPollingStation {
                 aprovalReady.await();
             }
 
-            if (isIdInQueue(voterId)) {
-                // System.out.println("ID validation was not for Voter " + voterId);
-                return 0;
-            } else {
-                // System.out.println("ID validation was for Voter " + voterId);
-                aprovalFlag = false;
-                logger.validatingVoter(voterId, isAproved);
+            aprovalFlag = false;
+            return isAproved;
 
-                if (isAproved) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            }
         } catch (InterruptedException e) {
             return false;
 
         } finally {
+            logger.validatingVoter(voterId, aprovalFlag);
             aprovedLock.unlock();
         }
     }
