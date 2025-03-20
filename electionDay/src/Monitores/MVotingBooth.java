@@ -44,7 +44,7 @@ public class MVotingBooth implements IVotingBooth {
         try {
             Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
             candidateB++;
-            System.out.println("B total votes: " + candidateA);
+            System.out.println("B total votes: " + candidateB);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
