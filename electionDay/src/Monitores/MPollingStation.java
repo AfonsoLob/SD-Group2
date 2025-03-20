@@ -114,7 +114,7 @@ public class MPollingStation implements IPollingStation {
             return false;
 
         } finally {
-            logger.validatingVoter(voterId, aprovalFlag);
+            logger.validatingVoter(voterId, isAproved);
             aprovedLock.unlock();
         }
     }
