@@ -7,10 +7,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import Interfaces.IPollingStation;
 // import Threads.TVoter;
-
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.Queue;
-
 import Logging.Logger;
 
 public class MPollingStation implements IPollingStation {
@@ -18,12 +17,13 @@ public class MPollingStation implements IPollingStation {
     private static MPollingStation instance;
     private final int capacity;
     private boolean isOpen;
+    private final Condition stationOpen;
+    private final Logger logger;
   
+    //id validation
+    private HashSet<Integer> validatedIDs;
     private boolean isAproved;
     private int aprovalId;
-
-    
-    private final Logger logger;
 
     // queue
     private final Queue<Integer> votersQueue;
@@ -32,8 +32,6 @@ public class MPollingStation implements IPollingStation {
     private final Condition notEmpty;
     private final Condition notFull;
     private final Condition aprovalReady;
-    // station lock
-    private final Condition stationOpen;
 
     //voting 
     private final ReentrantLock voting_lock;
@@ -49,6 +47,7 @@ public class MPollingStation implements IPollingStation {
         this.aprovalId = -1;
 
         this.votersQueue = new ArrayDeque<Integer>();
+        this.validatedIDs = new HashSet<>();
 
         this.queue_lock = new ReentrantLock(true); // true = fair
         this.notEmpty = queue_lock.newCondition();
@@ -68,6 +67,26 @@ public class MPollingStation implements IPollingStation {
         }
         return instance;
     }
+
+    private boolean validateID(int voterId) {
+        // check if voterid is in hashset, if not add it and mark it as positive, and if yes mark it as negative
+        boolean response = false;
+        if (!validatedIDs.contains(voterId)) {
+            response = true;
+            validatedIDs.add(voterId);
+        }
+        queue_lock.lock();
+        try {
+            isAproved = response;
+            aprovalId = voterId;
+            aprovalReady.signal();
+        } finally {
+            queue_lock.unlock();
+        }
+
+        return response;
+    }
+
 
     @Override
     public boolean enterPollingStation(int voterId) {
@@ -94,10 +113,6 @@ public class MPollingStation implements IPollingStation {
         }
     }
 
-    // private boolean isIdInQueue(int voterId) {
-    //     return votersQueue.contains(voterId);
-    // }
-
     @Override
     public boolean waitIdValidation(int voterId) {
         queue_lock.lock();
@@ -119,7 +134,7 @@ public class MPollingStation implements IPollingStation {
     }
 
     @Override
-    public int callNextVoter() {
+    public boolean callNextVoter() {
         queue_lock.lock();
         try {
             if (votersQueue.isEmpty()) {
@@ -127,25 +142,15 @@ public class MPollingStation implements IPollingStation {
             }
             int id = votersQueue.poll();
             notFull.signal();
-            return id;
+            return validateID(id);
         } catch (InterruptedException e) {
-            return -1;
+            return false;
         } finally {
             queue_lock.unlock();
         }
     }
 
-    @Override
-    public void sendSignal(int voterId, boolean response) {
-        queue_lock.lock();
-        try {
-            isAproved = response;
-            aprovalId = voterId;
-            aprovalReady.signal();
-        } finally {
-            queue_lock.unlock();
-        }
-    }
+    
 
     @Override
     public void openPollingStation() {

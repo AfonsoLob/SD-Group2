@@ -43,8 +43,9 @@ public class TVoter implements Runnable {
                     this.myVote = false; // 0 for B
                 }
                 // Exit polling station 
-                exitPoll.exitPollingStation(voterId, myVote);
             }
+
+            exitPoll.exitPollingStation(voterId, myVote, response);
 
             // Reborn with probability or exit
             if (Math.random() < 0.5) {

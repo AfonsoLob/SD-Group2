@@ -10,12 +10,15 @@ public class MExitPoll implements IExitPoll{
     private final ReentrantLock lock;
     private final Condition voterReady;
     private final Condition pollsterReady;
-    private boolean theVote;
+    private boolean registeredVote;
     private boolean newVoteReady;
 
     private boolean isOpen;
     private boolean aboutToClose;
     private int closeIn;
+
+    private int votesForA;
+    private int votesForB;
 
     // private int countLies;
     // private int countTruths;
@@ -30,6 +33,9 @@ public class MExitPoll implements IExitPoll{
         this.pollsterReady = lock.newCondition();
         this.isOpen = true;
         this.aboutToClose = false;
+
+        this.votesForA = 0;
+        this.votesForB = 0;
     }
 
     public static MExitPoll getInstance(int percentage, Logger logger) {
@@ -37,12 +43,16 @@ public class MExitPoll implements IExitPoll{
     }
 
     @Override
-    public void exitPollingStation(int voterId, boolean myVote) { 
+    public void exitPollingStation(int voterId, boolean realVote, boolean response) { 
         
         tryClosingExitPoll();
+
+        if(!response){
+            logger.exitPollVote(voterId, "");
+            return;
+        }
         
         try{
-
             lock.lock();
 
             if (Math.random() * 100 >= percentage) { // percentage chance of being selected
@@ -64,13 +74,13 @@ public class MExitPoll implements IExitPoll{
             }
 
             if (Math.random()>= 0.2){ // 80% tell the truth
-                theVote = myVote;
+                registeredVote = realVote;
                 System.out.println("Voter " + voterId + " leaving polling station (telling the truth)");
-                logger.exitPollVote(voterId, theVote ? "A" : "B");
+                logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             } else { // rest lie
-                theVote = !myVote;
+                registeredVote = !realVote;
                 System.out.println("Voter " + voterId + " leaving polling station (lying)");
-                logger.exitPollVote(voterId, theVote ? "A" : "B");
+                logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             }
             newVoteReady = true;
             voterReady.signal();
@@ -82,27 +92,28 @@ public class MExitPoll implements IExitPoll{
     }
 
     @Override
-    public int inquire(){
+    public void inquire(){
         lock.lock();
         try {
             while (newVoteReady == false && isOpen) {
-                // System.out.println("Pollster waiting...");
                 voterReady.await();
             }
-            newVoteReady = false;
-            pollsterReady.signal();
             
-            if (!isOpen) {
-                return 0;
-            } else if (theVote){
-                return 1;
-            } else {
-                return -1;
+            if(newVoteReady){
+                newVoteReady = false;
+                pollsterReady.signal();
+                if(registeredVote){
+                    votesForA++;
+                    System.out.println("Pollster registered one more vote for A");
+                }
+                else{
+                    votesForB++;
+                    System.out.println("Pollster registered one more vote for B");
+                }
             }
-
+            
         } catch (InterruptedException e) {
             e.printStackTrace();
-            return 0; 
         } finally {
             lock.unlock();
         }
@@ -134,12 +145,31 @@ public class MExitPoll implements IExitPoll{
         }
     }
 
-    @Override
-    public void tryClosingExitPoll(){
+    private void tryClosingExitPoll(){
         if(aboutToClose){
             closeIn--;
-            // System.out.println("Closing in " + closeIn);
-            if(closeIn <= 0){isOpen = false;} 
+            if(closeIn <= 0){
+                lock.lock();
+                try{
+                    isOpen = false;
+                    voterReady.signal();
+                }finally{
+                    lock.unlock();
+                }
+            } 
+        }
+    }
+
+    @Override
+    public void printExitPollResults(){
+        int totalVotes = votesForA + votesForB;
+        if (totalVotes > 0) {
+            double percentA = ((double)votesForA / totalVotes) * 100;
+            double percentB = ((double)votesForB / totalVotes) * 100;
+            System.out.println("Prediction for A: " + (int)percentA + " percent of the votes");
+            System.out.println("Prediction for B: " + (int)percentB + " percent of the votes");
+        } else {
+            System.out.println("No votes were recorded in the exit poll");
         }
     }
 }

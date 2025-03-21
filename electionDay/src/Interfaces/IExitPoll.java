@@ -1,9 +1,9 @@
 package Interfaces;
 
 public interface IExitPoll {
-    void exitPollingStation(int voterId, boolean myVote);
-    int inquire();
+    void exitPollingStation(int voterId, boolean myVote, boolean response);
+    void inquire();
     boolean isOpen();
     void closeIn(int stillVotersInQueue);
-    void tryClosingExitPoll();
+    void printExitPollResults();
 }
