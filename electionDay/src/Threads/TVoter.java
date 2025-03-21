@@ -1,26 +1,23 @@
 package Threads;
 import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
-import Interfaces.IVotingBooth;
 
 public class TVoter implements Runnable {
     private int voterId;
     private final IPollingStation pollingStation;
-    private final IVotingBooth votingBooth;
     private final IExitPoll exitPoll;
     private boolean myVote;
 
-    private TVoter(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll) {
+    private TVoter(int id, IPollingStation pollingStation, IExitPoll exitPoll) {
         this.voterId = id;
         // this.name = "Voter-" + id;
         this.pollingStation = pollingStation;
-        this.votingBooth = votingBooth;
         this.exitPoll = exitPoll;
         // this.myVote = -1;
     }
     
-    public static TVoter getInstance(int id, IPollingStation pollingStation, IVotingBooth votingBooth, IExitPoll exitPoll) {
-        return new TVoter(id, pollingStation, votingBooth, exitPoll);
+    public static TVoter getInstance(int id, IPollingStation pollingStation, IExitPoll exitPoll) {
+        return new TVoter(id, pollingStation, exitPoll);
     }
 
     @Override
@@ -38,11 +35,11 @@ public class TVoter implements Runnable {
                 
                 if (Math.random() < 0.4) {
                     System.out.println(voterId + " voted for candidate A");
-                    votingBooth.voteA(voterId);
+                    pollingStation.voteA(voterId);
                     this.myVote = true; // 1 for A
                 } else {
                     System.out.println(voterId + " voted for candidate b");
-                    votingBooth.voteB(voterId);
+                    pollingStation.voteB(voterId);
                     this.myVote = false; // 0 for B
                 }
                 // Exit polling station 

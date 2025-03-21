@@ -13,6 +13,9 @@ public interface IPollingStation {
 
     boolean isOpen();
     // boolean stillVotersInQueue();
+    void voteA(int voterId);
+    void voteB(int voterId);
+    void printFinalResults();
 
     int numberVotersInQueue();
 }

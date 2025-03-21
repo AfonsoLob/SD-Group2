@@ -1,10 +1,8 @@
 import GUI.Gui;
 import Interfaces.IExitPoll;
 import Interfaces.IPollingStation;
-import Interfaces.IVotingBooth;
 import Logging.Logger;
 import Monitores.MPollingStation;
-import Monitores.MVotingBooth;
 import Monitores.MExitPoll;
 import Threads.TClerk;
 import Threads.TPollster;
@@ -20,7 +18,6 @@ public class App {
     private static int maxVotes = 10;
     private static Logger logger;
     private static IPollingStation pollingStation;
-    private static IVotingBooth votingBooth;
     private static IExitPoll exitPoll;
     private static List<TVoter> voters;
     private static List<Thread> voterThreads;
@@ -37,7 +34,6 @@ public class App {
         // Initialize components
         logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
         pollingStation = MPollingStation.getInstance(maxCapacity, logger);
-        votingBooth = MVotingBooth.getInstance(logger);
         exitPoll = MExitPoll.getInstance(50,logger);
         
         // Launch the GUI
@@ -65,7 +61,7 @@ public class App {
         voterThreads = new ArrayList<>();
         
         for (int i = 0; i < maxVoters; i++) {
-            TVoter voter = TVoter.getInstance(i, pollingStation, votingBooth, exitPoll);
+            TVoter voter = TVoter.getInstance(i, pollingStation, exitPoll);
             voters.add(voter);
         }
         
@@ -118,7 +114,7 @@ public class App {
                 
                 // Simulation completed
                 simulationRunning = false;
-                votingBooth.printFinalResults();
+                pollingStation.printFinalResults();
                 System.out.println("ElectionSimulation finished");
                 logger.saveCloseFile();
                 

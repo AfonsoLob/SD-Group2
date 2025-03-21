@@ -1,8 +1,6 @@
 package Monitores;
 
-// import java.util.HashMap;
-// import java.util.HashSet;
-// import java.util.Set;
+
 import java.util.concurrent.locks.Condition;
 // import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,11 +20,9 @@ public class MPollingStation implements IPollingStation {
     private boolean isOpen;
   
     private boolean isAproved;
-    private boolean aprovalFlag;
     private int aprovalId;
 
-    private final ReentrantLock aprovedLock;
-    private final Condition aprovalReady;
+    
     private final Logger logger;
 
     // queue
@@ -35,32 +31,35 @@ public class MPollingStation implements IPollingStation {
     private final ReentrantLock queue_lock;
     private final Condition notEmpty;
     private final Condition notFull;
+    private final Condition aprovalReady;
     // station lock
     private final Condition stationOpen;
+
+    //voting 
+    private final ReentrantLock voting_lock;
+    private int candidateA;
+    private int candidateB;
 
     private MPollingStation(int capacity, Logger logger) {
         this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
-        // this.usedIds = new HashSet<>();
 
-        this.isAproved = true;
-        this.aprovalFlag = false;
+        this.isAproved = false;
         this.aprovalId = -1;
 
         this.votersQueue = new ArrayDeque<Integer>();
 
-        this.queue_lock = new ReentrantLock();
+        this.queue_lock = new ReentrantLock(true); // true = fair
         this.notEmpty = queue_lock.newCondition();
         this.notFull = queue_lock.newCondition();
         this.stationOpen = queue_lock.newCondition();
+        this.aprovalReady = queue_lock.newCondition();
 
-        this.aprovedLock = new ReentrantLock();
-        this.aprovalReady = aprovedLock.newCondition();
 
-        // this.messageBoard = new HashMap<>();
-        // this.hash_lock = new ReentrantLock();
-        // this.newMessage = queue_lock.newCondition();
+        this.voting_lock = new ReentrantLock();
+        this.candidateA = 0;
+        this.candidateB = 0;
     }
 
     public static MPollingStation getInstance(int maxCapacity, Logger logger) {
@@ -101,13 +100,13 @@ public class MPollingStation implements IPollingStation {
 
     @Override
     public boolean waitIdValidation(int voterId) {
-        aprovedLock.lock();
+        queue_lock.lock();
         try {
-            while (aprovalFlag == false || aprovalId != voterId) {
+            while (aprovalId != voterId) {
                 aprovalReady.await();
             }
 
-            aprovalFlag = false;
+            aprovalId = -1;
             return isAproved;
 
         } catch (InterruptedException e) {
@@ -115,7 +114,7 @@ public class MPollingStation implements IPollingStation {
 
         } finally {
             logger.validatingVoter(voterId, isAproved);
-            aprovedLock.unlock();
+            queue_lock.unlock();
         }
     }
 
@@ -138,30 +137,15 @@ public class MPollingStation implements IPollingStation {
 
     @Override
     public void sendSignal(int voterId, boolean response) {
-        aprovedLock.lock();
+        queue_lock.lock();
         try {
             isAproved = response;
-            aprovalFlag = true;
             aprovalId = voterId;
-            aprovalReady.signalAll();
+            aprovalReady.signal();
         } finally {
-            aprovedLock.unlock();
+            queue_lock.unlock();
         }
     }
-
-    // @Override
-    // public void exitPollingStation(int voterId) {
-    // lock.lock();
-    // try {
-    // votersInside.remove(voterId);
-    // stationNotFull.signal();
-    // } finally {
-    // lock.unlock();
-    // }
-    // }
-
-    // @Override
-    // boolean validateID(int voterId);
 
     @Override
     public void openPollingStation() {
@@ -196,16 +180,6 @@ public class MPollingStation implements IPollingStation {
         }
     }
 
-    // @Override
-    // public boolean stillVotersInQueue() {
-    //     queue_lock.lock();
-    //     try {
-    //         return !votersQueue.isEmpty();
-    //     } finally {
-    //         queue_lock.unlock();
-    //     }
-    // }
-
     @Override
     public int numberVotersInQueue() {
         queue_lock.lock();
@@ -214,6 +188,44 @@ public class MPollingStation implements IPollingStation {
         } finally {
             queue_lock.unlock();
         }
+    }
+
+    @Override
+    public void voteA(int voterId) {
+        voting_lock.lock();
+        try {
+            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
+            candidateA++;
+            System.out.println("A total votes: " + candidateA);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            logger.voterInBooth(voterId, true); // vote A
+            voting_lock.unlock();
+        }
+        
+    }
+
+    @Override
+    public void voteB(int voterId) {
+        voting_lock.lock();
+        try {
+            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
+            candidateB++;
+            System.out.println("B total votes: " + candidateB);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            logger.voterInBooth(voterId, false); // vote B
+            voting_lock.unlock();
+        }
+    }
+
+    @Override
+    public void printFinalResults() {
+        System.out.println("Final results: ");
+        System.out.println("Candidate A: " + candidateA);
+        System.out.println("Candidate B: " + candidateB);  
     }
 
 }
