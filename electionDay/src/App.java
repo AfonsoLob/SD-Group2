@@ -1,14 +1,25 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import GUI.Gui;
-import Interfaces.IExitPoll;
-import Interfaces.IPollingStation;
+import Interfaces.ExitPoll.IExitPoll_Clerk;
+import Interfaces.ExitPoll.IExitPoll_Pollster;
+import Interfaces.ExitPoll.IExitPoll_Voter;
+import Interfaces.ExitPoll.IExitPoll_all;
+import Interfaces.GUI.IGUI_all;
+import Interfaces.Logger.ILogger_ExitPoll;
+import Interfaces.Logger.ILogger_GUI;
+import Interfaces.Logger.ILogger_PollingStation;
+import Interfaces.Logger.ILogger_all;
+import Interfaces.Pollingstation.IPollingStation_Clerk;
+import Interfaces.Pollingstation.IPollingStation_Voter;
+import Interfaces.Pollingstation.IPollingStation_all;
 import Logging.Logger;
-import Monitores.MPollingStation;
 import Monitores.MExitPoll;
+import Monitores.MPollingStation;
 import Threads.TClerk;
 import Threads.TPollster;
 import Threads.TVoter;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class App {
@@ -16,9 +27,10 @@ public class App {
     private static int maxVoters = 5;
     private static int maxCapacity = 2;
     private static int maxVotes = 10;
-    private static Logger logger;
-    private static IPollingStation pollingStation;
-    private static IExitPoll exitPoll;
+    private static ILogger_all logger;
+    private static IPollingStation_all pollingStation;
+    private static IExitPoll_all exitPoll;
+    private static IGUI_all gui;
     private static List<TVoter> voters;
     private static List<Thread> voterThreads;
     private static TClerk clerk;
@@ -33,8 +45,9 @@ public class App {
         
         // Initialize components
         logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
-        pollingStation = MPollingStation.getInstance(maxCapacity, logger);
-        exitPoll = MExitPoll.getInstance(50,logger);
+        pollingStation = MPollingStation.getInstance(maxCapacity, (ILogger_PollingStation)logger);
+        exitPoll = MExitPoll.getInstance(50,(ILogger_ExitPoll)logger);
+        gui = Gui.getInstance();
         
         // Launch the GUI
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -48,6 +61,7 @@ public class App {
                         e.printStackTrace();
                     }
                 });
+                // Removed restart callback setup since the restart functionality is not working properly
             }
         });
     }
@@ -61,27 +75,42 @@ public class App {
         voterThreads = new ArrayList<>();
         
         for (int i = 0; i < maxVoters; i++) {
-            TVoter voter = TVoter.getInstance(i, pollingStation, exitPoll);
+            TVoter voter = TVoter.getInstance(i, 
+                                      (IPollingStation_Voter)pollingStation, 
+                                      (IExitPoll_Voter)exitPoll);
             voters.add(voter);
         }
         
         // Create clerk
-        clerk = TClerk.getInstance(maxVotes, pollingStation, exitPoll);
+        clerk = TClerk.getInstance(maxVotes, 
+                           (IPollingStation_Clerk)pollingStation, 
+                           (IExitPoll_Clerk)exitPoll);
 
         // Create pollster
-        pollster = TPollster.getInstance(exitPoll);
+        pollster = TPollster.getInstance((IExitPoll_Pollster)exitPoll);
         
         // Start the periodic GUI update thread with more comprehensive updates
         guiUpdateThread = new Thread(() -> {
             try {
                 while (simulationRunning) {
                     // Update GUI with various information from logger
-                    Gui.updateFromLogger(logger);
-                    Gui.updateQueueAndBoothInfo(
-                        logger.getCurrentQueueSize(),
-                        logger.getCurrentVoterInBooth()
+                    gui.updateFromLogger(
+                        ((ILogger_GUI)logger).getVoteCounts(),
+                        ((ILogger_GUI)logger).getVotersProcessed(),
+                        ((ILogger_GUI)logger).isStationOpen()
                     );
-                    Thread.sleep(200); // Update every 200ms for more responsive UI
+                    gui.updateQueueAndBoothInfo(
+                        ((ILogger_GUI)logger).getCurrentQueueSize(),
+                        ((ILogger_GUI)logger).getCurrentVoterInBooth()
+                    );
+                    
+                    // Control how often GUI updates happen based on simulation speed:
+                    // - Base interval of 500ms is slowed down at slower speeds
+                    // - Faster speeds result in more frequent updates
+                    // - Minimum interval of 100ms ensures UI doesn't update too frantically
+                    float speedFactor = gui.getSimulationSpeed();
+                    long updateInterval = Math.round(500 / speedFactor); 
+                    Thread.sleep(Math.max(100, updateInterval));
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -119,8 +148,15 @@ public class App {
                 logger.saveCloseFile();
                 
                 // Final GUI update after simulation is complete
-                Gui.updateFromLogger(logger);
-                Gui.updateQueueAndBoothInfo(0, ""); // Clear queue and booth
+                gui.updateFromLogger(
+                    ((ILogger_GUI)logger).getVoteCounts(),
+                    ((ILogger_GUI)logger).getVotersProcessed(),
+                    ((ILogger_GUI)logger).isStationOpen()
+                );
+                gui.updateQueueAndBoothInfo(0, ""); // Clear queue and booth
+                
+                // Set simulation to not running to trigger log file loading
+                Gui.setSimulationRunning(false);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

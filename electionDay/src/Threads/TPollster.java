@@ -1,16 +1,18 @@
 package Threads;
-import Interfaces.IExitPoll;
-
+import GUI.Gui;
+import Interfaces.ExitPoll.IExitPoll_Pollster;
+import Interfaces.GUI.IGUI_Common;
 
 public class TPollster implements Runnable {
-    private final IExitPoll exitPoll;
-    // private final IPollingStation pollingStation;
+    private final IExitPoll_Pollster exitPoll;
+    private final IGUI_Common gui;
 
-    private TPollster(IExitPoll exitPoll) {
+    private TPollster(IExitPoll_Pollster exitPoll) {
         this.exitPoll = exitPoll;
+        this.gui = Gui.getInstance();
     }
 
-    public static TPollster getInstance(IExitPoll exitPoll) {
+    public static TPollster getInstance(IExitPoll_Pollster exitPoll) {
         return new TPollster(exitPoll);
     }
 
@@ -20,9 +22,14 @@ public class TPollster implements Runnable {
         do {
             try {
                 exitPoll.inquire();
-                Thread.sleep((long) (Math.random() * 5) + 5); // 5-10 ms
-                // exitPoll.tryClosingExitPoll();
-            }  catch (InterruptedException e) {
+                
+                // Apply speed factor - slower speed = longer wait time
+                // Increase base wait time for pollster
+                float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round((Math.random() * 10 + 15) / speedFactor); // Increased from 5+5 to 10+15
+                Thread.sleep(waitTime);
+                
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         } while(exitPoll.isOpen());

@@ -1,11 +1,13 @@
 package Monitores;
 
+import GUI.Gui;
+import Interfaces.ExitPoll.IExitPoll_all;
+import Interfaces.GUI.IGUI_Common;
+import Interfaces.Logger.ILogger_ExitPoll;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import Interfaces.IExitPoll;
-import Logging.Logger;
 
-public class MExitPoll implements IExitPoll{
+public class MExitPoll implements IExitPoll_all {
     private final int percentage;
     private final ReentrantLock lock;
     private final Condition voterReady;
@@ -23,9 +25,10 @@ public class MExitPoll implements IExitPoll{
     // private int countLies;
     // private int countTruths;
 
-    private Logger logger;
+    private ILogger_ExitPoll logger;
+    private final IGUI_Common gui;
 
-    private MExitPoll(int percentage, Logger logger) {
+    private MExitPoll(int percentage, ILogger_ExitPoll logger) {
         this.percentage = percentage;
         this.lock = new ReentrantLock();
         this.voterReady = lock.newCondition();
@@ -33,12 +36,13 @@ public class MExitPoll implements IExitPoll{
         this.pollsterReady = lock.newCondition();
         this.isOpen = true;
         this.aboutToClose = false;
+        this.gui = Gui.getInstance();
 
         this.votesForA = 0;
         this.votesForB = 0;
     }
 
-    public static MExitPoll getInstance(int percentage, Logger logger) {
+    public static MExitPoll getInstance(int percentage, ILogger_ExitPoll logger) {
         return new MExitPoll(percentage, logger);
     }
 

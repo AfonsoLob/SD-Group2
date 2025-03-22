@@ -1,6 +1,8 @@
 package Threads;
-import Interfaces.IExitPoll;
-import Interfaces.IPollingStation;
+import GUI.Gui;
+import Interfaces.ExitPoll.IExitPoll_Clerk;
+import Interfaces.GUI.IGUI_Common;
+import Interfaces.Pollingstation.IPollingStation_Clerk;
 
 // import Monitores.MPollingStation;
 
@@ -8,22 +10,23 @@ import Interfaces.IPollingStation;
 public class TClerk implements Runnable {
 
     private static TClerk instance;
-    private final IPollingStation pollingStation;
-    private final IExitPoll exitPoll;
+    private final IPollingStation_Clerk pollingStation;
+    private final IExitPoll_Clerk exitPoll;
     private final int maxVotes;
+    private final IGUI_Common gui;
 
     
 
-    private TClerk(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll) {
+    private TClerk(int maxVotes, IPollingStation_Clerk pollingStation, IExitPoll_Clerk exitPoll) {
         this.pollingStation = pollingStation;
         this.maxVotes = maxVotes;
         this.exitPoll = exitPoll;
+        this.gui = Gui.getInstance();
     }
 
     @Override
     public void run() {
-        System.out.println("Clerk running");
-        pollingStation.openPollingStation();
+                pollingStation.openPollingStation();
         int votes = 0;
         while (votes < maxVotes) {
             // instance.openStation();
@@ -31,7 +34,11 @@ public class TClerk implements Runnable {
                 System.out.println("Clerk calling next voter");
                 boolean response = pollingStation.callNextVoter();
                 if (response) {votes++;}
-                Thread.sleep((long) (Math.random() * 5) + 5); // 5-10 ms
+                
+                // Apply speed factor - slower speed = longer wait time
+                float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
+                Thread.sleep(waitTime);
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -49,7 +56,11 @@ public class TClerk implements Runnable {
             try {
                 System.out.println("Clerk calling next voter");
                 pollingStation.callNextVoter();
-                Thread.sleep((long) (Math.random() * 5) + 5); // 5-10 ms
+                
+                // Apply speed factor here too
+                float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
+                Thread.sleep(waitTime);
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -59,7 +70,7 @@ public class TClerk implements Runnable {
         System.out.println("Clerk terminated");
     }
 
-    public static TClerk getInstance(int maxVotes, IPollingStation pollingStation, IExitPoll exitPoll) {
+    public static TClerk getInstance(int maxVotes, IPollingStation_Clerk pollingStation, IExitPoll_Clerk exitPoll) {
         if (instance == null) {
             instance = new TClerk(maxVotes, pollingStation, exitPoll);
         }

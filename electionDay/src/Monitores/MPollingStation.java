@@ -1,24 +1,24 @@
 package Monitores;
 
-
-import java.util.concurrent.locks.Condition;
-// import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import Interfaces.IPollingStation;
-// import Threads.TVoter;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Queue;
-import Logging.Logger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class MPollingStation implements IPollingStation {
+import GUI.Gui;
+import Interfaces.GUI.IGUI_Common;
+import Interfaces.Logger.ILogger_PollingStation;
+import Interfaces.Pollingstation.IPollingStation_all;
 
-    private static MPollingStation instance;
+public class MPollingStation implements IPollingStation_all {
+
+    private static IPollingStation_all instance;
     private final int capacity;
     private boolean isOpen;
     private final Condition stationOpen;
-    private final Logger logger;
+    private final ILogger_PollingStation logger;
+    private final IGUI_Common gui;
   
     //id validation
     private HashSet<Integer> validatedIDs;
@@ -38,10 +38,11 @@ public class MPollingStation implements IPollingStation {
     private int candidateA;
     private int candidateB;
 
-    private MPollingStation(int capacity, Logger logger) {
+    private MPollingStation(int capacity, ILogger_PollingStation logger) {
         this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
+        this.gui = Gui.getInstance();
 
         this.isAproved = false;
         this.aprovalId = -1;
@@ -61,7 +62,7 @@ public class MPollingStation implements IPollingStation {
         this.candidateB = 0;
     }
 
-    public static MPollingStation getInstance(int maxCapacity, Logger logger) {
+    public static IPollingStation_all getInstance(int maxCapacity, ILogger_PollingStation logger) {
         if (instance == null) {
             instance = new MPollingStation(maxCapacity, logger);
         }
@@ -199,7 +200,11 @@ public class MPollingStation implements IPollingStation {
     public void voteA(int voterId) {
         voting_lock.lock();
         try {
-            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
+            // Apply speed factor for voting time - increase minimum time required to vote
+            float speedFactor = gui.getSimulationSpeed();
+            long waitTime = Math.round((Math.random() * 20 + 30) / speedFactor);  // 30-50ms instead of 0-15ms
+            Thread.sleep(waitTime);
+            
             candidateA++;
             System.out.println("A total votes: " + candidateA);
         } catch (InterruptedException e) {
@@ -215,7 +220,11 @@ public class MPollingStation implements IPollingStation {
     public void voteB(int voterId) {
         voting_lock.lock();
         try {
-            Thread.sleep((long) (Math.random() * 15)); // 0-15 ms
+            // Apply speed factor for voting time - increase minimum time required to vote
+            float speedFactor = gui.getSimulationSpeed();
+            long waitTime = Math.round((Math.random() * 20 + 30) / speedFactor);  // 30-50ms instead of 0-15ms  
+            Thread.sleep(waitTime);
+            
             candidateB++;
             System.out.println("B total votes: " + candidateB);
         } catch (InterruptedException e) {

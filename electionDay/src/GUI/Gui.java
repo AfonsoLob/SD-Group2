@@ -1,45 +1,23 @@
 package GUI;
 
-import Logging.Logger;
+import Interfaces.GUI.IGUI_all;
+import Interfaces.Logger.ILogger_GUI;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
+import java.io.File;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.JTabbedPane;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
 
-public class Gui {
+/**
+ * Main GUI class implementing the IGUI_all interface.
+ * This class uses a singleton pattern to ensure a single GUI instance.
+ */
+public class Gui implements IGUI_all {
     // Log file path
     private static final String LOG_FILE = "log.txt";
-    
-    // GUI components
-    private static JFrame frame;
-    private static JPanel stationPanel;
-    private static JPanel queuePanel;
-    private static JPanel boothPanel;
-    private static JPanel resultsPanel;
-    private static JLabel scoreALabel;
-    private static JLabel scoreBLabel;
-    private static JLabel queueLabel;
-    private static JLabel boothLabel;
-    private static DefaultTableModel tableModel;
-    private static JTable logTable;
-    private static JButton startButton;
-    private static JButton exitButton;
     
     // Simulation state
     private static int scoreA = 0;
@@ -50,24 +28,124 @@ public class Gui {
     private static int queueSize = 0;
     private static String currentVoterInBooth = "";
     
-    // Callback for when Start Simulation button is pressed
+    // Speed control
+    /**
+     * simulationSpeed controls the pace of the entire simulation:
+     * - 1.0f is normal speed (real-time)
+     * - Values < 1.0 slow down the simulation (e.g., 0.5f = half speed)
+     * - Values > 1.0 speed up the simulation (e.g., 2.0f = double speed)
+     * 
+     * The speed factor is used in various places:
+     * 1. Animation timing and frame rate
+     * 2. Voter movement and decision timing
+     * 3. Clerk processing rate
+     * 4. UI update frequency
+     */
+    private static float simulationSpeed = 1.0f; // Default speed
+    
+    // Callback for simulation control
     private static Runnable simulationStarter;
+    
+    // Main GUI components
+    private static JFrame frame;
+    private static long simulationStartTime;
+    
+    // UI Components - reference to containers
+    private static GuiComponents components;
+    
+    // Animation components
+    private static GuiAnimation animation;
+    
+    // Singleton instance
+    private static final Gui INSTANCE = new Gui();
+    
+    // Private constructor for singleton pattern
+    private Gui() {
+        // Empty constructor - initialization happens in window()
+    }
+    
+    // Get the singleton instance
+    public static Gui getInstance() {
+        return INSTANCE;
+    }
     
     // Create a new GUI window
     public static void window() {
         // Create the main window
         frame = new JFrame("Election Day Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 700);
+        frame.setSize(1200, 800);
         frame.setLayout(new BorderLayout());
         
+        // Initialize components
+        components = new GuiComponents();
+        
         // Create the components
-        createStatusPanel();
-        createTablePanel();
-        createButtonPanel();
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        
+        // Create a tabbed pane for different views
+        JTabbedPane tabbedPane = new JTabbedPane();
+        
+        // Tab 1: Main simulation view with animation
+        JPanel simulationTab = new JPanel(new BorderLayout());
+        
+        components.createStatusPanel();
+        JPanel controlPanel = components.createControlPanel();
+        
+        // Create top panel with status and controls
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(components.getStationPanel(), BorderLayout.CENTER);
+        topPanel.add(controlPanel, BorderLayout.SOUTH);
+        simulationTab.add(topPanel, BorderLayout.NORTH);
+        
+        // Add animation panel as the main content
+        animation = new GuiAnimation();
+        simulationTab.add(animation.getAnimationPanel(), BorderLayout.CENTER);
+        
+        tabbedPane.addTab("Simulation", simulationTab);
+        
+        // Tab 2: Log view
+        components.createTablePanel();
+        JScrollPane scrollPane = new JScrollPane(components.getLogTable());
+        scrollPane.setBorder(GuiStyles.createTitledBorder("Simulation Log", TitledBorder.CENTER));
+        tabbedPane.addTab("Log", scrollPane);
+        
+        // Tab 3: Statistics
+        JPanel statsTab = components.createStatsPanel();
+        tabbedPane.addTab("Statistics", statsTab);
+        
+        // Start stats update timer
+        Timer statsUpdateTimer = new Timer(1000, e -> updateStatistics());
+        statsUpdateTimer.start();
+        
+        // Add tabbed pane to main panel
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        
+        // Add button panel at the bottom
+        JPanel buttonPanel = components.createButtonPanel();
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        frame.add(mainPanel, BorderLayout.CENTER);
         
         // Display the window
         frame.setVisible(true);
+        
+        // Debug folder location
+        System.out.println("Current working directory: " + System.getProperty("user.dir"));
+        File logFile = new File(LOG_FILE);
+        System.out.println("Log file exists: " + logFile.exists());
+        System.out.println("Log file path: " + logFile.getAbsolutePath());
+    }
+    
+    private static void updateStatistics() {
+        if (!simulationRunning) return;
+        
+        // Update running time
+        if (simulationStartTime > 0) {
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - simulationStartTime;
+            components.updateRunningTime(elapsedTime);
+        }
     }
     
     // Method to set the simulation starter callback
@@ -75,318 +153,183 @@ public class Gui {
         simulationStarter = starter;
     }
     
-    private static void createStatusPanel() {
-        JPanel statusPanel = new JPanel(new GridLayout(1, 4, 10, 10));
-        statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        // Polling Station Status Panel
-        stationPanel = new JPanel();
-        stationPanel.setLayout(new BorderLayout());
-        stationPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Polling Station", 
-            TitledBorder.CENTER, TitledBorder.TOP));
-        JLabel stationStatusLabel = new JLabel("CLOSED", JLabel.CENTER);
-        stationStatusLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        stationStatusLabel.setForeground(Color.RED);
-        stationPanel.add(stationStatusLabel, BorderLayout.CENTER);
-        
-        // Voter Queue Panel
-        queuePanel = new JPanel();
-        queuePanel.setLayout(new BorderLayout());
-        queuePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Voter Queue", 
-            TitledBorder.CENTER, TitledBorder.TOP));
-        queueLabel = new JLabel("Empty", JLabel.CENTER);
-        queueLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        queuePanel.add(queueLabel, BorderLayout.CENTER);
-        
-        // Voting Booth Panel
-        boothPanel = new JPanel();
-        boothPanel.setLayout(new BorderLayout());
-        boothPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Voting Booth", 
-            TitledBorder.CENTER, TitledBorder.TOP));
-        boothLabel = new JLabel("Available", JLabel.CENTER);
-        boothLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        boothPanel.add(boothLabel, BorderLayout.CENTER);
-        
-        // Results Panel
-        resultsPanel = new JPanel();
-        resultsPanel.setLayout(new GridLayout(3, 1));
-        resultsPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Election Results", 
-            TitledBorder.CENTER, TitledBorder.TOP));
-        
-        scoreALabel = new JLabel("Candidate A: 0", JLabel.CENTER);
-        scoreALabel.setFont(new Font("Arial", Font.BOLD, 14));
-        scoreALabel.setForeground(new Color(0, 102, 204));
-        
-        scoreBLabel = new JLabel("Candidate B: 0", JLabel.CENTER);
-        scoreBLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        scoreBLabel.setForeground(new Color(204, 0, 0));
-        
-        JLabel processedLabel = new JLabel("Processed: 0", JLabel.CENTER);
-        processedLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        
-        resultsPanel.add(scoreALabel);
-        resultsPanel.add(scoreBLabel);
-        resultsPanel.add(processedLabel);
-        
-        // Add all panels to the status panel
-        statusPanel.add(stationPanel);
-        statusPanel.add(queuePanel);
-        statusPanel.add(boothPanel);
-        statusPanel.add(resultsPanel);
-        
-        // Add status panel to the main frame
-        frame.add(statusPanel, BorderLayout.NORTH);
+    // Static method for backward compatibility
+    /**
+     * Get the current simulation speed factor.
+     * Used by interface components to adjust their timing.
+     * @return The speed factor where 1.0f is normal speed
+     */
+    public static float getStaticSimulationSpeed() {
+        return simulationSpeed;
     }
     
-    private static void createTablePanel() {
-        // Create columns for the log table
-        String[] columns = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit"};
-        tableModel = new DefaultTableModel(columns, 0);
-        logTable = new JTable(tableModel);
-        logTable.setFillsViewportHeight(true);
-        logTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        
-        JScrollPane scrollPane = new JScrollPane(logTable);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Simulation Log", 
-            TitledBorder.CENTER, TitledBorder.TOP));
-        
-        frame.add(scrollPane, BorderLayout.CENTER);
+    public static boolean isSimulationRunning() {
+        return simulationRunning;
     }
     
-    private static void createButtonPanel() {
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        
-        // Add Start Simulation button
-        startButton = new JButton("Start Simulation");
-        startButton.setFont(new Font("Arial", Font.BOLD, 14));
-        startButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!simulationRunning && simulationStarter != null) {
-                    simulationRunning = true;
-                    startButton.setEnabled(false);
-                    startButton.setText("Simulation Running...");
-                    new Thread(() -> simulationStarter.run()).start();
-                }
-            }
-        });
-        
-        // Add Exit Program button
-        exitButton = new JButton("Exit Program");
-        exitButton.setFont(new Font("Arial", Font.BOLD, 14));
-        exitButton.setForeground(new Color(204, 0, 0));
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int confirmed = JOptionPane.showConfirmDialog(frame, 
-                    "Are you sure you want to exit the program?", "Exit Program",
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (confirmed == JOptionPane.YES_OPTION) {
-                    // Save any unsaved data if necessary
-                    System.exit(0);
-                }
-            }
-        });
-        
-        JButton loadButton = new JButton("Load Log File");
-        loadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadLogFile();
-            }
-        });
-        
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadLogFile();
-            }
-        });
-        
-        buttonPanel.add(startButton);
-        buttonPanel.add(loadButton);
-        buttonPanel.add(refreshButton);
-        buttonPanel.add(exitButton);
-        
-        frame.add(buttonPanel, BorderLayout.SOUTH);
+    public static void setSimulationRunning(boolean running) {
+        simulationRunning = running;
+        if (running) {
+            simulationStartTime = System.currentTimeMillis();
+        }
     }
     
-    private static void loadLogFile() {
+    // Methods to access internal state
+    /**
+     * Set a new simulation speed factor.
+     * This affects the timing of all animated elements and thread sleeps.
+     * 
+     * @param speed The new speed factor:
+     *        - 0.05 to 0.5: Slow motion for detailed analysis
+     *        - 0.5 to 1.0: Comfortable pace for observation
+     *        - 1.0 to 2.0: Accelerated simulation for quick results
+     */
+    public static void setSpeedValue(float speed) {
+        simulationSpeed = speed;
+        // Note: Each component will check this value when making timing decisions
+    }
+    
+    public static Runnable getSimulationStarter() {
+        return simulationStarter;
+    }
+    
+    public static JFrame getFrame() {
+        return frame;
+    }
+    
+    // IGUI_Common interface implementation
+    /**
+     * Implementation of interface method to access simulation speed.
+     * Provides a non-static way for components to get the current speed factor.
+     */
+    @Override
+    public float getSimulationSpeed() {
+        return simulationSpeed;
+    }
+    
+    @Override
+    public void updateFromLogger(String voteCounts, int processedVoters, boolean isStationOpen) {
         try {
-            // Clear current table data
-            tableModel.setRowCount(0);
-            
-            // Read the log file
-            BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE));
-            String line;
-            
-            // Read header info (first line)
-            if ((line = reader.readLine()) != null) {
-                parseHeaderInfo(line);
-            }
-            
-            // Skip the column headers and delimiter lines
-            reader.readLine(); // column headers
-            reader.readLine(); // delimiter
-            
-            // Read and parse log entries
-            while ((line = reader.readLine()) != null) {
-                parseLine(line);
-            }
-            
-            reader.close();
-            
-            // Update the UI with the latest data
-            updateUI();
-            
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(frame, 
-                "Error loading log file: " + e.getMessage(),
-                "File Error", JOptionPane.ERROR_MESSAGE);
+            scoreA = Integer.parseInt(voteCounts.split(", ")[0].split(": ")[1]);
+            scoreB = Integer.parseInt(voteCounts.split(", ")[1].split(": ")[1]);
+            votersProcessed = processedVoters;
+            stationOpen = isStationOpen;
+            components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
+        } catch (Exception e) {
+            System.err.println("Error updating GUI from logger: " + e.getMessage());
         }
     }
     
-    private static void parseHeaderInfo(String headerLine) {
-        // Parse header info like "Total of Voters:5, Total Voters in Stations:2, Votes to end: 10 voters"
-        // This information could be displayed in the UI
-    }
-    
-    private static void parseLine(String line) {
-        // Parse each line of the log file table
-        if (line.trim().isEmpty()) return;
-        
-        String[] columns = new String[8];
-        line = line.trim();
-        
-        // Skip lines that don't match our expected format
-        if (!line.startsWith("|")) return;
-        
-        // Split the line by the pipe character and extract each column
-        String[] parts = line.split("\\|");
-        if (parts.length >= 9) {
-            for (int i = 1; i < 9; i++) {
-                columns[i-1] = parts[i].trim();
-            }
-            
-            // Add the row to the table model
-            tableModel.addRow(columns);
-            
-            // Update state based on the line
-            updateStateFromLine(columns);
-        }
-    }
-    
-    private static void updateStateFromLine(String[] columns) {
-        // Door status
-        if ("Op".equals(columns[0])) {
-            stationOpen = true;
-        } else if ("Cl".equals(columns[0])) {
-            stationOpen = false;
-        }
-        
-        // Update queue info
-        if (!columns[1].isEmpty()) {
-            // Voter in queue or entering
-            queueSize++;
-        }
-        
-        // Update booth info
-        if (!columns[4].isEmpty()) {
-            currentVoterInBooth = columns[4];
-        }
-        
-        // Score updates
-        if (!columns[5].isEmpty()) {
-            try {
-                scoreA = Integer.parseInt(columns[5]);
-            } catch (NumberFormatException e) {
-                // Ignore parsing errors
-            }
-        }
-        
-        if (!columns[6].isEmpty()) {
-            try {
-                scoreB = Integer.parseInt(columns[6]);
-            } catch (NumberFormatException e) {
-                // Ignore parsing errors
-            }
-        }
-        
-        // Count processed voters
-        if (!columns[7].isEmpty()) {
-            votersProcessed++;
-            // A voter exited, decrease queue size
-            queueSize = Math.max(0, queueSize - 1);
-        }
-    }
-    
-    private static void updateUI() {
-        // Update station status
-        JLabel stationStatusLabel = (JLabel)stationPanel.getComponent(0);
-        if (stationOpen) {
-            stationStatusLabel.setText("OPEN");
-            stationStatusLabel.setForeground(new Color(0, 153, 0));
-        } else {
-            stationStatusLabel.setText("CLOSED");
-            stationStatusLabel.setForeground(Color.RED);
-            
-            // If station is closed and we were running a simulation, update the button
-            if (simulationRunning) {
-                startButton.setText("Simulation Finished");
-                // Keep button disabled since simulation is complete
-            }
-        }
-        
-        // Update queue status
-        if (queueSize > 0) {
-            queueLabel.setText("Voters: " + queueSize);
-        } else {
-            queueLabel.setText("Empty");
-        }
-        
-        // Update booth status
-        if (currentVoterInBooth.isEmpty()) {
-            boothLabel.setText("Available");
-        } else {
-            boothLabel.setText("In use by: " + currentVoterInBooth);
-        }
-        
-        // Update scores
-        scoreALabel.setText("Candidate A: " + scoreA);
-        scoreBLabel.setText("Candidate B: " + scoreB);
-        
-        // Update processed voters count
-        ((JLabel)resultsPanel.getComponent(2)).setText("Processed: " + votersProcessed);
-    }
-    
-    // Method to update the UI with specific queue and booth information
-    public static void updateQueueAndBoothInfo(int queueCount, String voterInBooth) {
+    @Override
+    public void updateQueueAndBoothInfo(int queueCount, String voterInBooth) {
         queueSize = queueCount;
         currentVoterInBooth = voterInBooth;
-        updateUI();
+        components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
     }
     
-    // Method to link with the Logger for real-time updates
-    public static void updateFromLogger(Logger logger) {
-        if (logger != null) {
-            try {
-                scoreA = Integer.parseInt(logger.getVoteCounts().split(", ")[0].split(": ")[1]);
-                scoreB = Integer.parseInt(logger.getVoteCounts().split(", ")[1].split(": ")[1]);
-                votersProcessed = logger.getVotersProcessed();
-                stationOpen = logger.isStationOpen();
-                updateUI();
-            } catch (Exception e) {
-                // Handle any parsing errors silently
-                System.err.println("Error updating GUI from logger: " + e.getMessage());
-            }
+    // IGUI_Statistics interface implementation
+    @Override
+    public void updateStats(int validationSuccess, int validationFail, 
+                            int pollParticipants, int pollTotal,
+                            int pollAccurate, int pollResponses,
+                            long avgProcessingTime) {
+        components.updateStats(validationSuccess, validationFail,
+                               pollParticipants, pollTotal,
+                               pollAccurate, pollResponses,
+                               avgProcessingTime);
+    }
+    
+    // IGUI_Voter interface implementation
+    @Override
+    public void voterArrived(int voterId) {
+        if (animation != null) {
+            animation.voterArrived(voterId);
         }
+    }
+    
+    @Override
+    public void voterEnteringQueue(int voterId) {
+        if (animation != null) {
+            animation.voterEnteringQueue(voterId);
+        }
+    }
+    
+    @Override
+    public void voterValidated(int voterId, boolean valid) {
+        if (animation != null) {
+            animation.voterValidated(voterId, valid);
+        }
+    }
+    
+    @Override
+    public void voterVoting(int voterId, boolean voteA) {
+        if (animation != null) {
+            animation.voterVoting(voterId, voteA);
+        }
+    }
+    
+    @Override
+    public void voterExitPoll(int voterId, String vote) {
+        if (animation != null) {
+            animation.voterExitPoll(voterId, vote);
+        }
+    }
+    
+    @Override
+    public void voterReborn(int oldId, int newId) {
+        if (animation != null) {
+            animation.voterReborn(oldId, newId);
+        }
+    }
+    
+    // Renamed static bridge methods to avoid conflicts
+    public static void staticUpdateFromLogger(ILogger_GUI logger) {
+        if (logger != null) {
+            getInstance().updateFromLogger(
+                logger.getVoteCounts(),
+                logger.getVotersProcessed(),
+                logger.isStationOpen()
+            );
+        }
+    }
+    
+    public static void staticUpdateQueueAndBoothInfo(int queueCount, String voterInBooth) {
+        getInstance().updateQueueAndBoothInfo(queueCount, voterInBooth);
+    }
+    
+    public static void staticUpdateStats(int validationSuccess, int validationFail, 
+                                  int pollParticipants, int pollTotal,
+                                  int pollAccurate, int pollResponses,
+                                  long avgProcessingTime) {
+        getInstance().updateStats(
+            validationSuccess, validationFail, 
+            pollParticipants, pollTotal,
+            pollAccurate, pollResponses,
+            avgProcessingTime
+        );
+    }
+    
+    public static void staticVoterArrived(int voterId) {
+        getInstance().voterArrived(voterId);
+    }
+    
+    public static void staticVoterEnteringQueue(int voterId) {
+        getInstance().voterEnteringQueue(voterId);
+    }
+    
+    public static void staticVoterValidated(int voterId, boolean valid) {
+        getInstance().voterValidated(voterId, valid);
+    }
+    
+    public static void staticVoterVoting(int voterId, boolean voteA) {
+        getInstance().voterVoting(voterId, voteA);
+    }
+    
+    public static void staticVoterExitPoll(int voterId, String vote) {
+        getInstance().voterExitPoll(voterId, vote);
+    }
+    
+    public static void staticVoterReborn(int oldId, int newId) {
+        getInstance().voterReborn(oldId, newId);
     }
 }

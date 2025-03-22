@@ -1,9 +1,7 @@
 package Interfaces;
 
-public interface IExitPoll {
-    void exitPollingStation(int voterId, boolean myVote, boolean response);
-    void inquire();
-    boolean isOpen();
-    void closeIn(int stillVotersInQueue);
-    void printExitPollResults();
+import Interfaces.ExitPoll.IExitPoll_all;
+
+public interface IExitPoll extends IExitPoll_all {
+    // This interface is maintained for backward compatibility
 }
