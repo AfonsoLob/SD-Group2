@@ -42,6 +42,9 @@ public class App {
     
     public static void main(String[] args) throws Exception {
         System.out.println("Election Simulation initialized");
+
+        // Parse command line arguments
+        parseCommandLineArgs(args);   
         
         // Initialize components
         logger = Logger.getInstance(maxVoters, maxCapacity, maxVotes);
@@ -64,6 +67,54 @@ public class App {
                 // Removed restart callback setup since the restart functionality is not working properly
             }
         });
+    }
+
+
+    private static void parseCommandLineArgs(String[] args) {
+        if (args.length >= 3) {
+            try {
+                int numVoters = Integer.parseInt(args[0]);
+                int queueSize = Integer.parseInt(args[1]);
+                int votesToClose = Integer.parseInt(args[2]);
+                
+                // Validate number of voters (3-10)
+                if (numVoters >= 3 && numVoters <= 10) {
+                    maxVoters = numVoters;
+                } else {
+                    System.out.println("Warning: Number of voters must be between 3 and 10. Using default: " + maxVoters);
+                }
+                
+                // Validate queue size (2-5)
+                if (queueSize >= 2 && queueSize <= 5) {
+                    maxCapacity = queueSize;
+                } else {
+                    System.out.println("Warning: Queue size must be between 2 and 5. Using default: " + maxCapacity);
+                }
+                
+                // Set votes to close (> 0)
+                if(votesToClose > 0){                
+                    maxVotes = votesToClose;
+                } else {
+                    System.out.println("Warning: Number of votes to close should be higher than 0. Using default: " + maxVotes);
+                }
+                
+                System.out.println("Simulation parameters: Voters=" + maxVoters + 
+                                  ", Queue size=" + maxCapacity + 
+                                  ", Votes to close=" + maxVotes);
+            } catch (NumberFormatException e) {
+                System.out.println("Error parsing command line arguments. Using default values.");
+                System.out.println("Usage: java App <numVoters> <queueSize> <votesToClose>");
+                System.out.println("  numVoters: Integer between 3-10");
+                System.out.println("  queueSize: Integer between 2-5");
+                System.out.println("  votesToClose: Integer representing votes needed to close the station");
+            }
+        } else {
+            System.out.println("Insufficient command line arguments. Using default values.");
+            System.out.println("Current values: Voters=" + maxVoters + 
+                              ", Queue size=" + maxCapacity + 
+                              ", Votes to close=" + maxVotes);
+            System.out.println("Usage: java App <numVoters> <queueSize> <votesToClose>");
+        }
     }
     
     private static void startSimulation() throws Exception {
