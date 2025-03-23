@@ -28,21 +28,22 @@
 4. Chance of responding to exit poll.
 5. Leaves and may be reborn.
 
+![Voter Life Cycle](img/voter.png)
+
 ### **Poll Clerk Life Cycle**
 1. Starts when station opens.
 2. Validates voter IDs.
 3. Sends voters to the **e-voting booth** one by one.
 4. Closes station after a predefined number of voters.
 
-### **E-Voting Booth Life Cycle**
-1. Waits for a voter.
-2. Processes the vote.
-3. Notifies poll clerk once voting is done.
-4. Becomes available for the next voter.
+![Clerk Life Cycle](img/clerk.png)
+
 
 ### **Pollster Life Cycle**
 1. Intercepts voters randomly (based on a probability).
 2. Requests responses.
+
+![Pollster Life Cycle](img/pollster.png)
 
 ---
 
