@@ -1,0 +1,3 @@
+Total of Voters:5, Total Voters in Stations:2, Votes to end: 10 voters
+| Door       | Voter      | Clerk      | Validation | Booth      | ScoreA     | ScoreB     | Exit       | ExitPollA  | ExitPollB  |
+-----------------------------------------------------------------------------------------------------------------------------------

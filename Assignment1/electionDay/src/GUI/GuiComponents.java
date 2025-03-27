@@ -408,9 +408,9 @@ public class GuiComponents {
             String line;
             
             // Read header info (first line)
-            if ((line = reader.readLine()) != null) {
-                System.out.println("Header info: " + line);
-            }
+            // if ((line = reader.readLine()) != null) {
+            //     System.out.println("Header info: " + line);
+            // }
             
             // Skip the column headers and delimiter lines
             reader.readLine(); // column headers
