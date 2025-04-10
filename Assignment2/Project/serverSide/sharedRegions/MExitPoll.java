@@ -1,4 +1,4 @@
-package Monitores;
+package serverSide.sharedRegions;
 
 import GUI.Gui;
 import Interfaces.ExitPoll.IExitPoll_all;

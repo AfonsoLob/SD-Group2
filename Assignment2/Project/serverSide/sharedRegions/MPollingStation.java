@@ -1,4 +1,4 @@
-package Monitores;
+package serverSide.sharedRegions;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
