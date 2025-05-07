@@ -1,4 +1,4 @@
-package electionDay.src.clientSide.Main;
+package clientSide.Main;
 
 public class TClerkmain {
     
