@@ -2,9 +2,10 @@ package clientSide.main;
 
 import clientSide.entities.*;
 import clientSide.stubs.*;
-import serverSide.main.*;
 import commInfra.*;
 import genclass.GenericIO;
+import serverSide.Main.*;
+import serverSide.main.SimulPar;
 
 /**
  *    Client side of the Sleeping Barbers (barbers).

@@ -1,9 +1,12 @@
 package serverSide.sharedRegions;
 
-import serverSide.main.*;
 import clientSide.entities.*;
 import genclass.GenericIO;
 import genclass.TextFile;
+import serverSide.Main.*;
+import serverSide.main.ServerSleepingBarbersGeneralRepos;
+import serverSide.main.SimulPar;
+
 import java.util.Objects;
 
 /**

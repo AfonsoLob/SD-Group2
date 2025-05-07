@@ -1,4 +1,4 @@
-package serverSide.main;
+package serverSide.Main;
 
 public class PollingStationMain {
 

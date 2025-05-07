@@ -1,9 +1,10 @@
 package clientSide.stubs;
 
-import serverSide.main.*;
 import clientSide.entities.*;
 import commInfra.*;
 import genclass.GenericIO;
+import serverSide.Main.*;
+import serverSide.main.SimulPar;
 
 /**
  *  Stub to the barber shop.

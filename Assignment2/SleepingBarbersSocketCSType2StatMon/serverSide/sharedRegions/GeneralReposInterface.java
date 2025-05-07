@@ -1,7 +1,8 @@
 package serverSide.sharedRegions;
 
-import serverSide.main.*;
+import serverSide.Main.*;
 import serverSide.entities.*;
+import serverSide.main.SimulPar;
 import clientSide.entities.*;
 import commInfra.*;
 
