@@ -1,4 +1,4 @@
-package serverSide.Main;
+package serverSide.main;
 
 public class GUIMain {
 

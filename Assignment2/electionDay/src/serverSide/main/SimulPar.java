@@ -6,27 +6,22 @@ package serverSide.main;
 
 public final class SimulPar
 {
+  
   /**
-   *   Number of barbers working at the barber shop.
-   */
-
-   public static final int M = 2;
-
-  /**
-   *   Number of waiting chairs where the customers sit while waiting their turn to cut the hair.
+   *   Max number of voters waiting in queue.
    */
 
    public static final int K = 2;
 
   /**
-   *   Number of customers.
+   *   Number of Voters.
    */
 
    public static final int N = 5;
 
   /**
-   *   Number of entities requesting shutdown.
-   */
+   *   Number of entities requesting shutdown. ????????????????????????????
+   */ 
 
    public static final int E = 2;
 

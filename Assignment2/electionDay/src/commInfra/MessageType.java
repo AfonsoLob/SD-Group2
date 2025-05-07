@@ -1,4 +1,4 @@
-package commInfra;
+// package commInfra;
 
 /**
  * Enum defining all message types for the Election Day simulation system.
