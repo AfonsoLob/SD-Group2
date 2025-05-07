@@ -1,7 +1,7 @@
 package clientSide.entities;
 import GUI.Gui;
-import Interfaces.ExitPoll.IExitPoll_Pollster;
-import Interfaces.GUI.IGUI_Common;
+import interfaces.ExitPoll.IExitPoll_Pollster;
+import interfaces.GUI.IGUI_Common;
 
 public class TPollster implements Runnable {
     private final IExitPoll_Pollster exitPoll;

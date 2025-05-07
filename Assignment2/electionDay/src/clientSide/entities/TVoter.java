@@ -1,8 +1,8 @@
 package clientSide.entities;
-import src.serverSide.GUI.*;
-import src.serverSide.interfaces.ExitPoll.*;
-import src.serverSide.interfaces.Pollingstation.*;
-import src.serverSide.interfaces.GUI.*;
+import GUI.Gui;
+import interfaces.ExitPoll.IExitPoll_Voter;
+import interfaces.Pollingstation.IPollingStation_Voter;
+import interfaces.GUI.IGUI_Common;
 
 public class TVoter implements Runnable {
     private int voterId;

@@ -1,6 +1,6 @@
 package clientSide.entities;
 
-public enum ClerckStates {
+public enum ClerkStates {
     WAITINGFORVOTER,
     VALIDATINGID,
 }
