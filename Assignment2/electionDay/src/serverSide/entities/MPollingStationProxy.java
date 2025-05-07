@@ -1,9 +1,8 @@
 package serverSide.entities;
 
 import commInfra.Message;
-import commInfra.MessageException;
+// import commInfra.MessageException;
 import commInfra.ServerCom;
-import serverSide.sharedRegions.BarberShopInterface;
 import serverSide.sharedRegions.PollingStationInterface;
 
 // The Proxy serves as a service provider agent in a client-server architecture for a barber shop simulation. Here are its key functions:

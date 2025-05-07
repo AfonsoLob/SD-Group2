@@ -1,4 +1,4 @@
-package Interfaces.GUI;
+package serverSide.interfaces.GUI;
 
 /**
  * GUI interface for statistics-related UI updates

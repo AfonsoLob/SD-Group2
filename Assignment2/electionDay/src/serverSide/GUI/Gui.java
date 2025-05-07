@@ -1,7 +1,7 @@
-package GUI;
+package serverSide.GUI;
 
-import Interfaces.GUI.IGUI_all;
-import Interfaces.Logger.ILogger_GUI;
+import serverSide.interfaces.GUI.IGUI_all;
+import serverSide.interfaces.Logger.ILogger_GUI;
 import java.awt.BorderLayout;
 import java.io.File;
 import javax.swing.JFrame;

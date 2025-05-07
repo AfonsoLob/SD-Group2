@@ -5,7 +5,7 @@ import java.net.SocketTimeoutException;
 import commInfra.ServerCom;
 import serverSide.entities.MPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
-import serverSide.sharedRegions.PollingStationInterface;
+import serverSide.interfaces.Pollingstation.IPollingStation_all;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class ServerPollingStation {
    {
       final String CONFIG_FILE = "config.properties";               // Path to the configuration file
       MPollingStation pollingStation;                                              // barber shop (service to be rendered)
-      PollingStationInterface pStationInter;                                // interface to the barber shop
+      IPollingStation_all pStationInter;                                // interface to the barber shop
     //   GeneralReposStub reposStub;                                    // stub to the general repository
       ServerCom scon, sconi;                                         // communication channels
       int ServerPollingStationPortNumber = -1;                                             // port number for listening to service requests

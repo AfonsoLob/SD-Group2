@@ -1,8 +1,8 @@
 package clientSide.entities;
-import GUI.Gui;
-import interfaces.ExitPoll.IExitPoll_Clerk;
-import interfaces.GUI.IGUI_Common;
-import interfaces.Pollingstation.IPollingStation_Clerk;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.ExitPoll.IExitPoll_Clerk;
+import serverSide.interfaces.GUI.IGUI_Common;
+import serverSide.interfaces.Pollingstation.IPollingStation_Clerk;
 
 // import Monitores.MPollingStation;
 
