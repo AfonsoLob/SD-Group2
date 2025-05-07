@@ -1,4 +1,4 @@
-package electionDay.src.clientSide.studs;
+package studs;
 
 public class MExitpollStud {
     

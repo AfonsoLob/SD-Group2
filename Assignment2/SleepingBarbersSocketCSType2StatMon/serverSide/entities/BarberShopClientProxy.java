@@ -1,9 +1,12 @@
 package serverSide.entities;
 
-import serverSide.sharedRegions.*;
-import clientSide.entities.*;
-import commInfra.*;
+import clientSide.entities.BarberCloning;
+import clientSide.entities.CustomerCloning;
+import commInfra.Message;
+import commInfra.MessageException;
+import commInfra.ServerCom;
 import genclass.GenericIO;
+import serverSide.sharedRegions.BarberShopInterface;
 
 /**
  *  Service provider agent for access to the Barber Shop.
