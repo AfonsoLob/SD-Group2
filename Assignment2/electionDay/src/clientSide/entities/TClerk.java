@@ -1,4 +1,4 @@
-package Threads;
+package clientSide.entities;
 import GUI.Gui;
 import Interfaces.ExitPoll.IExitPoll_Clerk;
 import Interfaces.GUI.IGUI_Common;

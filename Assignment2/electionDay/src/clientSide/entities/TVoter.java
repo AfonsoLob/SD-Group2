@@ -1,8 +1,8 @@
-package Threads;
-import GUI.Gui;
-import Interfaces.ExitPoll.IExitPoll_Voter;
-import Interfaces.GUI.IGUI_Common;
-import Interfaces.Pollingstation.IPollingStation_Voter;
+package clientSide.entities;
+import src.serverSide.GUI.*;
+import src.serverSide.interfaces.ExitPoll.*;
+import src.serverSide.interfaces.Pollingstation.*;
+import src.serverSide.interfaces.GUI.*;
 
 public class TVoter implements Runnable {
     private int voterId;
