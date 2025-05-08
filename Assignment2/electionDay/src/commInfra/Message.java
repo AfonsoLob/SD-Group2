@@ -14,7 +14,7 @@ public class Message implements Serializable {
     
     private MessageType type;        // Type of message
     private int id;                  // ID of the entity (voter or clerk)
-    private int votingOption;        // The voting option chosen (if applicable)
+    private boolean votingOption;        // The voting option chosen (if applicable)
     private boolean myVote;         // The voter's choice in the exit poll (if applicable)
     private boolean truthful;        // Whether exit poll response is truthful (if applicable)
     private Object content;          // Additional content or data payload
@@ -44,7 +44,7 @@ public class Message implements Serializable {
      * @param votingOption The voting option (candidate choice)
      * @param content Additional content or data
      */
-    public Message(MessageType type, int Id, int votingOption, Object content) {
+    public Message(MessageType type, int Id, boolean votingOption, Object content) {
         this.type = type;
         this.id = Id;
         this.votingOption = votingOption;
@@ -83,11 +83,11 @@ public class Message implements Serializable {
         this.id = Id;
     }
     
-    public int getVotingOption() {
+    public boolean getVotingOption() {
         return votingOption;
     }
     
-    public void setVotingOption(int votingOption) {
+    public void setVotingOption(boolean votingOption) {
         this.votingOption = votingOption;
     }
     

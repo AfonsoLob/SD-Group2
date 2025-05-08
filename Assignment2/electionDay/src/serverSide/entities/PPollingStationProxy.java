@@ -1,9 +1,9 @@
 package serverSide.entities;
 import clientSide.interfaces.Pollingstation.IPollingStation_all;
-import example.commInfra.Message;
-import example.commInfra.MessageException;
-import example.commInfra.MessageType;
-import example.commInfra.ServerCom;
+import commInfra.Message;
+import commInfra.MessageException;
+import commInfra.MessageType;
+import commInfra.ServerCom;
 
 
 
@@ -130,7 +130,7 @@ public class PPollingStationProxy extends Thread{
          break;
 
          case VOTE_CAST_REQUEST:  ((PPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
-            if (inMessage.getVotingOption() == 1)
+            if (inMessage.getVotingOption())
                pollingStation.voteA(inMessage.getId ());
             else
                pollingStation.voteB(inMessage.getId ());

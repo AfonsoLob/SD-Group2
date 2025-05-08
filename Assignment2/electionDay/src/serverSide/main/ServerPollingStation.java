@@ -8,8 +8,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import commInfra.*;
+
 import clientSide.interfaces.Pollingstation.IPollingStation_all;
-import example.commInfra.ServerCom;
 
 
 
