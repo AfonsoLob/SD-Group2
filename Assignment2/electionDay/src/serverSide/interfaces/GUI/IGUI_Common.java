@@ -1,4 +1,4 @@
-package Interfaces.GUI;
+package serverSide.interfaces.GUI;
 
 /**
  * Common GUI interface containing general methods needed across components

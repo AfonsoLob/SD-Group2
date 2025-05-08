@@ -1,9 +1,9 @@
 package serverSide.sharedRegions;
 
-import GUI.Gui;
-import Interfaces.ExitPoll.IExitPoll_all;
-import Interfaces.GUI.IGUI_Common;
-import Interfaces.Logger.ILogger_ExitPoll;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.ExitPoll.IExitPoll_all;
+import serverSide.interfaces.GUI.IGUI_Common;
+import serverSide.interfaces.Logger.ILogger_ExitPoll;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 

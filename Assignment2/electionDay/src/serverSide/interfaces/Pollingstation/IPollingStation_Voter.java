@@ -1,4 +1,4 @@
-package Interfaces.Pollingstation;
+package serverSide.interfaces.Pollingstation;
 
 public interface IPollingStation_Voter {
     boolean enterPollingStation(int voterId);

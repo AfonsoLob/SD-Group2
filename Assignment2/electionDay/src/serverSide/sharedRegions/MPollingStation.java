@@ -6,10 +6,10 @@ import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import GUI.Gui;
-import Interfaces.GUI.IGUI_Common;
-import Interfaces.Logger.ILogger_PollingStation;
-import Interfaces.Pollingstation.IPollingStation_all;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.GUI.IGUI_Common;
+import serverSide.interfaces.Logger.ILogger_PollingStation;
+import serverSide.interfaces.Pollingstation.IPollingStation_all;
 
 public class MPollingStation implements IPollingStation_all {
 
@@ -39,6 +39,10 @@ public class MPollingStation implements IPollingStation_all {
     private int candidateB;
 
     private MPollingStation(int capacity, ILogger_PollingStation logger) {
+        if (capacity < 2 || capacity > 5) {
+            throw new IllegalArgumentException("Queue capacity must be between 2 and 5");
+        }
+        
         this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
@@ -55,7 +59,6 @@ public class MPollingStation implements IPollingStation_all {
         this.notFull = queue_lock.newCondition();
         this.stationOpen = queue_lock.newCondition();
         this.aprovalReady = queue_lock.newCondition();
-
 
         this.voting_lock = new ReentrantLock();
         this.candidateA = 0;
@@ -87,7 +90,6 @@ public class MPollingStation implements IPollingStation_all {
 
         return response;
     }
-
 
     @Override
     public boolean enterPollingStation(int voterId) {
@@ -151,8 +153,6 @@ public class MPollingStation implements IPollingStation_all {
         }
     }
 
-    
-
     @Override
     public void openPollingStation() {
         queue_lock.lock();
@@ -213,7 +213,6 @@ public class MPollingStation implements IPollingStation_all {
             logger.voterInBooth(voterId, true); // vote A
             voting_lock.unlock();
         }
-        
     }
 
     @Override
@@ -241,5 +240,4 @@ public class MPollingStation implements IPollingStation_all {
         System.out.println("Candidate A: " + candidateA);
         System.out.println("Candidate B: " + candidateB);  
     }
-
 }

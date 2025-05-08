@@ -1,4 +1,4 @@
-package Interfaces.ExitPoll;
+package serverSide.interfaces.ExitPoll;
 
 public interface IExitPoll_Pollster {
     void inquire();

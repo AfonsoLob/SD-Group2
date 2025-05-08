@@ -1,37 +1,26 @@
 package serverSide.sharedRegions;
 
-import serverSide.Main.*;
-import serverSide.entities.*;
+import commInfra.Message;
+
 import serverSide.main.SimulPar;
-import clientSide.entities.*;
-import commInfra.*;
+import clientSide.entities.VoterStates;
 
-/**
- *  Interface to the Barber Shop.
- *
- *    It is responsible to validate and process the incoming message, execute the corresponding method on the
- *    Barber Shop and generate the outgoing message.
- *    Implementation of a client-server model of type 2 (server replication).
- *    Communication is based on a communication channel under the TCP protocol.
- */
-
-public class BarberShopInterface
-{
-  /**
+public class PollingStationInterface {
+    /**
    *  Reference to the barber shop.
    */
 
-   private final BarberShop bShop;
+   private final MPollingStation pollingStation;
 
   /**
    *  Instantiation of an interface to the barber shop.
    *
-   *    @param bShop reference to the barber shop
+   *    @param pollingStation reference to the barber shop
    */
 
-   public BarberShopInterface (BarberShop bShop)
+   public PollingStationInterface (MPollingStation pollingStation)
    {
-      this.bShop = bShop;
+      this.pollingStation = pollingStation;
    }
 
   /**
@@ -50,34 +39,36 @@ public class BarberShopInterface
 
      /* validation of the incoming message */
 
-      switch (inMessage.getMsgType ())
-      { case MessageType.REQCUTH:  if ((inMessage.getCustId () < 0) || (inMessage.getCustId () >= SimulPar.N))
-                                      throw new MessageException ("Invalid customer id!", inMessage);
-                                      else if ((inMessage.getCustState () < CustomerStates.DAYBYDAYLIFE) || (inMessage.getCustState () > CustomerStates.CUTTHEHAIR))
-                                              throw new MessageException ("Invalid customer state!", inMessage);
-                                   break;
-        case MessageType.SLEEP:    if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
-                                      throw new MessageException ("Invalid barber id!", inMessage);
-                                   break;
-        case MessageType.CALLCUST: if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
-                                      throw new MessageException ("Invalid barber id!", inMessage);
-                                      else if ((inMessage.getBarbState () < BarberStates.SLEEPING) || (inMessage.getBarbState () > BarberStates.INACTIVITY))
-                                              throw new MessageException ("Invalid barber state!", inMessage);
-                                   break;
-        case MessageType.RECPAY:   if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
-                                      throw new MessageException ("Invalid barber id!", inMessage);
-                                      else if ((inMessage.getBarbState () < BarberStates.SLEEPING) || (inMessage.getBarbState () > BarberStates.INACTIVITY))
-                                              throw new MessageException ("Invalid barber state!", inMessage);
-                                              else if ((inMessage.getCustId () < 0) || (inMessage.getCustId () >= SimulPar.N))
-                                                      throw new MessageException ("Invalid customer id!", inMessage);
-                                   break;
-        case MessageType.ENDOP:    if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
-                                      throw new MessageException ("Invalid barber id!", inMessage);
-                                   break;
-        case MessageType.SHUT:     // check nothing
-                                   break;
-        default:                   throw new MessageException ("Invalid message type!", inMessage);
-      }
+      // switch (inMessage.getType())
+      // { 
+      //    case MessageType.REQCUTH:  if ((inMessage.getCustId () < 0) || (inMessage.getCustId () >= SimulPar.N))
+      //                                 throw new MessageException ("Invalid voter id!", inMessage);
+      //                                 else if ((inMessage.getCustState () < CustomerStates.DAYBYDAYLIFE) || (inMessage.getCustState () > CustomerStates.CUTTHEHAIR))
+      //                                         throw new MessageException ("Invalid customer state!", inMessage);
+      //                              break;
+      //   case MessageType.SLEEP:    if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
+      //                                 throw new MessageException ("Invalid barber id!", inMessage);
+      //                              break;
+      //   case MessageType.CALLCUST: if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
+      //                                 throw new MessageException ("Invalid barber id!", inMessage);
+      //                                 else if ((inMessage.getBarbState () < BarberStates.SLEEPING) || (inMessage.getBarbState () > BarberStates.INACTIVITY))
+      //                                         throw new MessageException ("Invalid barber state!", inMessage);
+      //                              break;
+      //   case MessageType.RECPAY:   if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
+      //                                 throw new MessageException ("Invalid barber id!", inMessage);
+      //                                 else if ((inMessage.getBarbState () < BarberStates.SLEEPING) || (inMessage.getBarbState () > BarberStates.INACTIVITY))
+      //                                         throw new MessageException ("Invalid barber state!", inMessage);
+      //                                         else if ((inMessage.getCustId () < 0) || (inMessage.getCustId () >= SimulPar.N))
+      //                                                 throw new MessageException ("Invalid customer id!", inMessage);
+      //                              break;
+      //   case MessageType.ENDOP:    if ((inMessage.getBarbId () < 0) || (inMessage.getBarbId () >= SimulPar.M))
+      //                                 throw new MessageException ("Invalid barber id!", inMessage);
+      //                              break;
+      //   case MessageType.SHUT:     // check nothing
+      //                              break;
+
+      //   default:                   throw new MessageException ("Invalid message type!", inMessage);
+      // }
 
      /* processing */
 

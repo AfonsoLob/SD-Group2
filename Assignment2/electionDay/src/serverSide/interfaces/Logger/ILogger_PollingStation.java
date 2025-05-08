@@ -1,4 +1,4 @@
-package Interfaces.Logger;
+package serverSide.interfaces.Logger;
 
 public interface ILogger_PollingStation {
     void voterAtDoor(int voterId);

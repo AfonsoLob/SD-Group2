@@ -1,8 +1,8 @@
-package Threads;
-import GUI.Gui;
-import Interfaces.ExitPoll.IExitPoll_Clerk;
-import Interfaces.GUI.IGUI_Common;
-import Interfaces.Pollingstation.IPollingStation_Clerk;
+package clientSide.entities;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.ExitPoll.IExitPoll_Clerk;
+import serverSide.interfaces.GUI.IGUI_Common;
+import serverSide.interfaces.Pollingstation.IPollingStation_Clerk;
 
 // import Monitores.MPollingStation;
 

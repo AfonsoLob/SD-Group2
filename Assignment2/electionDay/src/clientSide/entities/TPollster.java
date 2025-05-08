@@ -1,7 +1,7 @@
-package Threads;
-import GUI.Gui;
-import Interfaces.ExitPoll.IExitPoll_Pollster;
-import Interfaces.GUI.IGUI_Common;
+package clientSide.entities;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.ExitPoll.IExitPoll_Pollster;
+import serverSide.interfaces.GUI.IGUI_Common;
 
 public class TPollster implements Runnable {
     private final IExitPoll_Pollster exitPoll;
