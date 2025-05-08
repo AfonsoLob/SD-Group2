@@ -5,11 +5,13 @@ import java.net.SocketTimeoutException;
 import commInfra.ServerCom;
 import serverSide.entities.MPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
-import serverSide.interfaces.Pollingstation.IPollingStation_all;
+import serverSide.sharedRegions.PollingStationInterface;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+
+import clientSide.interfaces.Pollingstation.IPollingStation_all;
 
 
 
@@ -75,11 +77,11 @@ public class ServerPollingStation {
 
      /* service is established */
 
-    //   reposStub = new GeneralReposStub (reposServerName, reposPortNumb);       // communication to the general repository is instantiated
-    //   pollingStation = new MPollingStation (reposStub);                           // service is instantiated
-      pollingStation = new MPollingStation ();
-      pStationInter = new PollingStationInterface (pollingStation);                            // interface to the service is instantiated
-      scon = new ServerCom (ServerPollingStationPortNumber);                   // listening channel at the public port is established
+    //   reposStub = new GeneralReposStub (reposServerName, reposPortNumb);     // communication to the general repository is instantiated
+    //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
+      MPollingStation pollingStation = MPollingStation.getInstance(reposPortNumb, null); // Create an instance of the polling station
+      pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
+      scon = new ServerCom (ServerPollingStationPortNumber);                    // listening channel at the public port is established
       scon.start ();
       GenericIO.writelnString ("Service is established!");
       GenericIO.writelnString ("Server is listening for service requests.");

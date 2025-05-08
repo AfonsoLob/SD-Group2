@@ -1,6 +1,7 @@
 package serverSide.entities;
 
 import commInfra.Message;
+import commInfra.MessageException;
 // import commInfra.MessageException;
 import commInfra.ServerCom;
 import serverSide.sharedRegions.PollingStationInterface;
@@ -147,9 +148,12 @@ public class MPollingStationProxy extends Thread{
       Message inMessage = null,                                      // service request
               outMessage = null;                                     // service reply
 
-     /* service providing */
-
-      inMessage = (Message) sconi.readObject ();                     // get service request
+      
+     /* service providing */ // versão ServerCom nossa, em caso de erro mudar para a versão do prof
+      sconi.start();
+      ServerCom.ServerComHandler handler = sconi.accept();
+      inMessage = handler.readMessage();                                // get service request
+      // inMessage = (Message) sconi.readObject ();                     // get service request
       try
       { outMessage = pStationInter.processAndReply (inMessage);         // process it
       }
@@ -158,7 +162,7 @@ public class MPollingStationProxy extends Thread{
         GenericIO.writelnString (e.getMessageVal ().toString ());
         System.exit (1);
       }
-      sconi.writeObject (outMessage);                                // send service reply
-      sconi.close ();                                                // close the communication channel
+      handler.writeMessage(outMessage);                                // send service reply
+      handler.close ();                                                // close the communication channel
    }
 }

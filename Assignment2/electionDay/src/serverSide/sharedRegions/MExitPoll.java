@@ -1,11 +1,13 @@
 package serverSide.sharedRegions;
 
 import serverSide.GUI.Gui;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.GUI.IGUI_Common;
-import serverSide.interfaces.Logger.ILogger_ExitPoll;
+
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import clientSide.interfaces.ExitPoll.IExitPoll_all;
+import clientSide.interfaces.GUI.IGUI_Common;
+import clientSide.interfaces.Logger.ILogger_ExitPoll;
 
 public class MExitPoll implements IExitPoll_all {
     private final int percentage;

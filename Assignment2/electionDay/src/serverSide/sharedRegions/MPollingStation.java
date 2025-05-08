@@ -6,10 +6,10 @@ import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import clientSide.interfaces.GUI.IGUI_Common;
+import clientSide.interfaces.Logger.ILogger_PollingStation;
+import clientSide.interfaces.Pollingstation.IPollingStation_all;
 import serverSide.GUI.Gui;
-import serverSide.interfaces.GUI.IGUI_Common;
-import serverSide.interfaces.Logger.ILogger_PollingStation;
-import serverSide.interfaces.Pollingstation.IPollingStation_all;
 
 public class MPollingStation implements IPollingStation_all {
 

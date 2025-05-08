@@ -1,4 +1,4 @@
-package clientSide.Main;
+package clientSide.main;
 
 public class TpollsterMain {
     

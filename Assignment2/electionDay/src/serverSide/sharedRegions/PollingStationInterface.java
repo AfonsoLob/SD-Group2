@@ -2,9 +2,9 @@ package serverSide.sharedRegions;
 
 import commInfra.Message;
 import commInfra.MessageType;
+import commInfra.MessageException;
 import serverSide.entities.MPollingStationProxy;
-import serverSide.main.SimulPar;
-import clientSide.entities.VoterStates;
+
 
 public class PollingStationInterface {
     /**

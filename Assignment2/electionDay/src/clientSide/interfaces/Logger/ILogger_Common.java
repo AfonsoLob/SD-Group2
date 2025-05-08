@@ -1,4 +1,4 @@
-package serverSide.interfaces.Logger;
+package clientSide.interfaces.Logger;
 
 /**
  * Common Logger interface containing general operational methods

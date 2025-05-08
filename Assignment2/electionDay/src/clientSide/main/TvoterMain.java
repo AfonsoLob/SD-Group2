@@ -1,4 +1,4 @@
-package clientSide.Main;
+package clientSide.main;
 
 import clientSide.entities.TVoter;
 import clientSide.stubs.MPollingStationStub;
