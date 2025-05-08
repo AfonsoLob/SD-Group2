@@ -3,7 +3,7 @@ package serverSide.main;
 import java.net.SocketTimeoutException;
 
 import commInfra.ServerCom;
-import serverSide.entities.MPollingStationProxy;
+import serverSide.entities.PMPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class ServerPollingStation {
 
      /* service request processing */
 
-      MPollingStationProxy Proxy;                                // service provider agent
+      PMPollingStationProxy Proxy;                                // service provider agent
 
       waitConnection = true;
       while (waitConnection)

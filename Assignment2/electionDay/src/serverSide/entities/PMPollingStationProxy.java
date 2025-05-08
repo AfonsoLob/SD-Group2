@@ -1,5 +1,5 @@
 package serverSide.entities;
 
-public class MExitPollClientProxy {
+public class PMPollingStationProxy {
     
 }
