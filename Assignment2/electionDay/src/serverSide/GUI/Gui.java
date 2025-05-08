@@ -1,7 +1,5 @@
-package GUI;
+package serverSide.GUI;
 
-import Interfaces.GUI.IGUI_all;
-import Interfaces.Logger.ILogger_GUI;
 import java.awt.BorderLayout;
 import java.io.File;
 import javax.swing.JFrame;
@@ -28,36 +26,34 @@ public class Gui implements IGUI_all {
     private static int queueSize = 0;
     private static String currentVoterInBooth = "";
     
+    // Configuration settings
+    private static int configNumVoters = 5;
+    private static int configQueueSize = 3;
+    private static int configVotesToClose = 3;
+    
     // Speed control
     /**
      * simulationSpeed controls the pace of the entire simulation:
      * - 1.0f is normal speed (real-time)
      * - Values < 1.0 slow down the simulation (e.g., 0.5f = half speed)
      * - Values > 1.0 speed up the simulation (e.g., 2.0f = double speed)
-     * 
-     * The speed factor is used in various places:
-     * 1. Animation timing and frame rate
-     * 2. Voter movement and decision timing
-     * 3. Clerk processing rate
-     * 4. UI update frequency
      */
-    private static float simulationSpeed = 1.0f; // Default speed
+    private static float simulationSpeed = 0.5f;
     
-    // Callback for simulation control
-    private static Runnable simulationStarter;
-    
-    // Main GUI components
-    private static JFrame frame;
-    private static long simulationStartTime;
-    
-    // UI Components - reference to containers
-    private static GuiComponents components;
-    
-    // Animation components
-    private static GuiAnimation animation;
+    // Timing measurement
+    private static long simulationStartTime = 0;
     
     // Singleton instance
     private static final Gui INSTANCE = new Gui();
+    
+    // UI components
+    private static JFrame frame;
+    private static GuiComponents components;
+    private static GuiAnimation animation;
+    
+    // Callback for simulation starter and restarter
+    private static Runnable simulationStarter;
+    private static Runnable simulationRestarter;
     
     // Private constructor for singleton pattern
     private Gui() {
@@ -90,11 +86,13 @@ public class Gui implements IGUI_all {
         JPanel simulationTab = new JPanel(new BorderLayout());
         
         components.createStatusPanel();
+        JPanel configPanel = components.createConfigPanel();
         JPanel controlPanel = components.createControlPanel();
         
-        // Create top panel with status and controls
+        // Create top panel with status, config, and controls
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(components.getStationPanel(), BorderLayout.CENTER);
+        topPanel.add(components.getStationPanel(), BorderLayout.NORTH);
+        topPanel.add(configPanel, BorderLayout.CENTER);
         topPanel.add(controlPanel, BorderLayout.SOUTH);
         simulationTab.add(topPanel, BorderLayout.NORTH);
         
@@ -153,6 +151,11 @@ public class Gui implements IGUI_all {
         simulationStarter = starter;
     }
     
+    // Method to set the simulation restarter callback
+    public static void setSimulationRestarter(Runnable restarter) {
+        simulationRestarter = restarter;
+    }
+    
     // Static method for backward compatibility
     /**
      * Get the current simulation speed factor.
@@ -174,32 +177,65 @@ public class Gui implements IGUI_all {
         }
     }
     
-    // Methods to access internal state
-    /**
-     * Set a new simulation speed factor.
-     * This affects the timing of all animated elements and thread sleeps.
-     * 
-     * @param speed The new speed factor:
-     *        - 0.05 to 0.5: Slow motion for detailed analysis
-     *        - 0.5 to 1.0: Comfortable pace for observation
-     *        - 1.0 to 2.0: Accelerated simulation for quick results
-     */
     public static void setSpeedValue(float speed) {
         simulationSpeed = speed;
-        // Note: Each component will check this value when making timing decisions
     }
     
+    // Methods to access simulation starter
     public static Runnable getSimulationStarter() {
         return simulationStarter;
     }
     
+    // Method to access simulation restarter
+    public static Runnable getRestarter() {
+        return simulationRestarter;
+    }
+    
+    // Method to set config values from UI
+    public static void setConfigValues(int numVoters, int queueSize, int votesToClose) {
+        configNumVoters = numVoters;
+        configQueueSize = queueSize;
+        configVotesToClose = votesToClose;
+    }
+    
+    // Methods to access config values
+    public static int getConfigNumVoters() {
+        return configNumVoters;
+    }
+    
+    public static int getConfigQueueSize() {
+        return configQueueSize;
+    }
+    
+    public static int getConfigVotesToClose() {
+        return configVotesToClose;
+    }
+    
+    // Method to reset UI for restart
+    public static void resetForRestart() {
+        scoreA = 0;
+        scoreB = 0;
+        votersProcessed = 0;
+        stationOpen = false;
+        queueSize = 0;
+        currentVoterInBooth = "";
+        simulationStartTime = System.currentTimeMillis();
+        
+        // Reset the components
+        components.resetUI();
+        
+        // Reset the animation
+        if (animation != null) {
+            animation.resetAnimation();
+        }
+    }
+    
+    // Method to get frame for dialog context
     public static JFrame getFrame() {
         return frame;
     }
     
-    // IGUI_Common interface implementation
     /**
-     * Implementation of interface method to access simulation speed.
      * Provides a non-static way for components to get the current speed factor.
      */
     @Override

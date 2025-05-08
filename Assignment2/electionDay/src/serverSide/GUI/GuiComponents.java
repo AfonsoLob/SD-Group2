@@ -1,4 +1,4 @@
-package GUI;
+package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -12,7 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -22,6 +21,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -48,6 +48,11 @@ public class GuiComponents {
     private JButton restartButton;
     private JSlider speedSlider;
     private JLabel speedValueLabel;
+    
+    // Configuration components
+    private JTextField numVotersField;
+    private JTextField queueSizeField;
+    private JTextField votesToCloseField;
     
     // Statistics labels
     private JLabel validationSuccessRateLabel;
@@ -172,6 +177,48 @@ public class GuiComponents {
     }
     
     /**
+     * Create configuration panel for simulation parameters
+     */
+    public JPanel createConfigPanel() {
+        JPanel configPanel = new JPanel();
+        configPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        configPanel.setBorder(GuiStyles.createTitledBorder("Simulation Configuration", TitledBorder.CENTER));
+        
+        // Number of voters field (3-10)
+        JLabel votersLabel = new JLabel("Number of Voters (3-10): ");
+        votersLabel.setFont(GuiStyles.LABEL_FONT);
+        
+        numVotersField = new JTextField("5", 3);
+        numVotersField.setFont(GuiStyles.CONTENT_FONT);
+        
+        // Queue size field (2-5)
+        JLabel queueSizeLabel = new JLabel("Queue Size (2-5): ");
+        queueSizeLabel.setFont(GuiStyles.LABEL_FONT);
+        
+        queueSizeField = new JTextField("3", 3);
+        queueSizeField.setFont(GuiStyles.CONTENT_FONT);
+        
+        // Votes to close field
+        JLabel votesToCloseLabel = new JLabel("Votes to Close: ");
+        votesToCloseLabel.setFont(GuiStyles.LABEL_FONT);
+        
+        votesToCloseField = new JTextField("3", 3);
+        votesToCloseField.setFont(GuiStyles.CONTENT_FONT);
+        
+        // Add components to panel
+        configPanel.add(votersLabel);
+        configPanel.add(numVotersField);
+        configPanel.add(Box.createHorizontalStrut(20));
+        configPanel.add(queueSizeLabel);
+        configPanel.add(queueSizeField);
+        configPanel.add(Box.createHorizontalStrut(20));
+        configPanel.add(votesToCloseLabel);
+        configPanel.add(votesToCloseField);
+        
+        return configPanel;
+    }
+    
+    /**
      * Create the statistics panel
      */
     public JPanel createStatsPanel() {
@@ -258,10 +305,39 @@ public class GuiComponents {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!Gui.isSimulationRunning() && Gui.getSimulationStarter() != null) {
-                    Gui.setSimulationRunning(true);
-                    startButton.setEnabled(false);
-                    startButton.setText("Simulation Running...");
-                    new Thread(() -> Gui.getSimulationStarter().run()).start();
+                    // Validate inputs before starting
+                    if (validateConfigInputs()) {
+                        Gui.setSimulationRunning(true);
+                        startButton.setEnabled(false);
+                        restartButton.setEnabled(false);
+                        startButton.setText("Simulation Running...");
+                        new Thread(() -> Gui.getSimulationStarter().run()).start();
+                    }
+                }
+            }
+        });
+        
+        // Add Restart Simulation button
+        restartButton = new JButton("Restart Simulation");
+        restartButton.setFont(GuiStyles.LABEL_FONT);
+        restartButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!Gui.isSimulationRunning() && Gui.getRestarter() != null) {
+                    // Validate inputs before restarting
+                    if (validateConfigInputs()) {
+                        // Reset UI elements
+                        startButton.setText("Simulation Running...");
+                        startButton.setEnabled(false);
+                        restartButton.setEnabled(false);
+                        
+                        // Clear table data
+                        tableModel.setRowCount(0);
+                        
+                        // Set simulation as running and start new simulation
+                        Gui.setSimulationRunning(true);
+                        new Thread(() -> Gui.getRestarter().run()).start();
+                    }
                 }
             }
         });
@@ -283,12 +359,56 @@ public class GuiComponents {
             }
         });
         
-        // Removed load and refresh buttons
-        
         buttonPanel.add(startButton);
+        buttonPanel.add(restartButton);
         buttonPanel.add(exitButton);
         
         return buttonPanel;
+    }
+    
+    /**
+     * Validate configuration inputs
+     * @return true if all inputs are valid
+     */
+    private boolean validateConfigInputs() {
+        try {
+            // Validate number of voters (3-10)
+            int numVoters = Integer.parseInt(numVotersField.getText());
+            if (numVoters < 3 || numVoters > 10) {
+                JOptionPane.showMessageDialog(Gui.getFrame(),
+                    "Number of voters must be between 3 and 10.",
+                    "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            
+            // Validate queue size (2-5)
+            int queueSize = Integer.parseInt(queueSizeField.getText());
+            if (queueSize < 2 || queueSize > 5) {
+                JOptionPane.showMessageDialog(Gui.getFrame(),
+                    "Queue size must be between 2 and 5.",
+                    "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            
+            // Validate votes to close (must be > 0)
+            int votesToClose = Integer.parseInt(votesToCloseField.getText());
+            if (votesToClose <= 0) {
+                JOptionPane.showMessageDialog(Gui.getFrame(),
+                    "Votes to close must be greater than 0.",
+                    "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            
+            // Set the configuration values for the simulation
+            Gui.setConfigValues(numVoters, queueSize, votesToClose);
+            
+            return true;
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(Gui.getFrame(),
+                "All fields must contain valid numbers.",
+                "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
     
     /**
@@ -310,7 +430,8 @@ public class GuiComponents {
             // If station is closed and we were running a simulation, update the button
             if (Gui.isSimulationRunning()) {
                 startButton.setText("Simulation Finished");
-                // Keep button disabled since simulation is complete
+                restartButton.setEnabled(true);  // Enable restart button when finished
+                Gui.setSimulationRunning(false);
                 
                 // Automatically load the log file when the simulation ends
                 loadLogFile();
@@ -337,6 +458,37 @@ public class GuiComponents {
         
         // Update processed voters count
         ((JLabel)resultsPanel.getComponent(2)).setText("Processed: " + votersProcessed);
+    }
+    
+    /**
+     * Reset UI components after simulation restart
+     */
+    public void resetUI() {
+        // Reset status labels
+        JPanel pollingPanel = (JPanel) stationPanel.getComponent(0);
+        JLabel stationStatusLabel = (JLabel) pollingPanel.getComponent(0);
+        stationStatusLabel.setText("CLOSED");
+        stationStatusLabel.setForeground(GuiStyles.ERROR_COLOR);
+        
+        // Reset queue and booth
+        queueLabel.setText("Empty");
+        boothLabel.setText("Available");
+        
+        // Reset scores
+        scoreALabel.setText("Candidate A: 0");
+        scoreBLabel.setText("Candidate B: 0");
+        ((JLabel)resultsPanel.getComponent(2)).setText("Processed: 0");
+        
+        // Reset statistics
+        validationSuccessRateLabel.setText("Validation Success Rate: 0%");
+        validationFailRateLabel.setText("Validation Failure Rate: 0%");
+        pollParticipationRateLabel.setText("Poll Participation Rate: 0%");
+        pollAccuracyRateLabel.setText("Poll Accuracy Rate: 0%");
+        averageProcessingTimeLabel.setText("Average Processing Time: 0 ms");
+        runningTimeLabel.setText("Simulation Running Time: 00:00:00");
+        
+        // Clear log table
+        tableModel.setRowCount(0);
     }
     
     /**
@@ -463,4 +615,29 @@ public class GuiComponents {
     // Getters for components
     public JPanel getStationPanel() { return stationPanel; }
     public JTable getLogTable() { return logTable; }
+    
+    // Getters for configuration fields
+    public int getNumVoters() { 
+        try {
+            return Integer.parseInt(numVotersField.getText()); 
+        } catch (NumberFormatException e) {
+            return 5; // Default value
+        }
+    }
+    
+    public int getQueueSize() { 
+        try {
+            return Integer.parseInt(queueSizeField.getText()); 
+        } catch (NumberFormatException e) {
+            return 3; // Default value
+        }
+    }
+    
+    public int getVotesToClose() { 
+        try {
+            return Integer.parseInt(votesToCloseField.getText()); 
+        } catch (NumberFormatException e) {
+            return 3; // Default value
+        }
+    }
 }

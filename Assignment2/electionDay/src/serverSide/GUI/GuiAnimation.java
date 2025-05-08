@@ -1,4 +1,4 @@
-package GUI;
+package serverSide.GUI;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -72,6 +72,13 @@ public class GuiAnimation {
         if (animationPanel != null) {
             animationPanel.clearVoters();
         }
+    }
+    
+    /**
+     * Reset animation state for simulation restart
+     */
+    public void resetAnimation() {
+        clearVoters();
     }
     
     /**
