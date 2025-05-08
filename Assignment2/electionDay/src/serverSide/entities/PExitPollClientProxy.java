@@ -15,7 +15,7 @@ import java.net.Socket;
  * It implements the protocol for interaction.
  * It manages the Thread life cycle, the state and the communication channels
  */
-public class PMExitPollClientProxy extends Thread {
+public class PExitPollClientProxy extends Thread {
     /**
     *  Number of instantiayed threads.
     */
@@ -48,7 +48,7 @@ public class PMExitPollClientProxy extends Thread {
      * @param sock socket connected to the client
      * @param exitPoll reference to the exit poll shared region
      */
-    public PMExitPollClientProxy(Socket sock, ExitPoll exitPoll) {
+    public PExitPollClientProxy(Socket sock, ExitPoll exitPoll) {
         this.sock = sock;
         this.exitPoll = exitPoll;
     }
