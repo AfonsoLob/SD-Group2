@@ -1,6 +1,8 @@
 package commInfra;
 
 import java.io.Serializable;
+
+import example.commInfra.MessageType;
 /**
  * Message class for communication between components in the Election Day simulation.
  * This class implements Serializable to allow objects to be transmitted over TCP sockets.

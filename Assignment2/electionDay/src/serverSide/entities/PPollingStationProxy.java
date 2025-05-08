@@ -1,10 +1,9 @@
 package serverSide.entities;
 import clientSide.interfaces.Pollingstation.IPollingStation_all;
-import commInfra.Message;
-import commInfra.MessageException;
-import commInfra.MessageType;
-
-import commInfra.ServerCom;
+import example.commInfra.Message;
+import example.commInfra.MessageException;
+import example.commInfra.MessageType;
+import example.commInfra.ServerCom;
 
 
 

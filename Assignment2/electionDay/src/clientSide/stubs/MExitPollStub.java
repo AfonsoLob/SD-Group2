@@ -1,7 +1,10 @@
 package clientSide.stubs;
 
-import commInfra.*;
 import clientSide.interfaces.ExitPoll.IExitPoll_all;
+import commInfra.ClientCom;
+import commInfra.Message;
+import commInfra.MessageType;
+import example.commInfra.*;
 
 public class MExitPollStub implements IExitPoll_all {
     private final String serverHostName;

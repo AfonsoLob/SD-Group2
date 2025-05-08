@@ -6,12 +6,11 @@ import java.util.Properties;
 
 import clientSide.entities.TVoter;
 import clientSide.stubs.MPollingStationStub;
+import example.serverSide.main.SimulPar;
 import clientSide.stubs.MExitPollStub;
 
 import clientSide.interfaces.Pollingstation.*;
 import clientSide.interfaces.ExitPoll.*;
-
-import serverSide.main.SimulPar;
 
 public class TvoterMain {
     public static void main(String[] args) {

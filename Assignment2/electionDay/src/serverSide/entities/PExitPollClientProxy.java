@@ -1,14 +1,14 @@
 package serverSide.entities;
 
-import commInfra.Message;
-import commInfra.ServerCom;
-
 import serverSide.interfaces.ExitPoll.IExitPoll_all;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import example.commInfra.Message;
+import example.commInfra.ServerCom;
 
 /**
  * PMExitPollClientProxy - Thread that handles communication with an exit poll client.

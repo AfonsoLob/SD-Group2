@@ -1,7 +1,10 @@
 package clientSide.stubs;
 
-import commInfra.*;
 import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import commInfra.ClientCom;
+import commInfra.Message;
+import commInfra.MessageType;
+import example.commInfra.*;
 
 public class MPollingStationStub implements IPollingStation_all {
     private final String serverHostName;

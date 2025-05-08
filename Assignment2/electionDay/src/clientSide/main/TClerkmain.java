@@ -6,11 +6,10 @@ import java.util.Properties;
 
 import clientSide.entities.TClerk;
 import clientSide.stubs.MPollingStationStub;
+import example.serverSide.main.SimulPar;
 import clientSide.stubs.MExitPollStub;
 import clientSide.interfaces.Pollingstation.IPollingStation_Clerk;
 import clientSide.interfaces.ExitPoll.IExitPoll_Clerk;
-
-import serverSide.main.SimulPar;
 
 public class TClerkmain {
     public static void main(String[] args) {

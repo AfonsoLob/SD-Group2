@@ -1,5 +1,7 @@
 package commInfra;
 
+import example.commInfra.Message;
+
 /**
  *    Message exception.
  *

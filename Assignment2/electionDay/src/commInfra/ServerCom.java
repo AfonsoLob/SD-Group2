@@ -3,6 +3,8 @@ package commInfra;
 import java.io.*;
 import java.net.*;
 
+import example.commInfra.Message;
+
 /**
  * Server communication class for the Election Day simulation.
  * Handles server socket creation and client connection acceptance.

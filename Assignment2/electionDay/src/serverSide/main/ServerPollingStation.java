@@ -2,7 +2,6 @@ package serverSide.main;
 
 import java.net.SocketTimeoutException;
 
-import commInfra.ServerCom;
 import serverSide.entities.PPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
 import java.io.FileInputStream;
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import example.commInfra.ServerCom;
 
 
 

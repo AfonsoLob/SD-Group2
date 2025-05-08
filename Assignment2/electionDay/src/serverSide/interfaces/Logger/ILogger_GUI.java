@@ -1,4 +1,4 @@
-package clientSide.interfaces.Logger;
+package serverSide.interfaces.Logger;
 
 /**
  * Logger interface containing methods needed by the GUI
