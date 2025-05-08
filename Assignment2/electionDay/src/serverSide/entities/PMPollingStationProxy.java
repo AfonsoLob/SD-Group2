@@ -11,7 +11,7 @@ import serverSide.sharedRegions.PollingStationInterface;
 //      State Management
 //      Communication Handling
 
-public class MPollingStationProxy extends Thread{
+public class PMPollingStationProxy extends Thread{
     /**
    *  Number of instantiayed threads.
    */
@@ -60,11 +60,18 @@ public class MPollingStationProxy extends Thread{
    *     @param pStationInter interface to the barber shop
    */
 
-   public MPollingStationProxy (ServerCom sconi, PollingStationInterface pStationInter)
+   private PMPollingStationProxy (ServerCom sconi, PollingStationInterface pStationInter)
    {
-      super ("PollingStationProxy_" + MPollingStationProxy.getProxyId ());
+      super ("PollingStationProxy_" + PMPollingStationProxy.getProxyId ());
       this.sconi = sconi;
       this.pStationInter = pStationInter;
+   }
+
+
+   public PMPollingStationProxy getInstance (ServerCom sconi, PollingStationInterface pStationInter)
+   {
+      PMPollingStationProxy proxy = new PMPollingStationProxy (sconi, pStationInter);
+      return proxy;
    }
 
   /**
@@ -95,9 +102,9 @@ public class MPollingStationProxy extends Thread{
 
 
   /**
-   *   Set customer id.
+   *   Set voter id.
    *
-   *     @param id customer id
+   *     @param id voter id
    */
 
    public void setVoterId (int id)
@@ -106,9 +113,9 @@ public class MPollingStationProxy extends Thread{
    }
 
   /**
-   *   Get customer id.
+   *   Get voter id.
    *
-   *     @return customer id
+   *     @return voter id
    */
 
    public int getVoterId ()
@@ -117,9 +124,9 @@ public class MPollingStationProxy extends Thread{
    }
 
   /**
-   *   Set customer state.
+   *   Set voter state.
    *
-   *     @param state new customer state
+   *     @param state new voter state
    */
 
    public void setVoterState (int state)
@@ -128,9 +135,9 @@ public class MPollingStationProxy extends Thread{
    }
 
   /**
-   *   Get customer state.
+   *   Get voter state.
    *
-   *     @return customer state
+   *     @return voter state
    */
 
    public int getVoterState ()
@@ -155,12 +162,15 @@ public class MPollingStationProxy extends Thread{
       inMessage = handler.readMessage();                                // get service request
       // inMessage = (Message) sconi.readObject ();                     // get service request
       try
-      { outMessage = pStationInter.processAndReply (inMessage);         // process it
+      {
+         outMessage = pStationInter.processAndReply (inMessage);         // process it
       }
       catch (MessageException e)
-      { GenericIO.writelnString ("Thread " + getName () + ": " + e.getMessage () + "!");
-        GenericIO.writelnString (e.getMessageVal ().toString ());
-        System.exit (1);
+      {
+         System.out.println("Message exception on serverSide: " + e.getMessage());
+         e.printStackTrace ();
+         // outMessage = new Message (Message.ERROR, "Message exception on serverSide: " + e.getMessage()); // send error message
+         System.exit (1);
       }
       handler.writeMessage(outMessage);                                // send service reply
       handler.close ();                                                // close the communication channel

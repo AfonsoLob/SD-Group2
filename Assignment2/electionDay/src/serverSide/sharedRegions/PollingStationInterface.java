@@ -3,7 +3,7 @@ package serverSide.sharedRegions;
 import commInfra.Message;
 import commInfra.MessageType;
 import commInfra.MessageException;
-import serverSide.entities.MPollingStationProxy;
+import serverSide.entities.PMPollingStationProxy;
 
 
 public class PollingStationInterface {
@@ -76,26 +76,26 @@ public class PollingStationInterface {
       switch (inMessage.getType())
       {  
          //  VOTER MESSAGES
-         case VOTER_ENTER_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+         case VOTER_ENTER_REQUEST:  ((PMPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
             if (pollingStation.enterPollingStation(inMessage.getId ()))
-               outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+               outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((PMPollingStationProxy) Thread.currentThread ()).getVoterId());                          
             else 
                outMessage = new Message (MessageType.ERROR);
          break;
 
-         case ID_CHECK_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+         case ID_CHECK_REQUEST:  ((PMPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
             if (pollingStation.waitIdValidation(inMessage.getId ()))
-               outMessage = new Message (MessageType.ID_VALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+               outMessage = new Message (MessageType.ID_VALID,((PMPollingStationProxy) Thread.currentThread ()).getVoterId());                          
             else 
-               outMessage = new Message (MessageType.ID_INVALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+               outMessage = new Message (MessageType.ID_INVALID,((PMPollingStationProxy) Thread.currentThread ()).getVoterId());                          
          break;
 
-         case VOTE_CAST_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+         case VOTE_CAST_REQUEST:  ((PMPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
             if (inMessage.getVotingOption() == 1)
                pollingStation.voteA(inMessage.getId ());
             else
                pollingStation.voteB(inMessage.getId ());
-            outMessage = new Message (MessageType.VOTE_CAST_DONE,((MPollingStationProxy) Thread.currentThread ()).getVoterId());
+            outMessage = new Message (MessageType.VOTE_CAST_DONE,((PMPollingStationProxy) Thread.currentThread ()).getVoterId());
          break;
 
          // CLERK MESSAGES

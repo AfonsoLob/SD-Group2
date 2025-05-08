@@ -3,7 +3,7 @@ package serverSide.main;
 import java.net.SocketTimeoutException;
 
 import commInfra.ServerCom;
-import serverSide.entities.MPollingStationProxy;
+import serverSide.entities.PMPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
 import serverSide.sharedRegions.PollingStationInterface;
 
@@ -88,13 +88,13 @@ public class ServerPollingStation {
 
      /* service request processing */
 
-      MPollingStationProxy Proxy;                                // service provider agent
+      PMPollingStationProxy Proxy;                                // service provider agent
 
       waitConnection = true;
       while (waitConnection)
       { try
         { sconi = scon.accept ();                                    // enter listening procedure
-          Proxy = new MPollingStationProxy (sconi);                 // start a service provider agent to address
+          Proxy = new PMPollingStationProxy (sconi);                 // start a service provider agent to address
           Proxy.start ();                                         //   the request of service
         }
         catch (SocketTimeoutException e) {}
