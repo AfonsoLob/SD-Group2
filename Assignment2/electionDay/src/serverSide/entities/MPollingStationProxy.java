@@ -1,57 +1,20 @@
 package serverSide.entities;
 
+import clientSide.interfaces.Pollingstation.IPollingStation_all;
 import commInfra.Message;
 import commInfra.MessageException;
-// import commInfra.MessageException;
-import commInfra.ServerCom;
-import serverSide.sharedRegions.PollingStationInterface;
+import commInfra.MessageType;
 
-// The Proxy serves as a service provider agent in a client-server architecture for a barber shop simulation. Here are its key functions:
-//      Thread Management
-//      State Management
-//      Communication Handling
+import commInfra.ServerCom;
+import serverSide.sharedRegions.MPollingStation;
+
 
 public class MPollingStationProxy extends Thread{
-    /**
-   *  Number of instantiayed threads.
-   */
-   private static int nProxy = 0;
-
-  /**
-   *  Communication channel.
-   */
-
-   private ServerCom sconi;
-
-  /**
-   *  Interface to the Polling Station Shop.
-   */
-
-   private PollingStationInterface pStationInter;
-
-  /**
-   *  Voter identification.
-   */
-
+  
+   private static int nProxy = 0; // Number of instantiayed threads.
+   private ServerCom.ServerComHandler sconi; // communication channel
+   private IPollingStation_all pollingStation; 
    private int voterId;
-
-  /**
-   *  Voter state.
-   */
-
-   private int voterState;
-
-  /**
-   *  Clerk identification.
-   */
-
-   // private int clerkId;
-
-  /**
-   *  Clerk state.
-   */
-
-   // private int clerkState;
 
   /**
    *  Instantiation of a client proxy.
@@ -60,11 +23,11 @@ public class MPollingStationProxy extends Thread{
    *     @param pStationInter interface to the barber shop
    */
 
-   public MPollingStationProxy (ServerCom sconi, PollingStationInterface pStationInter)
+   public MPollingStationProxy (ServerCom.ServerComHandler sconi, IPollingStation_all pStationInter)
    {
       super ("PollingStationProxy_" + MPollingStationProxy.getProxyId ());
       this.sconi = sconi;
-      this.pStationInter = pStationInter;
+      this.pollingStation = pStationInter;
    }
 
   /**
@@ -116,31 +79,7 @@ public class MPollingStationProxy extends Thread{
       return voterId;
    }
 
-  /**
-   *   Set customer state.
-   *
-   *     @param state new customer state
-   */
 
-   public void setVoterState (int state)
-   {
-      voterState = state;
-   }
-
-  /**
-   *   Get customer state.
-   *
-   *     @return customer state
-   */
-
-   public int getVoterState ()
-   {
-      return voterState;
-   }
-
-  /**
-   *  Life cycle of the service provider agent.
-   */
 
    @Override
    public void run ()
@@ -150,19 +89,72 @@ public class MPollingStationProxy extends Thread{
 
       
      /* service providing */ // versão ServerCom nossa, em caso de erro mudar para a versão do prof
-      sconi.start();
-      ServerCom.ServerComHandler handler = sconi.accept();
-      inMessage = handler.readMessage();                                // get service request
+      inMessage = sconi.readMessage();                                // get service request
       // inMessage = (Message) sconi.readObject ();                     // get service request
       try
-      { outMessage = pStationInter.processAndReply (inMessage);         // process it
+      { outMessage = processAndReply(inMessage);         // process it
       }
       catch (MessageException e)
       { GenericIO.writelnString ("Thread " + getName () + ": " + e.getMessage () + "!");
         GenericIO.writelnString (e.getMessageVal ().toString ());
         System.exit (1);
       }
-      handler.writeMessage(outMessage);                                // send service reply
-      handler.close ();                                                // close the communication channel
+      sconi.writeMessage(outMessage);                                // send service reply
+      sconi.close ();                                                // close the communication channel
+   }
+
+   public Message processAndReply (Message inMessage) throws MessageException
+   {
+      Message outMessage = null;                                     // outgoing message
+      switch (inMessage.getType())
+      {  
+         //  VOTER MESSAGES
+         case VOTER_ENTER_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (pollingStation.enterPollingStation(inMessage.getId ()))
+               outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+            else 
+               outMessage = new Message (MessageType.ERROR);
+         break;
+
+         case ID_CHECK_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (pollingStation.waitIdValidation(inMessage.getId ()))
+               outMessage = new Message (MessageType.ID_VALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+            else 
+               outMessage = new Message (MessageType.ID_INVALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+         break;
+
+         case VOTE_CAST_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (inMessage.getVotingOption() == 1)
+               pollingStation.voteA(inMessage.getId ());
+            else
+               pollingStation.voteB(inMessage.getId ());
+            outMessage = new Message (MessageType.VOTE_CAST_DONE,((MPollingStationProxy) Thread.currentThread ()).getVoterId());
+         break;
+
+         // CLERK MESSAGES
+         case POLLING_STATION_OPEN:                              
+            pollingStation.openPollingStation();
+            outMessage = new Message (MessageType.POLLING_STATION_READY);
+         break;
+
+         case POLLING_STATION_CLOSE:                              
+            pollingStation.closePollingStation();
+            outMessage = new Message (MessageType.POLLING_STATION_CLOSED);
+         break;
+
+         case VALIDATE_NEXT_VOTER:                              
+            if(pollingStation.callNextVoter())
+               outMessage = new Message (MessageType.ID_VALID);
+            else
+               outMessage = new Message (MessageType.ID_INVALID);
+         break;
+
+         default:
+         // Handle all other cases 
+            outMessage = new Message(MessageType.ERROR);
+         break;
+      }
+
+     return (outMessage);
    }
 }

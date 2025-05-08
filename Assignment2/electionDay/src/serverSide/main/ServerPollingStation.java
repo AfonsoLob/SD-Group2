@@ -5,8 +5,6 @@ import java.net.SocketTimeoutException;
 import commInfra.ServerCom;
 import serverSide.entities.MPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
-import serverSide.sharedRegions.PollingStationInterface;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -34,10 +32,10 @@ public class ServerPollingStation {
    public static void main (String [] args)
    {
       final String CONFIG_FILE = "config.properties";               // Path to the configuration file
-      MPollingStation pollingStation;                                              // barber shop (service to be rendered)
-      IPollingStation_all pStationInter;                                // interface to the barber shop
+      IPollingStation_all pollingStation;                                // interface to the barber shop
     //   GeneralReposStub reposStub;                                    // stub to the general repository
-      ServerCom scon, sconi;                                         // communication channels
+      ServerCom scon;                                         // communication channels
+      ServerCom.ServerComHandler sconi;                       // communication channel
       int ServerPollingStationPortNumber = -1;                                             // port number for listening to service requests
       String reposServerName;                                        // name of the platform where is located the server for the general repository
       int reposPortNumb = -1;                                        // port nunber where the server for the general repository is listening to service requests
@@ -79,10 +77,12 @@ public class ServerPollingStation {
 
     //   reposStub = new GeneralReposStub (reposServerName, reposPortNumb);     // communication to the general repository is instantiated
     //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
-      MPollingStation pollingStation = MPollingStation.getInstance(reposPortNumb, null); // Create an instance of the polling station
-      pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
+    //   pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
+
+      pollingStation = MPollingStation.getInstance(5, reposStub);                      // service is instantiated
+       
       scon = new ServerCom (ServerPollingStationPortNumber);                    // listening channel at the public port is established
-      scon.start ();
+      scon.start();
       GenericIO.writelnString ("Service is established!");
       GenericIO.writelnString ("Server is listening for service requests.");
 
@@ -93,8 +93,8 @@ public class ServerPollingStation {
       waitConnection = true;
       while (waitConnection)
       { try
-        { sconi = scon.accept ();                                    // enter listening procedure
-          Proxy = new MPollingStationProxy (sconi);                 // start a service provider agent to address
+        { sconi = scon.accept();                                    // enter listening procedure
+          Proxy = new MPollingStationProxy (sconi,pollingStation);  // start a service provider agent to address
           Proxy.start ();                                         //   the request of service
         }
         catch (SocketTimeoutException e) {}
