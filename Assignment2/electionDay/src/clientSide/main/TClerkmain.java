@@ -40,7 +40,7 @@ public class TClerkmain {
         IExitPoll_Clerk exitPoll = new MExitPollStub(hostExitPollName, ServerExitPollPortNumber);
         
         // Create and start clerk thread
-        Thread clerk = new Thread(TClerk.getInstance(20, pollingStation, exitPoll));
+        Thread clerk = new Thread(TClerk.getInstance(SimulPar.MAX_VOTES, pollingStation, exitPoll));
         clerk.start();
 
         // Wait for clerk to finish

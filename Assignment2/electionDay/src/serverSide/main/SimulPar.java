@@ -65,6 +65,12 @@ public final class SimulPar
    public static final double ANSWER_PROBABILITY = 0.6;
 
   /**
+   *   Number of Max Votes
+   */
+
+   public static final int MAX_VOTES = 30;
+
+  /**
    *   It can not be instantiated.
    */
 
