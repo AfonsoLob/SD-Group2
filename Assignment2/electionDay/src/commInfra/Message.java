@@ -11,7 +11,7 @@ public class Message implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private MessageType type;        // Type of message
-    private int voterId;             // ID of the voter (if applicable)
+    private int id;                  // ID of the entity (voter or clerk)
     private int votingOption;        // The voting option chosen (if applicable)
     private boolean truthful;        // Whether exit poll response is truthful (if applicable)
     private Object content;          // Additional content or data payload
@@ -29,9 +29,9 @@ public class Message implements Serializable {
      * @param type The message type
      * @param voterId The voter's ID
      */
-    public Message(MessageType type, int voterId) {
+    public Message(MessageType type, int id) {
         this.type = type;
-        this.voterId = voterId;
+        this.id = id;
     }
     
     /**
@@ -41,9 +41,9 @@ public class Message implements Serializable {
      * @param votingOption The voting option (candidate choice)
      * @param content Additional content or data
      */
-    public Message(MessageType type, int voterId, int votingOption, Object content) {
+    public Message(MessageType type, int Id, int votingOption, Object content) {
         this.type = type;
-        this.voterId = voterId;
+        this.id = Id;
         this.votingOption = votingOption;
         this.content = content;
     }
@@ -55,9 +55,9 @@ public class Message implements Serializable {
      * @param votingOption The voting option claimed in poll
      * @param truthful Whether the response is truthful
      */
-    public Message(MessageType type, int voterId, int votingOption, boolean truthful) {
+    public Message(MessageType type, int Id, int votingOption, boolean truthful) {
         this.type = type;
-        this.voterId = voterId;
+        this.id = Id;
         this.votingOption = votingOption;
         this.truthful = truthful;
     }
@@ -72,12 +72,12 @@ public class Message implements Serializable {
         this.type = type;
     }
     
-    public int getVoterId() {
-        return voterId;
+    public int getId() {
+        return id;
     }
     
-    public void setVoterId(int voterId) {
-        this.voterId = voterId;
+    public void setId(int Id) {
+        this.id = Id;
     }
     
     public int getVotingOption() {
@@ -106,6 +106,6 @@ public class Message implements Serializable {
     
     @Override
     public String toString() {
-        return "Message [type=" + type + ", voterId=" + voterId + ", votingOption=" + votingOption + "]";
+        return "Message [type=" + type + ", Id=" + id + ", votingOption=" + votingOption + "]";
     }
 }

@@ -44,13 +44,13 @@ public class MPollingStationProxy extends Thread{
    *  Clerk identification.
    */
 
-   private int clerkId;
+   // private int clerkId;
 
   /**
    *  Clerk state.
    */
 
-   private int clerkState;
+   // private int clerkState;
 
   /**
    *  Instantiation of a client proxy.
@@ -92,49 +92,6 @@ public class MPollingStationProxy extends Thread{
       return proxyId;
    }
 
-  /**
-   *   Set barber id.
-   *
-   *     @param id barber id
-   */
-
-   public void setClerkId (int id)
-   {
-    clerkId = id;
-   }
-
-  /**
-   *   Get barber id.
-   *
-   *     @return barber id
-   */
-
-   public int getClerkId ()
-   {
-      return clerkId;
-   }
-
-  /**
-   *   Set barber state.
-   *
-   *     @param state new barber state
-   */
-
-   public void setClerkState (int state)
-   {
-      clerkState = state;
-   }
-
-  /**
-   *   Get barber state.
-   *
-   *     @return barber state
-   */
-
-   public int getClerkState ()
-   {
-      return clerkState;
-   }
 
   /**
    *   Set customer id.

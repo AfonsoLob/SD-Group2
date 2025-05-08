@@ -8,10 +8,14 @@ package commInfra;
 
 public enum MessageType {
     // Polling station status messages
-    POLLING_STATION_OPEN,              // Sent by Poll Clerk to notify voters that polling station is open
-    POLLING_STATION_CLOSED,            // Sent by Poll Clerk to notify that polling station is closed
-    POLLING_STATION_FULL,              // Sent when polling station reaches capacity
-    POLLING_STATION_HAS_SPACE,         // Sent when space becomes available in polling station
+    POLLING_STATION_OPEN,              // Sent BY Poll Clerk to notify voters that polling station is open
+    POLLING_STATION_READY,             // Sent TO Poll Clerk to notify that polling station is ready
+    POLLING_STATION_CLOSE,             // Sent BY Poll Clerk to notify that polling station is closed
+    POLLING_STATION_CLOSED,            // Sent TO Poll Clerk to notify that polling station is closed
+    VALIDATE_NEXT_VOTER,               // Sent by Poll Clerk to validate the next voter
+
+    // POLLING_STATION_FULL,              // Sent when polling station reaches capacity
+    // POLLING_STATION_HAS_SPACE,         // Sent when space becomes available in polling station
     
     // Voter action messages
     VOTER_ENTER_REQUEST,               // Voter requests to enter polling station
@@ -25,9 +29,8 @@ public enum MessageType {
     ID_INVALID,                        // ID is invalid or has already voted
     
     // Voting booth messages
-    VOTING_BOOTH_REQUEST,              // Voter requests access to e-voting booth
-    VOTING_BOOTH_GRANTED,              // Access to e-voting booth granted
-    VOTE_CAST,                         // Voter casts their vote
+    VOTE_CAST_REQUEST,                  // Voter requests access to e-voting booth
+    VOTE_CAST_DONE,                     // Access to e-voting booth granted
     
     // Exit poll messages
     EXIT_POLL_REQUEST,                 // Pollster requests voter for exit poll

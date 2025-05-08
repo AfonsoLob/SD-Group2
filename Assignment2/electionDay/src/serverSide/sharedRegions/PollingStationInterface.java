@@ -1,7 +1,8 @@
 package serverSide.sharedRegions;
 
 import commInfra.Message;
-
+import commInfra.MessageType;
+import serverSide.entities.MPollingStationProxy;
 import serverSide.main.SimulPar;
 import clientSide.entities.VoterStates;
 
@@ -72,45 +73,53 @@ public class PollingStationInterface {
 
      /* processing */
 
-      switch (inMessage.getMsgType ())
+      switch (inMessage.getType())
+      {  
+         //  VOTER MESSAGES
+         case VOTER_ENTER_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (pollingStation.enterPollingStation(inMessage.getId ()))
+               outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+            else 
+               outMessage = new Message (MessageType.ERROR);
+         break;
 
-      { case MessageType.REQCUTH:  ((BarberShopClientProxy) Thread.currentThread ()).setCustomerId (inMessage.getCustId ());
-                                   ((BarberShopClientProxy) Thread.currentThread ()).setCustomerState (inMessage.getCustState ());
-                                   if (bShop.goCutHair ())
-                                      outMessage = new Message (MessageType.CUTHDONE,
-                                                                ((BarberShopClientProxy) Thread.currentThread ()).getCustomerId (),
-                                                                ((BarberShopClientProxy) Thread.currentThread ()).getCustomerState ());
-                                      else outMessage = new Message (MessageType.BSHOPF,
-                                                                     ((BarberShopClientProxy) Thread.currentThread ()).getCustomerId (),
-                                                                     ((BarberShopClientProxy) Thread.currentThread ()).getCustomerState ());
-                                   break;
-        case MessageType.SLEEP:    ((BarberShopClientProxy) Thread.currentThread ()).setBarberId (inMessage.getBarbId ());
-                                   if (bShop.goToSleep ())
-                                      outMessage = new Message (MessageType.SLEEPDONE,
-                                                                ((BarberShopClientProxy) Thread.currentThread ()).getBarberId (), true);
-                                      else outMessage = new Message (MessageType.SLEEPDONE,
-                                                                     ((BarberShopClientProxy) Thread.currentThread ()).getBarberId (), false);
-                                   break;
-        case MessageType.CALLCUST: ((BarberShopClientProxy) Thread.currentThread ()).setBarberId (inMessage.getBarbId ());
-                                   ((BarberShopClientProxy) Thread.currentThread ()).setBarberState (inMessage.getBarbState ());
-                                   int custId = bShop.callACustomer ();
-                                   outMessage = new Message (MessageType.CCUSTDONE,
-                                                             ((BarberShopClientProxy) Thread.currentThread ()).getBarberId (),
-                                                             ((BarberShopClientProxy) Thread.currentThread ()).getBarberState (), custId);
-                                   break;
-        case MessageType.RECPAY:   ((BarberShopClientProxy) Thread.currentThread ()).setBarberId (inMessage.getBarbId ());
-                                   ((BarberShopClientProxy) Thread.currentThread ()).setBarberState (inMessage.getBarbState ());
-                                   bShop.receivePayment (inMessage.getCustId ());
-                                   outMessage = new Message (MessageType.RPAYDONE,
-                                                             ((BarberShopClientProxy) Thread.currentThread ()).getBarberId (),
-                                                             ((BarberShopClientProxy) Thread.currentThread ()).getBarberState ());
-                                   break;
-        case MessageType.ENDOP:    bShop.endOperation (inMessage.getBarbId ());
-                                   outMessage = new Message (MessageType.EOPDONE, inMessage.getBarbId ());
-                                   break;
-        case MessageType.SHUT:     bShop.shutdown ();
-                                   outMessage = new Message (MessageType.SHUTDONE);
-                                   break;
+         case ID_CHECK_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (pollingStation.waitIdValidation(inMessage.getId ()))
+               outMessage = new Message (MessageType.ID_VALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+            else 
+               outMessage = new Message (MessageType.ID_INVALID,((MPollingStationProxy) Thread.currentThread ()).getVoterId());                          
+         break;
+
+         case VOTE_CAST_REQUEST:  ((MPollingStationProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());                              
+            if (inMessage.getVotingOption() == 1)
+               pollingStation.voteA(inMessage.getId ());
+            else
+               pollingStation.voteB(inMessage.getId ());
+            outMessage = new Message (MessageType.VOTE_CAST_DONE,((MPollingStationProxy) Thread.currentThread ()).getVoterId());
+         break;
+
+         // CLERK MESSAGES
+         case POLLING_STATION_OPEN:                              
+            pollingStation.openPollingStation();
+            outMessage = new Message (MessageType.POLLING_STATION_READY);
+         break;
+
+         case POLLING_STATION_CLOSE:                              
+            pollingStation.closePollingStation();
+            outMessage = new Message (MessageType.POLLING_STATION_CLOSED);
+         break;
+
+         case VALIDATE_NEXT_VOTER:                              
+            if(pollingStation.callNextVoter())
+               outMessage = new Message (MessageType.ID_VALID);
+            else
+               outMessage = new Message (MessageType.ID_INVALID);
+         break;
+
+         default:
+         // Handle all other cases 
+            outMessage = new Message(MessageType.ERROR);
+         break;
       }
 
      return (outMessage);
