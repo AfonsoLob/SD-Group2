@@ -1,7 +1,7 @@
 package serverSide.main;
 
 import java.net.SocketTimeoutException;
-
+import genclass.GenericIO;
 import serverSide.entities.PPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
 import java.io.FileInputStream;

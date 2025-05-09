@@ -1,10 +1,10 @@
 package serverSide.entities;
 
 import clientSide.interfaces.ExitPoll.IExitPoll_all;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+// import java.io.IOException;
+// import java.io.ObjectInputStream;
+// import java.io.ObjectOutputStream;
+// import java.net.Socket;
 
 import commInfra.Message;
 import commInfra.MessageException;
@@ -124,10 +124,19 @@ public class PExitPollProxy extends Thread {
       {  
          //  VOTER MESSAGES
          case EXIT_POLL_ENTER:  ((PExitPollProxy) Thread.currentThread ()).setVoterId (inMessage.getId ());             
-            exitPoll.exitPollingStation(inMessage.getId(), inMessage.getVotingOption(), inMessage.isTruthful());
+            exitPoll.exitPollingStation(inMessage.getId(), inMessage.getVotingOption(), inMessage.didHeVote());
             outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((PExitPollProxy) Thread.currentThread ()).getVoterId());                          
          break;
 
+         case EXIT_POLL_INQUIRY:             
+            exitPoll.inquire();
+            outMessage = new Message (MessageType.EXIT_POLL_RESPONSE);                          
+         break;
+
+         case EXIT_POLL_CLOSE:             
+            exitPoll.closeIn(inMessage.getCloseIn());;
+            outMessage = new Message (MessageType.EXIT_POLL_CLOSED);                          
+         break;
          
          default:
          // Handle all other cases 

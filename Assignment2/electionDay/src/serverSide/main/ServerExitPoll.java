@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import clientSide.interfaces.ExitPoll.IExitPoll_all;
 import commInfra.ServerCom;
+import serverSide.entities.PExitPollProxy;
 import serverSide.entities.PPollingStationProxy;
 import serverSide.sharedRegions.MExitPoll;
 import serverSide.sharedRegions.MPollingStation;
@@ -72,7 +73,7 @@ public class ServerExitPoll {
     //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
     //   pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
 
-      exitPoll = MExitPoll.getInstance();                      // service is instantiated
+      exitPoll = MExitPoll.getInstance(50, );                      // service is instantiated
        
       scon = new ServerCom (ServerExitPollPortNumber);                    // listening channel at the public port is established
       scon.start();
@@ -81,7 +82,7 @@ public class ServerExitPoll {
 
      /* service request processing */
 
-      PPollingStationProxy Proxy;                                // service provider agent
+      PExitPollProxy Proxy;                                // service provider agent
 
       waitConnection = true;
       while (waitConnection)

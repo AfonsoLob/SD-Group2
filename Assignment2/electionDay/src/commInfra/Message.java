@@ -2,7 +2,7 @@ package commInfra;
 
 import java.io.Serializable;
 
-import example.commInfra.MessageType;
+// import commInfra.MessageType;
 /**
  * Message class for communication between components in the Election Day simulation.
  * This class implements Serializable to allow objects to be transmitted over TCP sockets.
@@ -14,9 +14,9 @@ public class Message implements Serializable {
     
     private MessageType type;        // Type of message
     private int id;                  // ID of the entity (voter or clerk)
-    private boolean votingOption;        // The voting option chosen (if applicable)
-    private boolean myVote;         // The voter's choice in the exit poll (if applicable)
-    private boolean truthful;        // Whether exit poll response is truthful (if applicable)
+    private boolean votingOption;    // The voting option chosen (if applicable)
+    private boolean voted;           // In the exit poll if the voter did not vote it automatically leaves (false)
+    private int closeIn;             // Number of voters until the exit poll closes
     private Object content;          // Additional content or data payload
     
     /**
@@ -34,35 +34,31 @@ public class Message implements Serializable {
      */
     public Message(MessageType type, int id) {
         this.type = type;
-        this.id = id;
-    }
-    
-    /**
-     * Constructor for creating a full message
-     * @param type The message type
-     * @param voterId The voter's ID
-     * @param votingOption The voting option (candidate choice)
-     * @param content Additional content or data
-     */
-    public Message(MessageType type, int Id, boolean votingOption, Object content) {
-        this.type = type;
-        this.id = Id;
-        this.votingOption = votingOption;
-        this.content = content;
+        this.id = id;    
     }
     
     /**
      * Constructor for creating an exit poll response message
      * @param type The message type
      * @param voterId The voter's ID
-     * @param myVote The voter's choice in the exit poll
-     * @param truthful Whether the response is truthful
+     * @param votingOption The voter's choice in the exit poll
+     * @param voted Whether the response is truthful
      */
-    public Message(MessageType type, int Id, boolean myVote, boolean truthful) {
+    public Message(MessageType type, int Id, boolean votingOption, boolean voted) {
         this.type = type;
         this.id = Id;
-        this.myVote = myVote;
-        this.truthful = truthful;
+        this.votingOption = votingOption;
+        this.voted = voted;
+    }
+
+    /**
+     * Constructor for creating an exit poll response message
+     * @param type The message type
+     * @param closeIn Whether the response is truthful
+     */
+    public Message(MessageType type, int id, int closeIn) {
+        this.type = type;
+        this.closeIn = closeIn;
     }
     
     // Getters and setters
@@ -91,12 +87,20 @@ public class Message implements Serializable {
         this.votingOption = votingOption;
     }
     
-    public boolean isTruthful() {
-        return truthful;
+    public boolean didHeVote() {
+        return voted;
     }
     
-    public void setTruthful(boolean truthful) {
-        this.truthful = truthful;
+    public void setVoted(boolean truthful) {
+        this.voted = truthful;
+    }
+
+    public int getCloseIn() {
+        return closeIn;
+    }
+
+    public void setCloseIn(int closeIn) {
+        this.closeIn = closeIn;
     }
     
     public Object getContent() {
