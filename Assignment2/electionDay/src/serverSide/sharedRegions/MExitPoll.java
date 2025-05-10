@@ -1,13 +1,9 @@
 package serverSide.sharedRegions;
 
-import serverSide.GUI.Gui;
-
+// import clientSide.interfaces.ExitPoll.IExitPoll_all;
+import clientSide.interfaces.Logger.ILogger_ExitPoll;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import clientSide.interfaces.ExitPoll.IExitPoll_all;
-import clientSide.interfaces.GUI.IGUI_Common;
-import clientSide.interfaces.Logger.ILogger_ExitPoll;
 
 public class MExitPoll implements IExitPoll_all {
     private final int percentage;
@@ -27,18 +23,18 @@ public class MExitPoll implements IExitPoll_all {
     // private int countLies;
     // private int countTruths;
 
-    private ILogger_ExitPoll logger;
-    private final IGUI_Common gui;
+    // private final ILogger_ExitPoll logger;
+
 
     private MExitPoll(int percentage, ILogger_ExitPoll logger) {
         this.percentage = percentage;
         this.lock = new ReentrantLock();
         this.voterReady = lock.newCondition();
-        this.logger = logger;
+        // this.logger = logger;
         this.pollsterReady = lock.newCondition();
         this.isOpen = true;
         this.aboutToClose = false;
-        this.gui = Gui.getInstance();
+        
 
         this.votesForA = 0;
         this.votesForB = 0;
@@ -54,7 +50,7 @@ public class MExitPoll implements IExitPoll_all {
         tryClosingExitPoll();
 
         if(!response){
-            logger.exitPollVote(voterId, "");
+            // logger.exitPollVote(voterId, "");
             return;
         }
         
@@ -63,14 +59,14 @@ public class MExitPoll implements IExitPoll_all {
 
             if (Math.random() * 100 >= percentage) { // percentage chance of being selected
                 System.out.println("Voter " + voterId + " leaving polling station (not selected for questioning)");
-                logger.exitPollVote(voterId, "");
+                // logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
 
             if (Math.random() >= 0.6) { // 40% don't want to answer
                 System.out.println("Voter " + voterId + " leaving polling station (doesn't want to answer)");
-                logger.exitPollVote(voterId, "");
+                // logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
@@ -82,11 +78,11 @@ public class MExitPoll implements IExitPoll_all {
             if (Math.random()>= 0.2){ // 80% tell the truth
                 registeredVote = realVote;
                 System.out.println("Voter " + voterId + " leaving polling station (telling the truth)");
-                logger.exitPollVote(voterId, registeredVote ? "A" : "B");
+                // logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             } else { // rest lie
                 registeredVote = !realVote;
                 System.out.println("Voter " + voterId + " leaving polling station (lying)");
-                logger.exitPollVote(voterId, registeredVote ? "A" : "B");
+                // logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             }
             newVoteReady = true;
             voterReady.signal();

@@ -50,5 +50,16 @@ public enum MessageType {
     SIMULATION_STATUS_RESPONSE,        // Response with overall simulation status
     
     // Error messages
-    ERROR                              // General error message
+    ERROR,                              // General error message
+
+    // Logger event messages (Client -> Logger)
+    LOG_VOTER_AT_DOOR,              // int voterId
+    LOG_VOTER_ENTERING_QUEUE,       // int voterId
+    LOG_VALIDATING_VOTER,           // int voterId, boolean valid
+    LOG_VOTER_IN_BOOTH,             // int voterId, boolean voteA
+    LOG_EXIT_POLL_VOTE,             // int voterId, String vote (can be empty)
+    LOG_STATION_OPENING,
+    LOG_STATION_CLOSING,
+    // SIMULATION_END is already defined and can be used to trigger logger's saveCloseFile
+
 }

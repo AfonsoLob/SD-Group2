@@ -1,8 +1,8 @@
 package serverSide.sharedRegions;
 
-import GUI.Gui;
-import Interfaces.GUI.IGUI_Statistics;
-import example.serverSide.interfaces.GUI.IGUI_Voter;
+import serverSide.GUI.Gui;
+import serverSide.interfaces.GUI.IGUI_Statistics;
+import serverSide.interfaces.GUI.IGUI_Voter;
 import serverSide.interfaces.Logger.ILogger_all;
 import java.io.File;
 import java.io.PrintWriter;

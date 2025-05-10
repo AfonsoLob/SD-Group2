@@ -4,7 +4,7 @@ import clientSide.interfaces.ExitPoll.IExitPoll_all;
 import commInfra.ClientCom;
 import commInfra.Message;
 import commInfra.MessageType;
-import example.commInfra.*;
+import commInfra.*;
 
 public class MExitPollStub implements IExitPoll_all {
     private final String serverHostName;

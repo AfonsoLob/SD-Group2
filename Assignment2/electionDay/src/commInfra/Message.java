@@ -21,6 +21,7 @@ public class Message implements Serializable {
     
     /**
      * Constructor for creating a simple message with just a type
+     * For use with types: VOTING_CLOSED, END_OF_DAY, etc.
      * @param type The message type
      */
     public Message(MessageType type) {
@@ -28,9 +29,10 @@ public class Message implements Serializable {
     }
     
     /**
-     * Constructor for creating a message with type and voter ID
+     * Constructor for creating a message with type and entity ID
+     * For use with types: VOTER_ENTERS, VOTER_LEAVES, REQUEST_TO_VOTE, VOTING_COMPLETED, etc.
      * @param type The message type
-     * @param voterId The voter's ID
+     * @param id The entity ID (voter or clerk)
      */
     public Message(MessageType type, int id) {
         this.type = type;
@@ -39,25 +41,29 @@ public class Message implements Serializable {
     
     /**
      * Constructor for creating an exit poll response message
-     * @param type The message type
-     * @param voterId The voter's ID
+     * For use with type: EXIT_POLL_ANSWER
+     * @param type The message type (should be EXIT_POLL_ANSWER)
+     * @param id The voter's ID
      * @param votingOption The voter's choice in the exit poll
-     * @param voted Whether the response is truthful
+     * @param voted Whether the voter actually voted or not
      */
-    public Message(MessageType type, int Id, boolean votingOption, boolean voted) {
+    public Message(MessageType type, int id, boolean votingOption, boolean voted) {
         this.type = type;
-        this.id = Id;
+        this.id = id;
         this.votingOption = votingOption;
         this.voted = voted;
     }
 
     /**
-     * Constructor for creating an exit poll response message
-     * @param type The message type
-     * @param closeIn Whether the response is truthful
+     * Constructor for creating a poll closing notification message
+     * For use with type: POLL_CLOSING
+     * @param type The message type (should be POLL_CLOSING)
+     * @param id The entity ID
+     * @param closeIn Number of voters until the exit poll closes
      */
     public Message(MessageType type, int id, int closeIn) {
         this.type = type;
+        this.id = id;
         this.closeIn = closeIn;
     }
     

@@ -3,15 +3,14 @@ package serverSide.GUI;
 import java.awt.BorderLayout;
 import java.io.File;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
-
-import clientSide.interfaces.GUI.IGUI_all;
-import clientSide.interfaces.Logger.ILogger_GUI;
-
+import serverSide.interfaces.GUI.IGUI_all;
+import serverSide.interfaces.Logger.ILogger_GUI;
 /**
  * Main GUI class implementing the IGUI_all interface.
  * This class uses a singleton pattern to ensure a single GUI instance.
@@ -128,6 +127,60 @@ public class Gui implements IGUI_all {
         
         frame.add(mainPanel, BorderLayout.CENTER);
         
+        // Set up the simulation starter (called when the Start button is clicked)
+        setSimulationStarter(() -> {
+            try {
+                // Get configuration parameters from GuiComponents
+                int numVoters = components.getNumVoters();
+                int queueSize = components.getQueueSize();
+                int votesToClose = components.getVotesToClose();
+                
+                // Call ServerLogger's static method to start the server logic
+                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
+            } catch (Exception e) {
+                System.err.println("Error starting server: " + e.getMessage());
+                components.resetUI(); // Reset UI on error
+                if (frame != null) {
+                    JOptionPane.showMessageDialog(frame, 
+                        "Error starting server: " + e.getMessage(),
+                        "Server Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        // Set up the simulation restarter (called when the Restart button is clicked)
+        setSimulationRestarter(() -> {
+            try {
+                // First, shut down the current server instance
+                serverSide.main.ServerLogger.shutdown();
+                
+                // Allow a brief pause for shutdown to complete
+                try {
+                    Thread.sleep(500);  // 500ms pause
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                // Reset the GUI
+                resetForRestart();
+                
+                // Get the current configuration values
+                int numVoters = components.getNumVoters();
+                int queueSize = components.getQueueSize();
+                int votesToClose = components.getVotesToClose();
+                
+                // Start a new server instance
+                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
+            } catch (Exception e) {
+                System.err.println("Error restarting server: " + e.getMessage());
+                if (frame != null) {
+                    JOptionPane.showMessageDialog(frame, 
+                        "Error restarting server: " + e.getMessage(),
+                        "Server Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
         // Display the window
         frame.setVisible(true);
         
@@ -173,7 +226,24 @@ public class Gui implements IGUI_all {
         return simulationRunning;
     }
     
-    public static void setSimulationRunning(boolean running) {
+    @Override
+    public void setSimulationRunning(boolean running) {
+        Gui.simulationRunning = running; // Update the static field
+        if (running) {
+            Gui.simulationStartTime = System.currentTimeMillis();
+        }
+        // Update GUI components, e.g., enable/disable start button
+        if (components != null && components.getStartButton() != null) { // Assuming GuiComponents has getStartButton()
+            components.getStartButton().setEnabled(!running);
+            components.getStartButton().setText(running ? "Server Running..." : "Start Server");
+        }
+        if (components != null && components.getRestartButton() != null) { // Assuming GuiComponents has getRestartButton()
+             components.getRestartButton().setEnabled(running); // Enable restart only when running or after it ran
+        }
+    }
+
+    // The existing static method can remain or be called by the instance method
+    public static void setStaticSimulationRunning(boolean running) {
         simulationRunning = running;
         if (running) {
             simulationStartTime = System.currentTimeMillis();
@@ -259,6 +329,16 @@ public class Gui implements IGUI_all {
         }
     }
     
+    @Override
+    public void displayMessage(String message) {
+        if (frame != null) {
+            JOptionPane.showMessageDialog(frame, message, "Server Message", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            // Fallback if frame is not available or for headless mode/testing
+            System.out.println("GUI Message (frame not available): " + message);
+        }
+    }
+
     @Override
     public void updateQueueAndBoothInfo(int queueCount, String voterInBooth) {
         queueSize = queueCount;

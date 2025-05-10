@@ -3,9 +3,9 @@ package serverSide.GUI;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font; // Added for default font
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -44,8 +44,8 @@ public class GuiComponents {
     private DefaultTableModel tableModel;
     private JTable logTable;
     private JButton startButton;
+    private JButton restartButton; // Added restartButton field
     private JButton exitButton;
-    private JButton restartButton;
     private JSlider speedSlider;
     private JLabel speedValueLabel;
     
@@ -149,24 +149,16 @@ public class GuiComponents {
         speedValueLabel.setPreferredSize(new Dimension(50, 20));
         
         // Update simulation speed whenever slider changes
-        speedSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                // Convert slider value (5-200) to simulation speed (0.05x-2.0x)
-                float speed = speedSlider.getValue() / 100.0f;
-                Gui.setSpeedValue(speed);
-                speedValueLabel.setText(String.format("%.1fx", speed));
-            }
+        speedSlider.addChangeListener((ChangeEvent e) -> {
+            // Convert slider value (5-200) to simulation speed (0.05x-2.0x)
+            float speed = speedSlider.getValue() / 100.0f;
+            Gui.setSpeedValue(speed);
+            speedValueLabel.setText(String.format("%.1fx", speed));
         });
         
         // Quick reset button to return to half-speed (optimal for analysis)
         JButton resetSpeedButton = new JButton("Normal Speed");
-        resetSpeedButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                speedSlider.setValue(50); // Set to 0.5x speed
-            }
-        });
+        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(50)); // Set to 0.5x speed
         
         controlPanel.add(speedLabel);
         controlPanel.add(speedSlider);
@@ -295,74 +287,44 @@ public class GuiComponents {
      * Create the button panel with control buttons
      */
     public JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        
-        // Add Start Simulation button
-        startButton = new JButton("Start Simulation");
-        startButton.setFont(GuiStyles.LABEL_FONT);
-        startButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!Gui.isSimulationRunning() && Gui.getSimulationStarter() != null) {
-                    // Validate inputs before starting
-                    if (validateConfigInputs()) {
-                        Gui.setSimulationRunning(true);
-                        startButton.setEnabled(false);
-                        restartButton.setEnabled(false);
-                        startButton.setText("Simulation Running...");
-                        new Thread(() -> Gui.getSimulationStarter().run()).start();
-                    }
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBorder(GuiStyles.createTitledBorder("Controls", TitledBorder.CENTER));
+
+        startButton = new JButton("Start Server");
+        startButton.setFont(new Font("Arial", Font.BOLD, 12)); // Using default font
+        startButton.addActionListener(e -> {
+            if (!Gui.isSimulationRunning() && Gui.getSimulationStarter() != null) {
+                if (validateConfigInputs()) {
+                    new Thread(Gui.getSimulationStarter()).start();
                 }
             }
         });
-        
-        // Add Restart Simulation button
-        restartButton = new JButton("Restart Simulation");
-        restartButton.setFont(GuiStyles.LABEL_FONT);
-        restartButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!Gui.isSimulationRunning() && Gui.getRestarter() != null) {
-                    // Validate inputs before restarting
-                    if (validateConfigInputs()) {
-                        // Reset UI elements
-                        startButton.setText("Simulation Running...");
-                        startButton.setEnabled(false);
-                        restartButton.setEnabled(false);
-                        
-                        // Clear table data
-                        tableModel.setRowCount(0);
-                        
-                        // Set simulation as running and start new simulation
-                        Gui.setSimulationRunning(true);
-                        new Thread(() -> Gui.getRestarter().run()).start();
-                    }
-                }
-            }
-        });
-        
-        // Add Exit Program button
-        exitButton = new JButton("Exit Program");
-        exitButton.setFont(GuiStyles.LABEL_FONT);
-        exitButton.setForeground(GuiStyles.ERROR_COLOR);
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int confirmed = JOptionPane.showConfirmDialog(Gui.getFrame(), 
-                    "Are you sure you want to exit the program?", "Exit Program",
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (confirmed == JOptionPane.YES_OPTION) {
-                    System.exit(0);
-                }
-            }
-        });
-        
         buttonPanel.add(startButton);
+
+        restartButton = new JButton("Restart Server");
+        restartButton.setFont(new Font("Arial", Font.BOLD, 12)); // Using default font
+        restartButton.setEnabled(false); // Initially disabled
+        restartButton.addActionListener(e -> {
+            if (Gui.getRestarter() != null) {
+                new Thread(Gui.getRestarter()).start();
+            }
+        });
         buttonPanel.add(restartButton);
+
+        exitButton = new JButton("Exit");
+        exitButton.setFont(new Font("Arial", Font.BOLD, 12)); // Using default font
+        exitButton.setForeground(GuiStyles.ERROR_COLOR);
+        exitButton.addActionListener(e -> {
+            int confirmed = JOptionPane.showConfirmDialog(Gui.getFrame(), 
+                "Are you sure you want to exit the program?", "Exit Program",
+                JOptionPane.YES_NO_OPTION);
+            
+            if (confirmed == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
+        });
         buttonPanel.add(exitButton);
-        
+
         return buttonPanel;
     }
     
@@ -489,6 +451,14 @@ public class GuiComponents {
         
         // Clear log table
         tableModel.setRowCount(0);
+
+        if (startButton != null) {
+            startButton.setEnabled(true);
+            startButton.setText("Start Server");
+        }
+        if (restartButton != null) {
+            restartButton.setEnabled(false);
+        }
     }
     
     /**
@@ -639,5 +609,14 @@ public class GuiComponents {
         } catch (NumberFormatException e) {
             return 3; // Default value
         }
+    }
+
+    // Added getters for buttons to be controlled by Gui.java if needed
+    public JButton getStartButton() {
+        return startButton;
+    }
+
+    public JButton getRestartButton() {
+        return restartButton;
     }
 }

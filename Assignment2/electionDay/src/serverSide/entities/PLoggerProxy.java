@@ -1,7 +1,9 @@
 package serverSide.entities;
 
 
-import example.commInfra.ServerCom.ServerComHandler;
+import commInfra.Message;
+import commInfra.MessageException;
+import commInfra.ServerCom.ServerComHandler;
 import serverSide.interfaces.Logger.ILogger_all;
 
 
@@ -39,5 +41,99 @@ public class PLoggerProxy extends Thread {
         return proxyId;
     }
 
-    
+    @Override
+    public void run ()
+    {
+        Message inMessage = null,                                      // service request
+        outMessage = null;                                     // service reply
+
+        /* service providing */
+
+        inMessage = (Message) sconi.readMessage();                     // get service request
+        try{
+                outMessage = processAndReply (inMessage);         // process it
+        }catch (MessageException e){
+            System.err.println ("Thread " + getName () + ": " + e.getMessage () + "!");
+            System.err.println (e.getMessageVal ().toString ());
+            System.exit (1);
+        }
+          sconi.writeMessage(outMessage);                                // send service reply
+          sconi.close ();                                                // close the communication channel
+        }
+
+
+    public Message processAndReply (Message inMessage) throws MessageException
+    {
+        Message outMessage = null;                                     // mensagem de resposta
+
+        /* validation of the incoming message */
+
+        switch (inMessage.getType()){
+            case LOG_VOTER_AT_DOOR:
+                if (inMessage.getVoterId() < 0) // Assuming voterId is an int and should be non-negative
+                    throw new MessageException("Invalid voterId for LOG_VOTER_AT_DOOR!", inMessage);
+                loggerInter.voterAtDoor(inMessage.getVoterId());
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_VOTER_ENTERING_QUEUE:
+                if (inMessage.getVoterId() < 0)
+                    throw new MessageException("Invalid voterId for LOG_VOTER_ENTERING_QUEUE!", inMessage);
+                loggerInter.voterEnteringQueue(inMessage.getVoterId());
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_VALIDATING_VOTER:
+                if (inMessage.getVoterId() < 0)
+                     throw new MessageException("Invalid voterId for LOG_VALIDATING_VOTER!", inMessage);
+                loggerInter.validatingVoter(inMessage.getVoterId(), inMessage.getBoolVal());
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_VOTER_IN_BOOTH:
+                 if (inMessage.getVoterId() < 0)
+                     throw new MessageException("Invalid voterId for LOG_VOTER_IN_BOOTH!", inMessage);
+                loggerInter.voterInBooth(inMessage.getVoterId(), inMessage.getBoolVal());
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_EXIT_POLL_VOTE:
+                if (inMessage.getVoterId() < 0)
+                    throw new MessageException("Invalid voterId for LOG_EXIT_POLL_VOTE!", inMessage);
+                loggerInter.exitPollVote(inMessage.getVoterId(), inMessage.getStringVal());
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_STATION_OPENING:
+                loggerInter.stationOpening();
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case LOG_STATION_CLOSING:
+                loggerInter.stationClosing();
+                outMessage = new Message(commInfra.MessageType.LOG_ACK);
+                break;
+            case REQ_VOTE_COUNTS:
+                String voteCounts = loggerInter.getVoteCounts();
+                outMessage = new Message(commInfra.MessageType.REP_VOTE_COUNTS, voteCounts);
+                break;
+            case REQ_VOTERS_PROCESSED:
+                int votersProcessed = loggerInter.getVotersProcessed();
+                outMessage = new Message(commInfra.MessageType.REP_VOTERS_PROCESSED, votersProcessed);
+                break;
+            case REQ_IS_STATION_OPEN:
+                boolean isStationOpen = loggerInter.isStationOpen();
+                outMessage = new Message(commInfra.MessageType.REP_IS_STATION_OPEN, isStationOpen);
+                break;
+            case REQ_CURRENT_VOTER_IN_BOOTH:
+                String currentVoterInBooth = loggerInter.getCurrentVoterInBooth();
+                outMessage = new Message(commInfra.MessageType.REP_CURRENT_VOTER_IN_BOOTH, currentVoterInBooth);
+                break;
+            case REQ_CURRENT_QUEUE_SIZE:
+                int currentQueueSize = loggerInter.getCurrentQueueSize();
+                outMessage = new Message(commInfra.MessageType.REP_CURRENT_QUEUE_SIZE, currentQueueSize);
+                break;
+            case SIMULATION_END:
+                loggerInter.saveCloseFile();
+                outMessage = new Message(commInfra.MessageType.LOGGER_TERMINATED);
+                break;
+            default:
+                throw new MessageException ("Invalid message type: " + inMessage.getType(), inMessage);
+        }
+        return outMessage;
+    }
 }
