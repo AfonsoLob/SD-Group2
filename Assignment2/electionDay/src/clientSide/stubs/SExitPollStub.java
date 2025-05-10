@@ -5,11 +5,11 @@ import commInfra.ClientCom;
 import commInfra.Message;
 import commInfra.MessageType;
 
-public class MExitPollStub implements IExitPoll_all {
+public class SExitPollStub implements IExitPoll_all {
     private final String serverHostName;
     private final int serverPort;
 
-    public MExitPollStub(String host, int port) {
+    public SExitPollStub(String host, int port) {
         this.serverHostName = host;
         this.serverPort = port;
     }

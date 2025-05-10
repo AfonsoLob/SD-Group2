@@ -18,6 +18,7 @@ public class Message implements Serializable {
     private boolean voted;           // In the exit poll if the voter did not vote it automatically leaves (false)
     private int closeIn;             // Number of voters until the exit poll closes
     private Object content;          // Additional content or data payload
+    private String message;         // Message content (if needed)
     
     /**
      * Constructor for creating a simple message with just a type
@@ -37,6 +38,28 @@ public class Message implements Serializable {
     public Message(MessageType type, int id) {
         this.type = type;
         this.id = id;    
+    }
+
+     /**
+     * Constructor for creating a poll closing notification message
+     * For use with type: POLL_CLOSING
+     * @param type The message type (should be POLL_CLOSING)
+     * @param message The message content
+     */
+    public Message(MessageType type, String message) {
+        this.type = type;
+        this.message = message;
+    }
+
+     /**
+     * Constructor for creating a poll closing notification message
+     * For use with type: POLL_CLOSING
+     * @param type The message type (should be POLL_CLOSING)
+     * @param message The message content
+     */
+    public Message(MessageType type, Boolean votingOption) {
+        this.type = type;
+        this.votingOption = votingOption;
     }
     
     /**
@@ -66,6 +89,21 @@ public class Message implements Serializable {
         this.id = id;
         this.closeIn = closeIn;
     }
+
+    /**
+     * Constructor for creating a poll closing notification message
+     * For use with type: POLL_CLOSING
+     * @param type The message type (should be POLL_CLOSING)
+     * @param id The entity ID
+     * @param votingOption The voter's choice in the exit poll
+     */
+    public Message(MessageType type, int id, boolean votingOption) {
+        this.type = type;
+        this.id = id;
+        this.votingOption = votingOption;
+    }
+
+   
     
     // Getters and setters
     
@@ -112,6 +150,15 @@ public class Message implements Serializable {
     public Object getContent() {
         return content;
     }
+
+    public void setStringVal(String content) {
+        this.content = message;
+    }
+
+    public String getStringVal() {
+        return message;
+    }
+
     
     public void setContent(Object content) {
         this.content = content;

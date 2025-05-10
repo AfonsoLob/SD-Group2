@@ -70,35 +70,41 @@ public class PLoggerProxy extends Thread {
 
         switch (inMessage.getType()){
             case LOG_VOTER_AT_DOOR:
-                if (inMessage.getVoterId() < 0) // Assuming voterId is an int and should be non-negative
+                if (inMessage.getId() < 0) // Assuming voterId is an int and should be non-negative
                     throw new MessageException("Invalid voterId for LOG_VOTER_AT_DOOR!", inMessage);
-                loggerInter.voterAtDoor(inMessage.getVoterId());
+                loggerInter.voterAtDoor(inMessage.getId());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
             case LOG_VOTER_ENTERING_QUEUE:
-                if (inMessage.getVoterId() < 0)
+                if (inMessage.getId() < 0)
                     throw new MessageException("Invalid voterId for LOG_VOTER_ENTERING_QUEUE!", inMessage);
-                loggerInter.voterEnteringQueue(inMessage.getVoterId());
+                loggerInter.voterEnteringQueue(inMessage.getId());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
+
             case LOG_VALIDATING_VOTER:
-                if (inMessage.getVoterId() < 0)
+                if (inMessage.getId() < 0)
                      throw new MessageException("Invalid voterId for LOG_VALIDATING_VOTER!", inMessage);
-                loggerInter.validatingVoter(inMessage.getVoterId(), inMessage.getBoolVal());
+                loggerInter.validatingVoter(inMessage.getId(), inMessage.didHeVote());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
             case LOG_VOTER_IN_BOOTH:
-                 if (inMessage.getVoterId() < 0)
+                 if (inMessage.getId() < 0)
                      throw new MessageException("Invalid voterId for LOG_VOTER_IN_BOOTH!", inMessage);
-                loggerInter.voterInBooth(inMessage.getVoterId(), inMessage.getBoolVal());
+                loggerInter.voterInBooth(inMessage.getId(), inMessage.getVotingOption());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
             case LOG_EXIT_POLL_VOTE:
-                if (inMessage.getVoterId() < 0)
+                if (inMessage.getId() < 0)
                     throw new MessageException("Invalid voterId for LOG_EXIT_POLL_VOTE!", inMessage);
-                loggerInter.exitPollVote(inMessage.getVoterId(), inMessage.getStringVal());
+                if(inMessage.getVotingOption())
+                    loggerInter.exitPollVote(inMessage.getId(), "A");
+                else
+                    loggerInter.exitPollVote(inMessage.getId(), "B");
+
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
+
             case LOG_STATION_OPENING:
                 loggerInter.stationOpening();
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);

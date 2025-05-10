@@ -6,11 +6,11 @@ import commInfra.Message;
 import commInfra.MessageType;
 // import example.commInfra.*;
 
-public class MPollingStationStub implements IPollingStation_all {
+public class SPollingStationStub implements IPollingStation_all {
     private final String serverHostName;
     private final int serverPort;
 
-    public MPollingStationStub(String host, int port) {
+    public SPollingStationStub(String host, int port) {
         this.serverHostName = host;
         this.serverPort = port;
     }
@@ -58,17 +58,17 @@ public class MPollingStationStub implements IPollingStation_all {
 
     @Override
     public void voteA(int voterId) {
-        sendVote(voterId, 1); // 1 - A
+        sendVote(voterId, true); // 1 - A
     }
 
     @Override
     public void voteB(int voterId) {
-        sendVote(voterId, 0); // 0 - B
+        sendVote(voterId, false); // 0 - B
     }
 
-    private void sendVote(int voterId, int vote) {
+    private void sendVote(int voterId, boolean vote) {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.VOTE_CAST_REQUEST, voterId, vote, null);
+        Message outMessage = new Message(MessageType.VOTE_CAST_REQUEST, voterId, vote);
 
         while (!com.open()) {
             try {

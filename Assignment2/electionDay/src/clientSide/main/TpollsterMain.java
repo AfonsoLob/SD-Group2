@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import clientSide.entities.TPollster;
-import clientSide.stubs.MExitPollStub;
+import clientSide.stubs.SExitPollStub;
 import serverSide.main.SimulPar;
 import clientSide.interfaces.ExitPoll.IExitPoll_Pollster;
 
@@ -29,7 +29,7 @@ public class TpollsterMain {
         }
         
         // Stub
-        IExitPoll_Pollster exitPoll = new MExitPollStub(hostExitPollName, ServerExitPollPortNumber);
+        IExitPoll_Pollster exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber);
         
         // Create and start pollster thread
         Thread pollster = new Thread(TPollster.getInstance(exitPoll));

@@ -69,6 +69,22 @@ public enum MessageType {
     LOG_EXIT_POLL_VOTE,             // int voterId, String vote (can be empty)
     LOG_STATION_OPENING,
     LOG_STATION_CLOSING,
+
+    // Logger remaining messages 
+    REQ_VOTE_COUNTS,
+    REP_VOTE_COUNTS,
+    REQ_VOTERS_PROCESSED,
+    REP_VOTERS_PROCESSED,
+    REQ_IS_STATION_OPEN,
+    REP_IS_STATION_OPEN,
+    REQ_CURRENT_VOTER_IN_BOOTH,
+    REP_CURRENT_VOTER_IN_BOOTH,
+    REQ_CURRENT_QUEUE_SIZE,
+    REP_CURRENT_QUEUE_SIZE,
+
+    LOGGER_TERMINATED,
+
+    LOG_ACK,                          // Acknowledgment message for logger events
     // SIMULATION_END is already defined and can be used to trigger logger's saveCloseFile
 
 }

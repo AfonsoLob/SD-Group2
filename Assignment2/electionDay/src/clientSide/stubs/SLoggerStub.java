@@ -5,7 +5,7 @@ import commInfra.ClientCom;
 import commInfra.Message;
 import commInfra.MessageType;
 
-public class SLogger implements ILogger_all {
+public class SLoggerStub implements ILogger_all {
 
     private final String serverHostName;
     private final int serverPortNum;
@@ -16,13 +16,13 @@ public class SLogger implements ILogger_all {
      * @param serverHostName The hostname of the server where the Logger is running.
      * @param serverPortNum  The port number on which the Logger server is listening.
      */
-    private SLogger(String serverHostName, int serverPortNum) {
+    private SLoggerStub(String serverHostName, int serverPortNum) {
         this.serverHostName = serverHostName;
         this.serverPortNum = serverPortNum;
     }
 
     public static ILogger_all getInstance(String serverHostName, int serverPortNum) {
-        return new SLogger(serverHostName, serverPortNum);
+        return new SLoggerStub(serverHostName, serverPortNum);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class SLogger implements ILogger_all {
             System.err.println("SLogger: Failed to open connection for validatingVoter (" + voterId + ", " + valid + ").");
             return;
         }
-        outMessage = new Message(MessageType.LOG_VALIDATING_VOTER, voterId, valid);
+        outMessage = new Message(MessageType.LOG_VALIDATING_VOTER, voterId, true ,valid); // Assuming the boolean is for didHeVote
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage == null || inMessage.getType() != MessageType.LOG_ACK) {
@@ -106,7 +106,11 @@ public class SLogger implements ILogger_all {
             System.err.println("SLogger: Failed to open connection for exitPollVote (" + voterId + ", '" + vote + "').");
             return;
         }
-        outMessage = new Message(MessageType.LOG_EXIT_POLL_VOTE, voterId, vote);
+        if(vote.equals("A"))
+            outMessage = new Message(MessageType.LOG_EXIT_POLL_VOTE, voterId, true);
+        else
+            outMessage = new Message(MessageType.LOG_EXIT_POLL_VOTE, voterId, false);
+            
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage == null || inMessage.getType() != MessageType.LOG_ACK) {
@@ -187,7 +191,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_VOTERS_PROCESSED) {
-            votersProcessed = inMessage.getIntVal();
+            votersProcessed = inMessage.getId(); // Will use id as a way to get the number of voters processed
         } else {
             System.err.println("SLogger: Error in getVotersProcessed communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }
@@ -209,7 +213,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_IS_STATION_OPEN) {
-            isOpen = inMessage.getBoolVal();
+            isOpen = inMessage.getVotingOption();
         } else {
             System.err.println("SLogger: Error in isStationOpen communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }
@@ -253,7 +257,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_CURRENT_QUEUE_SIZE) {
-            queueSize = inMessage.getIntVal();
+            queueSize = inMessage.getId();
         } else {
             System.err.println("SLogger: Error in getCurrentQueueSize communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }

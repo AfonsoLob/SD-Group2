@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 import clientSide.entities.TVoter;
-import clientSide.stubs.MPollingStationStub;
+import clientSide.stubs.SPollingStationStub;
 import serverSide.main.SimulPar;
-import clientSide.stubs.MExitPollStub;
+import clientSide.stubs.SExitPollStub;
 
 import clientSide.interfaces.Pollingstation.*;
 import clientSide.interfaces.ExitPoll.*;
@@ -39,8 +39,8 @@ public class TvoterMain {
         }
         
         // Stubs
-        IPollingStation_Voter pollingStation = new MPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber);
-        IExitPoll_Voter exitPoll = new MExitPollStub(hostExitPollName, ServerExitPollPortNumber);
+        IPollingStation_Voter pollingStation = new SPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber);
+        IExitPoll_Voter exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber);
         
         // Create and start voter threads
         Thread[] voters = new Thread[SimulPar.N];

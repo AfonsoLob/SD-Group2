@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 import clientSide.entities.TClerk;
-import clientSide.stubs.MPollingStationStub;
+import clientSide.stubs.SPollingStationStub;
 import serverSide.main.SimulPar;
-import clientSide.stubs.MExitPollStub;
+import clientSide.stubs.SExitPollStub;
 import clientSide.interfaces.Pollingstation.IPollingStation_Clerk;
 import clientSide.interfaces.ExitPoll.IExitPoll_Clerk;
 
@@ -35,8 +35,8 @@ public class TClerkmain {
         }
         
         // Stubs
-        IPollingStation_Clerk pollingStation = new MPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber);
-        IExitPoll_Clerk exitPoll = new MExitPollStub(hostExitPollName, ServerExitPollPortNumber);
+        IPollingStation_Clerk pollingStation = new SPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber);
+        IExitPoll_Clerk exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber);
         
         // Create and start clerk thread
         Thread clerk = new Thread(TClerk.getInstance(SimulPar.MAX_VOTES, pollingStation, exitPoll));
