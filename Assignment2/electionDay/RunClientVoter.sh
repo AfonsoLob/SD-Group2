@@ -1,5 +1,5 @@
 
 echo "Compiling the code"
-javac ./src/clientSide/Main/TvoterMain.java
+javac ./src/clientSide/main/TvoterMain.java
 echo "Running the code"
-java ./src/clientSide/Main/TvoterMain.java
+java ./src/clientSide/main/TvoterMain.java

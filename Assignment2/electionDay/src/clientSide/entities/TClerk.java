@@ -1,8 +1,7 @@
 package clientSide.entities;
+
 import clientSide.interfaces.ExitPoll.IExitPoll_Clerk;
-import clientSide.interfaces.GUI.IGUI_Common;
 import clientSide.interfaces.Pollingstation.IPollingStation_Clerk;
-import serverSide.GUI.Gui;
 
 // import Monitores.MPollingStation;
 
@@ -13,7 +12,7 @@ public class TClerk implements Runnable {
     private final IPollingStation_Clerk pollingStation;
     private final IExitPoll_Clerk exitPoll;
     private final int maxVotes;
-    private final IGUI_Common gui;
+    // private final IGUI_Common gui;
 
     
 
@@ -21,7 +20,7 @@ public class TClerk implements Runnable {
         this.pollingStation = pollingStation;
         this.maxVotes = maxVotes;
         this.exitPoll = exitPoll;
-        this.gui = Gui.getInstance();
+        // this.gui = Gui.getInstance();
     }
 
     @Override
@@ -36,8 +35,9 @@ public class TClerk implements Runnable {
                 if (response) {votes++;}
                 
                 // Apply speed factor - slower speed = longer wait time
-                float speedFactor = gui.getSimulationSpeed();
-                long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
+                // float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round((Math.random() * 5 + 5) / 1);
+                // long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
                 Thread.sleep(waitTime);
 
             } catch (InterruptedException e) {
@@ -58,8 +58,9 @@ public class TClerk implements Runnable {
                 pollingStation.callNextVoter();
                 
                 // Apply speed factor here too
-                float speedFactor = gui.getSimulationSpeed();
-                long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
+                // float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round((Math.random() * 5 + 5) / 1);
+                // long waitTime = Math.round((Math.random() * 5 + 5) / speedFactor);
                 Thread.sleep(waitTime);
 
             } catch (InterruptedException e) {

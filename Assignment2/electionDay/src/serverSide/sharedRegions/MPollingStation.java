@@ -6,10 +6,9 @@ import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import clientSide.interfaces.GUI.IGUI_Common;
-import clientSide.interfaces.Logger.ILogger_PollingStation;
-import clientSide.interfaces.Pollingstation.IPollingStation_all;
-import serverSide.GUI.Gui;
+
+import serverSide.interfaces.Logger.ILogger_PollingStation;
+import serverSide.interfaces.Pollingstation.IPollingStation_all;
 
 public class MPollingStation implements IPollingStation_all {
 
@@ -18,7 +17,7 @@ public class MPollingStation implements IPollingStation_all {
     private boolean isOpen;
     private final Condition stationOpen;
     private final ILogger_PollingStation logger;
-    private final IGUI_Common gui;
+    // private final IGUI_Common gui;
   
     //id validation
     private HashSet<Integer> validatedIDs;
@@ -46,7 +45,7 @@ public class MPollingStation implements IPollingStation_all {
         this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
-        this.gui = Gui.getInstance();
+        // this.gui = Gui.getInstance();
 
         this.isAproved = false;
         this.aprovalId = -1;
@@ -201,8 +200,8 @@ public class MPollingStation implements IPollingStation_all {
         voting_lock.lock();
         try {
             // Apply speed factor for voting time - increase minimum time required to vote
-            float speedFactor = gui.getSimulationSpeed();
-            long waitTime = Math.round((Math.random() * 20 + 30) / speedFactor);  // 30-50ms instead of 0-15ms
+            // float speedFactor = gui.getSimulationSpeed();
+            long waitTime = Math.round((Math.random() * 20 + 30) / 1);  // 30-50ms instead of 0-15ms
             Thread.sleep(waitTime);
             
             candidateA++;
@@ -220,8 +219,8 @@ public class MPollingStation implements IPollingStation_all {
         voting_lock.lock();
         try {
             // Apply speed factor for voting time - increase minimum time required to vote
-            float speedFactor = gui.getSimulationSpeed();
-            long waitTime = Math.round((Math.random() * 20 + 30) / speedFactor);  // 30-50ms instead of 0-15ms  
+            // float speedFactor = gui.getSimulationSpeed();
+            long waitTime = Math.round((Math.random() * 20 + 30) / 1);  // 30-50ms instead of 0-15ms  
             Thread.sleep(waitTime);
             
             candidateB++;

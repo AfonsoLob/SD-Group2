@@ -1,14 +1,14 @@
 package serverSide.main;
 
-import serverSide.interfaces.GUI.IGUI_all;
 import commInfra.ServerCom;
-import commInfra.ServerCom.ServerComHandler; // Ensure this import is correct
-import java.io.FileInputStream;
+import commInfra.ServerCom.ServerComHandler;
+import java.io.FileInputStream; // Ensure this import is correct
 import java.io.IOException;
 import java.util.Properties;
 import javax.swing.SwingUtilities;
 import serverSide.GUI.Gui;
 import serverSide.entities.PLoggerProxy;
+import serverSide.interfaces.GUI.IGUI_all;
 import serverSide.interfaces.Logger.ILogger_GUI;
 import serverSide.interfaces.Logger.ILogger_all;
 import serverSide.sharedRegions.Logger;
@@ -124,24 +124,14 @@ public class ServerLogger {
 
         System.out.println("Server entering client acceptance loop...");
         while (waitConnection) {
-            try {
-                sconiHandler = scon.accept(); // Blocking call
-                if (sconiHandler != null) {
-                    cliProxy = PLoggerProxy.getInstanceLoggerProxy(sconiHandler, repos);
-                    cliProxy.start();
-                } else if (waitConnection) {
-                    // This case might occur if accept() is non-blocking or returns null upon interruption
-                    // without throwing an IOException, which is less common for standard ServerSocket.accept().
-                    System.out.println("Accepted null connection handler, but server is still waiting.");
-                }
-            } catch (IOException e) {
-                if (waitConnection) {
-                    // An unexpected error occurred during accept
-                    System.err.println("IOException in accept loop: " + e.getMessage() + ". Server might be shutting down or a network error occurred.");
-                } else {
-                    // This is the expected path when shutdown() closes the ServerSocket via scon.closeServerSocket()
-                    System.out.println("Server accept loop interrupted as server is shutting down.");
-                }
+            sconiHandler = scon.accept(); // Blocking call
+            if (sconiHandler != null) {
+                cliProxy = PLoggerProxy.getInstanceLoggerProxy(sconiHandler, repos);
+                cliProxy.start();
+            } else if (waitConnection) {
+                // This case might occur if accept() is non-blocking or returns null upon interruption
+                // without throwing an IOException, which is less common for standard ServerSocket.accept().
+                System.out.println("Accepted null connection handler, but server is still waiting.");
             }
         }
         System.out.println("Server loop terminated. Starting shutdown sequence...");

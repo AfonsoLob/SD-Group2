@@ -2,6 +2,7 @@ package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -9,6 +10,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
+
 import serverSide.interfaces.GUI.IGUI_all;
 import serverSide.interfaces.Logger.ILogger_GUI;
 /**
@@ -225,6 +227,7 @@ public class Gui implements IGUI_all {
     public static boolean isSimulationRunning() {
         return simulationRunning;
     }
+    
     
     @Override
     public void setSimulationRunning(boolean running) {

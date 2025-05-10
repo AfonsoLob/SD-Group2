@@ -24,7 +24,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -393,7 +392,7 @@ public class GuiComponents {
             if (Gui.isSimulationRunning()) {
                 startButton.setText("Simulation Finished");
                 restartButton.setEnabled(true);  // Enable restart button when finished
-                Gui.setSimulationRunning(false);
+                Gui.getInstance().setSimulationRunning(false);
                 
                 // Automatically load the log file when the simulation ends
                 loadLogFile();

@@ -6,6 +6,6 @@ echo "Running all scripts"
 
 ./RunServerPollingStation.sh
 ./RunServerExitPoll.sh
-./RunServerGUI.sh
+./RunServerLogger.sh
 
 echo "All scripts succecfully executed"

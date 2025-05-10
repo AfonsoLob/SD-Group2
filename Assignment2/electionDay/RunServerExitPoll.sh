@@ -1,5 +1,5 @@
 
 echo "Compiling the code"
-javac ./src/serverSide/Main/ServerExitPoll.java
+javac ./src/serverSide/main/ServerExitPoll.java
 echo "Running the code"
-java ./src/serverSide/Main/ServerExitPoll.java
+java ./src/serverSide/main/ServerExitPoll.java

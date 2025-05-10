@@ -1,21 +1,20 @@
 package clientSide.entities;
 import clientSide.interfaces.ExitPoll.IExitPoll_Voter;
-import clientSide.interfaces.GUI.IGUI_Common;
 import clientSide.interfaces.Pollingstation.IPollingStation_Voter;
-import serverSide.GUI.Gui;
+// import serverSide.GUI.Gui;
 
 public class TVoter implements Runnable {
     private int voterId;
     private final IPollingStation_Voter pollingStation;
     private final IExitPoll_Voter exitPoll;
     private boolean myVote;
-    private final IGUI_Common gui;
+    // private final IGUI_Common gui;
 
     private TVoter(int id, IPollingStation_Voter pollingStation, IExitPoll_Voter exitPoll) {
         this.voterId = id;
         this.pollingStation = pollingStation;
         this.exitPoll = exitPoll;
-        this.gui = Gui.getInstance();
+        // this.gui = Gui.getInstance();
     }
     
     public static TVoter getInstance(int id, IPollingStation_Voter pollingStation, IExitPoll_Voter exitPoll) {
@@ -44,8 +43,9 @@ public class TVoter implements Runnable {
             if (response) {
                 try {
                     // Add delay after validation before voting
-                                        float speedFactor = gui.getSimulationSpeed();
-                    long waitTime = Math.round(1200 / speedFactor);  // 1.2 seconds at normal speed
+                    // float speedFactor = gui.getSimulationSpeed();
+                    long waitTime = Math.round(1200 / 1);  // 1.2 seconds at normal speed
+                    // long waitTime = Math.round(1200 / speedFactor);  // 1.2 seconds at normal speed
                     Thread.sleep(waitTime);
                 } catch (InterruptedException e) {
                     break;
@@ -66,8 +66,9 @@ public class TVoter implements Runnable {
 
                 try {
                     // Add delay after voting before exit poll
-                                        float speedFactor = gui.getSimulationSpeed();
-                    long waitTime = Math.round(1500 / speedFactor);  // 1.5 seconds at normal speed
+                    // float speedFactor = gui.getSimulationSpeed();
+                    long waitTime = Math.round(1500 / 1);  // 1.5 seconds at normal speed
+                    // long waitTime = Math.round(1500 / speedFactor);  // 1.5 seconds at normal speed
                     Thread.sleep(waitTime);
                 } catch (InterruptedException e) {
                     break;
@@ -79,8 +80,8 @@ public class TVoter implements Runnable {
 
             try {
                 // Add delay after exit poll before rebirth/reappearance
-                                float speedFactor = gui.getSimulationSpeed();
-                long waitTime = Math.round(1800 / speedFactor);  // 1.8 seconds at normal speed
+                // float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round(1800 / 1);  // 1.8 seconds at normal speed
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
                 break;
@@ -97,8 +98,9 @@ public class TVoter implements Runnable {
 
             // Wait before trying again - Apply speed control
             try {
-                                float speedFactor = gui.getSimulationSpeed();
-                long waitTime = Math.round(2000 / speedFactor);  // Increase to 2 seconds at normal speed
+                // float speedFactor = gui.getSimulationSpeed();
+                long waitTime = Math.round(2000 / 1);  // Increase to 2 seconds at normal speed
+                // long waitTime = Math.round(2000 / speedFactor);  // Increase to 2 seconds at normal speed
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
                 break;
