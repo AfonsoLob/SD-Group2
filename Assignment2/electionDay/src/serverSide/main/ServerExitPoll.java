@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.Properties;
 
+import genclass.GenericIO;
+
 import clientSide.interfaces.ExitPoll.IExitPoll_all;
 import commInfra.ServerCom;
 import serverSide.entities.PExitPollProxy;

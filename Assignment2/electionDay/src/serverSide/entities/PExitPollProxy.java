@@ -128,11 +128,27 @@ public class PExitPollProxy extends Thread {
             outMessage = new Message (MessageType.VOTER_ENTER_GRANTED,((PExitPollProxy) Thread.currentThread ()).getVoterId());                          
          break;
 
+         //  POLLSTER MESSAGES
          case EXIT_POLL_INQUIRY:             
             exitPoll.inquire();
             outMessage = new Message (MessageType.EXIT_POLL_RESPONSE);                          
          break;
 
+         case EXIT_POLL_OPEN:             
+            if(exitPoll.isOpen()){
+               outMessage = new Message (MessageType.EXIT_POLL_OPENED);                          
+            }
+            else{
+               outMessage = new Message (MessageType.EXIT_POLL_CLOSED);
+            }
+         break;
+
+         case EXIT_POLL_PRINT:             
+            exitPoll.printExitPollResults();
+            outMessage = new Message (MessageType.EXIT_POLL_PRINTED);
+         break;
+
+         // CLERK MESSAGES
          case EXIT_POLL_CLOSE:             
             exitPoll.closeIn(inMessage.getCloseIn());;
             outMessage = new Message (MessageType.EXIT_POLL_CLOSED);                          

@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import clientSide.entities.TPollster;
 import clientSide.stubs.MExitPollStub;
-import example.serverSide.main.SimulPar;
+import serverSide.main.SimulPar;
 import clientSide.interfaces.ExitPoll.IExitPoll_Pollster;
 
 public class TpollsterMain {

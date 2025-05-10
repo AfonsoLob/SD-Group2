@@ -33,12 +33,21 @@ public enum MessageType {
     VOTE_CAST_DONE,                     // Access to e-voting booth granted
     
     // Exit poll messages
-    EXIT_POLL_ENTER,                // Voter responds to exit poll
-    EXIT_POLL_LEAVE,                // Voter declines to participate in exit poll
-    EXIT_POLL_INQUIRY,               // Exit poll inquiry
-    EXIT_POLL_RESPONSE,              // Exit poll response
-    EXIT_POLL_CLOSE,                // Exit poll closed
-    EXIT_POLL_CLOSED,                 // Exit poll opened
+    EXIT_POLL_ENTER,                // Voter enters exit poll
+    EXIT_POLL_LEAVE,                // Exitpoll response after voter leaves
+
+    EXIT_POLL_INQUIRY,              // Pollster inquiry
+    EXIT_POLL_RESPONSE,             // Exit poll inquiry response
+
+    EXIT_POLL_CLOSE,                // Clerk closes exit poll
+    EXIT_POLL_OPEN,             // Pollster ask if exitpoll opened
+
+    EXIT_POLL_OPENED,                // Exit poll opened
+    EXIT_POLL_CLOSED,               // Exit poll closed
+
+    EXIT_POLL_PRINT,                 // Pollster prints exit poll results
+    EXIT_POLL_PRINTED,              // Exit poll results printed
+
     
     // Election result messages
     ELECTION_RESULTS_REQUEST,          // Request for current election results

@@ -4,7 +4,6 @@ import clientSide.interfaces.ExitPoll.IExitPoll_all;
 import commInfra.ClientCom;
 import commInfra.Message;
 import commInfra.MessageType;
-import commInfra.*;
 
 public class MExitPollStub implements IExitPoll_all {
     private final String serverHostName;
@@ -19,7 +18,7 @@ public class MExitPollStub implements IExitPoll_all {
     @Override
     public void exitPollingStation(int voterId, boolean myVote, boolean response) {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_REQUEST, voterId, myVote, response); // TODO: create a new message constructor?
+        Message outMessage = new Message(MessageType.EXIT_POLL_ENTER, voterId, myVote, response); // TODO: create a new message constructor?
 
         while (!com.open()) {
             try {
@@ -36,7 +35,7 @@ public class MExitPollStub implements IExitPoll_all {
     @Override
     public boolean isOpen() {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_REQUEST);
+        Message outMessage = new Message(MessageType.EXIT_POLL_OPEN);
         Message inMessage;
 
         while (!com.open()) {
@@ -57,7 +56,7 @@ public class MExitPollStub implements IExitPoll_all {
     @Override
     public void inquire() {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_REQUEST);
+        Message outMessage = new Message(MessageType.EXIT_POLL_INQUIRY);
 
         while (!com.open()) {
             try {
@@ -74,7 +73,7 @@ public class MExitPollStub implements IExitPoll_all {
     @Override
     public void printExitPollResults() {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_REQUEST);
+        Message outMessage = new Message(MessageType.EXIT_POLL_PRINT);
 
         while (!com.open()) {
             try {
@@ -92,7 +91,7 @@ public class MExitPollStub implements IExitPoll_all {
     @Override
     public void closeIn(int stillVotersInQueue) {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_REQUEST, stillVotersInQueue);
+        Message outMessage = new Message(MessageType.EXIT_POLL_CLOSED, -1, stillVotersInQueue);
 
         while (!com.open()) {
             try {

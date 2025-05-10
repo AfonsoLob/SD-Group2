@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import clientSide.entities.TClerk;
 import clientSide.stubs.MPollingStationStub;
-import example.serverSide.main.SimulPar;
+import serverSide.main.SimulPar;
 import clientSide.stubs.MExitPollStub;
 import clientSide.interfaces.Pollingstation.IPollingStation_Clerk;
 import clientSide.interfaces.ExitPoll.IExitPoll_Clerk;
