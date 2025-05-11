@@ -32,6 +32,8 @@ public class TClerk implements Runnable {
             try {
                 System.out.println("Clerk calling next voter");
                 boolean response = pollingStation.callNextVoter();
+                System.out.println(response);
+                
                 if (response) {votes++;}
                 
                 // Apply speed factor - slower speed = longer wait time

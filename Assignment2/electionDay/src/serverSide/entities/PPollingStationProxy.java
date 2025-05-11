@@ -1,5 +1,6 @@
 package serverSide.entities;
-import clientSide.interfaces.Pollingstation.IPollingStation_all;
+// import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import serverSide.interfaces.Pollingstation.IPollingStation_all;
 import commInfra.Message;
 import commInfra.MessageException;
 import commInfra.MessageType;

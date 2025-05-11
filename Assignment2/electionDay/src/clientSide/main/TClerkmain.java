@@ -18,7 +18,7 @@ public class TClerkmain {
         final String CONFIG_FILE = "config.properties";               // Path to the configuration 
         int ServerPollingStationPortNumber = -1;                     // port number for listening to service requests
         int ServerExitPollPortNumber = -1;                           // port number for listening to service requests
-        String hostPollingStationName = "localhost";            // name of the platform where is located the polling station server
+        String hostPollingStationName = "localhost";                // name of the platform where is located the polling station server
         String hostExitPollName = "localhost";                        // name of the platform where is located the exit poll server
 
         // Load default values from properties file

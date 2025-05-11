@@ -36,7 +36,7 @@ public class ServerExitPoll {
       Properties props = new Properties();
       try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
           props.load(fis);
-          ServerExitPollPortNumber = Integer.parseInt(props.getProperty("portNumber"));
+          ServerExitPollPortNumber = Integer.parseInt(props.getProperty("ServerExitPollPortNumber"));
           reposPortNumb = Integer.parseInt(props.getProperty("reposPortNumber"));
       } catch (IOException | NumberFormatException e) {
           System.err.println("Error reading configuration file!");

@@ -59,7 +59,7 @@ public class ServerCom {
             listeningSocket = new ServerSocket(serverPortNum);
             listeningSocket.setSoTimeout(timeout);
         } catch (BindException e) {
-            System.err.println("Server: address already in use: " + e.getMessage());
+            System.err.println("Server: address " + serverPortNum + " already in use: " + e.getMessage());
             return false;
         } catch (IOException e) {
             System.err.println("Server: error creating server socket: " + e.getMessage());

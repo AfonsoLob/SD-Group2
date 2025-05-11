@@ -1,6 +1,7 @@
 package serverSide.main;
 
-import clientSide.interfaces.Pollingstation.IPollingStation_all;
+// import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import serverSide.interfaces.Pollingstation.IPollingStation_all;
 import commInfra.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class ServerPollingStation {
       Properties props = new Properties();
       try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
           props.load(fis);
-          ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("portNumber"));
+          ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("ServerPollingStationPortNumber"));
           reposPortNumb = Integer.parseInt(props.getProperty("reposPortNumber"));
       } catch (IOException | NumberFormatException e) {
           System.err.println("Error reading configuration file!");
