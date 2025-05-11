@@ -33,7 +33,7 @@ public class TClerk implements Runnable {
                 System.out.println("Votes remaining: " + (maxVotes - votes));
                 System.out.println("Clerk calling next voter");
                 boolean response = pollingStation.callNextVoter();
-                System.out.println(response);
+                // System.out.println(response);
                 
                 if (response) {votes++;}
                 

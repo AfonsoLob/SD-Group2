@@ -58,9 +58,11 @@ public class ServerPollingStation {
 
       waitConnection = true;
       while (waitConnection)
-      {   sconi = scon.accept();                                    // enter listening procedure
-      Proxy = PPollingStationProxy.getInstance(sconi,pollingStation);  // start a service provider agent to address
-      Proxy.start ();                                         //   the request of service
+      {   
+        sconi = scon.accept();                                    // enter listening procedure
+        Proxy = new PPollingStationProxy(sconi,pollingStation);  // start a service provider agent to address
+        Proxy.start();                                         //   the request of service
+        // System.out.println("New client connection accepted and started proxy thread PollingStation: " + Proxy.getName());
       }
       scon.end ();                                                   // operations termination
         System.err.println("Server was shutdown.");

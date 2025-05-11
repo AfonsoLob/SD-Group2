@@ -41,34 +41,7 @@ public class ServerExitPoll {
           System.exit(1);
       }
   
-      // Override with command line arguments if provided
-    //   if (args.length == 3) {
-    //       try {
-    //         ServerExitPollPortNumber = Integer.parseInt(args[0]);
-    //           reposServerName = args[1];
-    //           reposPortNumb = Integer.parseInt(args[2]);
-    //       } catch (NumberFormatException e) {
-    //           System.err.println("Invalid number format in arguments!");
-    //           System.exit(1);
-    //       }
-    //   }
-
-    //   // Validate port numbers
-    //   if ((ServerExitPollPortNumber < 4000) || (ServerExitPollPortNumber >= 65536)) {
-    //       System.err.println("Invalid port number!");
-    //       System.exit(1);
-    //   }
-    //   if ((reposPortNumb < 4000) || (reposPortNumb >= 65536)) {
-    //       System.err.println("Invalid repository port number!");
-    //       System.exit(1);
-    //   }
-
-     /* service is established */
-
-    //   reposStub = new GeneralReposStub (reposServerName, reposPortNumb);     // communication to the general repository is instantiated
-    //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
-    //   pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
-
+    
       exitPoll = MExitPoll.getInstance(SimulPar.EXIT_POLL_PERCENTAGE);                      // service is instantiated
        
       scon = new ServerCom (ServerExitPollPortNumber);                    // listening channel at the public port is established
@@ -82,10 +55,11 @@ public class ServerExitPoll {
 
       waitConnection = true;
       while (waitConnection)
-      {   sconi = scon.accept();                                    // enter listening procedure
-      Proxy = PExitPollProxy.getInstance(sconi, exitPoll);           // service provider agent is generated
-      Proxy.start();                                         //   the request of service
-      System.out.println("New client connection accepted and started proxy thread ExitPoll: " + Proxy.getName());
+      {   
+        sconi = scon.accept();                                    // enter listening procedure
+        Proxy = new PExitPollProxy(sconi, exitPoll);           // service provider agent is generated
+        Proxy.start();                                         //   the request of service
+        // System.out.println("New client connection accepted and started proxy thread ExitPoll: " + Proxy.getName());
    }
       scon.end ();                                                   // operations termination
       System.err.println ("Server was shutdown.");

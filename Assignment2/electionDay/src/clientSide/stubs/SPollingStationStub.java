@@ -135,7 +135,7 @@ public class SPollingStationStub implements IPollingStation_all {
     @Override
     public boolean isOpen() {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.POLLING_STATION_OPEN);
+        Message outMessage = new Message(MessageType.POLLING_STATION_IS_OPEN);
         Message inMessage;
 
         while (!com.open()) {
@@ -214,7 +214,7 @@ public class SPollingStationStub implements IPollingStation_all {
     @Override
     public int numberVotersInQueue() {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.ELECTION_RESULTS_REQUEST);
+        Message outMessage = new Message(MessageType.VOTERS_QUEUE_REQUEST);
         Message inMessage;
 
         while (!com.open()) {
@@ -228,8 +228,8 @@ public class SPollingStationStub implements IPollingStation_all {
         inMessage = com.sendAndReceive(outMessage);
         com.close();
 
-        if (inMessage.getType() == MessageType.ELECTION_RESULTS_RESPONSE) {
-            return inMessage.getContent() instanceof Integer ? (Integer) inMessage.getContent() : -1; // Assuming content is an Integer
+        if (inMessage.getType() == MessageType.VOTERS_QUEUE_RESPONSE) {
+            return inMessage.getId(); // Assuming content is an Integer
         }
 
         return -1; // Return -1 if the response is invalid

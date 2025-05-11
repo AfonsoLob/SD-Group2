@@ -48,7 +48,8 @@ public class PPollingStationProxy extends Thread{
       int proxyId;                                                   // instantiation identifier
 
       try
-      { cl = Class.forName ("serverSide.entities.PPollingStationProxy");
+      { 
+         cl = Class.forName ("serverSide.entities.PPollingStationProxy");
       }
       catch (ClassNotFoundException e)
       { System.out.println("Data type PPollingStationProxy was not found!");
@@ -97,7 +98,8 @@ public class PPollingStationProxy extends Thread{
       inMessage = sconi.readMessage();                                // get service request
       // inMessage = (Message) sconi.readObject ();                     // get service request
       try
-      { outMessage = processAndReply(inMessage);         // process it
+      { 
+         outMessage = processAndReply(inMessage);         // process it
       }
       catch (MessageException e)
       {
@@ -138,6 +140,12 @@ public class PPollingStationProxy extends Thread{
             outMessage = new Message (MessageType.VOTE_CAST_DONE,((PPollingStationProxy) Thread.currentThread ()).getVoterId());
          break;
 
+         case POLLING_STATION_IS_OPEN:                              
+            if (pollingStation.isOpen())
+               outMessage = new Message (MessageType.POLLING_STATION_READY);
+            else
+               outMessage = new Message (MessageType.POLLING_STATION_CLOSED);
+
          // CLERK MESSAGES
          case POLLING_STATION_OPEN:                              
             pollingStation.openPollingStation();
@@ -154,6 +162,11 @@ public class PPollingStationProxy extends Thread{
                outMessage = new Message (MessageType.ID_VALID);
             else
                outMessage = new Message (MessageType.ID_INVALID);
+         break;
+
+         case VOTERS_QUEUE_REQUEST:                              
+            int queueSize = pollingStation.numberVotersInQueue();
+            outMessage = new Message (MessageType.VOTERS_QUEUE_RESPONSE, queueSize);
          break;
 
          default:
