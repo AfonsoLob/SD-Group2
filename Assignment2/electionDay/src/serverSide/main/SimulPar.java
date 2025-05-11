@@ -29,7 +29,7 @@ public final class SimulPar
    *   Percentage of voters to be selected for exit poll (0.5 = 50%).
    */
 
-   public static final double EXIT_POLL_PERCENTAGE = 0.5;
+   public static final int EXIT_POLL_PERCENTAGE = 50;
 
   /**
    *   Time for ID validation in milliseconds (between 5 and 10).

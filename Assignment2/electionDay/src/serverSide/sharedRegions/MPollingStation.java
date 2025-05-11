@@ -6,8 +6,6 @@ import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-
-import serverSide.interfaces.Logger.ILogger_PollingStation;
 import serverSide.interfaces.Pollingstation.IPollingStation_all;
 
 public class MPollingStation implements IPollingStation_all {
@@ -16,7 +14,6 @@ public class MPollingStation implements IPollingStation_all {
     private final int capacity;
     private boolean isOpen;
     private final Condition stationOpen;
-    private final ILogger_PollingStation logger;
     // private final IGUI_Common gui;
   
     //id validation
@@ -37,12 +34,11 @@ public class MPollingStation implements IPollingStation_all {
     private int candidateA;
     private int candidateB;
 
-    private MPollingStation(int capacity, ILogger_PollingStation logger) {
+    private MPollingStation(int capacity) {
         if (capacity < 2 || capacity > 5) {
             throw new IllegalArgumentException("Queue capacity must be between 2 and 5");
         }
         
-        this.logger = logger;
         this.capacity = capacity;
         this.isOpen = false;
         // this.gui = Gui.getInstance();
@@ -64,9 +60,9 @@ public class MPollingStation implements IPollingStation_all {
         this.candidateB = 0;
     }
 
-    public static IPollingStation_all getInstance(int maxCapacity, ILogger_PollingStation logger) {
+    public static IPollingStation_all getInstance(int maxCapacity) {
         if (instance == null) {
-            instance = new MPollingStation(maxCapacity, logger);
+            instance = new MPollingStation(maxCapacity);
         }
         return instance;
     }
@@ -93,7 +89,7 @@ public class MPollingStation implements IPollingStation_all {
     @Override
     public boolean enterPollingStation(int voterId) {
         queue_lock.lock();
-        logger.voterAtDoor(voterId);
+        // logger.voterAtDoor(voterId);
         try {
             while (!isOpen) {
                 stationOpen.await();
@@ -110,7 +106,7 @@ public class MPollingStation implements IPollingStation_all {
         } catch (InterruptedException e) {
             return false;
         } finally {
-            logger.voterEnteringQueue(voterId);
+            // logger.voterEnteringQueue(voterId);
             queue_lock.unlock();
         }
     }
@@ -130,7 +126,7 @@ public class MPollingStation implements IPollingStation_all {
             return false;
 
         } finally {
-            logger.validatingVoter(voterId, isAproved);
+            // logger.validatingVoter(voterId, isAproved);
             queue_lock.unlock();
         }
     }
@@ -162,7 +158,7 @@ public class MPollingStation implements IPollingStation_all {
             isOpen = true;
             stationOpen.signalAll();
         } finally {
-            logger.stationOpening();
+            // logger.stationOpening();
             queue_lock.unlock();
         }
     }
@@ -173,7 +169,7 @@ public class MPollingStation implements IPollingStation_all {
         try {
             isOpen = false;
         } finally {
-            logger.stationClosing();
+            // logger.stationClosing();
             queue_lock.unlock();
         }
     }
@@ -212,7 +208,7 @@ public class MPollingStation implements IPollingStation_all {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            logger.voterInBooth(voterId, true); // vote A
+            // logger.voterInBooth(voterId, true); // vote A
             voting_lock.unlock();
         }
     }
@@ -231,7 +227,7 @@ public class MPollingStation implements IPollingStation_all {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            logger.voterInBooth(voterId, false); // vote B
+            // logger.voterInBooth(voterId, false); // vote B
             voting_lock.unlock();
         }
     }

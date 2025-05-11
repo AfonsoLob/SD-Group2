@@ -10,7 +10,6 @@ import serverSide.entities.PPollingStationProxy;
 import serverSide.sharedRegions.MPollingStation;
 
 
-
 public class ServerPollingStation {
     /**
    *  Flag signaling the service is active.
@@ -31,45 +30,41 @@ public class ServerPollingStation {
    {
       final String CONFIG_FILE = "config.properties";               // Path to the configuration file
       IPollingStation_all pollingStation;                                // interface to the barber shop
-    //   GeneralReposStub reposStub;                                    // stub to the general repository
       ServerCom scon;                                         // communication channels
       ServerCom.ServerComHandler sconi;                       // communication channel
       int ServerPollingStationPortNumber = -1;                                             // port number for listening to service requests
-      String reposServerName;                                        // name of the platform where is located the server for the general repository
-      int reposPortNumb = -1;                                        // port nunber where the server for the general repository is listening to service requests
 
       // Load default values from properties file
       Properties props = new Properties();
       try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
           props.load(fis);
           ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("ServerPollingStationPortNumber"));
-          reposPortNumb = Integer.parseInt(props.getProperty("reposPortNumber"));
       } catch (IOException | NumberFormatException e) {
           System.err.println("Error reading configuration file!");
           System.exit(1);
       }
   
       // Override with command line arguments if provided
-      if (args.length == 3) {
-          try {
-              ServerPollingStationPortNumber = Integer.parseInt(args[0]);
-              reposServerName = args[1];
-              reposPortNumb = Integer.parseInt(args[2]);
-          } catch (NumberFormatException e) {
-              System.err.println("Invalid number format in arguments!");
-              System.exit(1);
-          }
-      }
+    //   if (args.length == 3) {
+    //       try {
+    //           ServerPollingStationPortNumber = Integer.parseInt(args[0]);
+    //           reposServerName = args[1];
+    //           reposPortNumb = Integer.parseInt(args[2]);
+    //       } catch (NumberFormatException e) {
+    //           System.err.println("Invalid number format in arguments!");
+    //           System.exit(1);
+    //       }
+    //   }
 
-      // Validate port numbers
-      if ((ServerPollingStationPortNumber < 4000) || (ServerPollingStationPortNumber >= 65536)) {
-          System.err.println("Invalid port number!");
-          System.exit(1);
-      }
-      if ((reposPortNumb < 4000) || (reposPortNumb >= 65536)) {
-          System.err.println("Invalid repository port number!");
-          System.exit(1);
-      }
+    //   // Validate port numbers
+    //   if ((ServerPollingStationPortNumber < 4000) || (ServerPollingStationPortNumber >= 65536)) {
+    //       System.err.println("Invalid port number!");
+    //       System.exit(1);
+    //   }
+    //   if ((reposPortNumb < 4000) || (reposPortNumb >= 65536)) {
+    //       System.err.println("Invalid repository port number!");
+    //       System.exit(1);
+    //   }
 
      /* service is established */
 
@@ -79,7 +74,7 @@ public class ServerPollingStation {
 
       // Create a logger stub for MPollingStation
       // SLogger loggerStub = new SLogger("localhost", reposPortNumb);
-      pollingStation = (IPollingStation_all) MPollingStation.getInstance(5, null);                      // service is instantiated
+      pollingStation = (IPollingStation_all) MPollingStation.getInstance(SimulPar.K);                      // service is instantiated
        
       scon = new ServerCom (ServerPollingStationPortNumber);                    // listening channel at the public port is established
       scon.start();

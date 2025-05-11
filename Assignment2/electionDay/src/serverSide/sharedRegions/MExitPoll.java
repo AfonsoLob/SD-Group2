@@ -4,7 +4,6 @@ package serverSide.sharedRegions;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Logger.ILogger_ExitPoll;
 
 public class MExitPoll implements IExitPoll_all {
     private final int percentage;
@@ -27,7 +26,7 @@ public class MExitPoll implements IExitPoll_all {
     // private final ILogger_ExitPoll logger;
 
 
-    private MExitPoll(int percentage, ILogger_ExitPoll logger) {
+    private MExitPoll(int percentage) {
         this.percentage = percentage;
         this.lock = new ReentrantLock();
         this.voterReady = lock.newCondition();
@@ -41,8 +40,8 @@ public class MExitPoll implements IExitPoll_all {
         this.votesForB = 0;
     }
 
-    public static MExitPoll getInstance(int percentage, ILogger_ExitPoll logger) {
-        return new MExitPoll(percentage, logger);
+    public static MExitPoll getInstance(int percentage) {
+        return new MExitPoll(percentage);
     }
 
     @Override
