@@ -2,7 +2,6 @@ package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.io.File;
-
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -10,7 +9,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
-
 import serverSide.interfaces.GUI.IGUI_all;
 import serverSide.interfaces.Logger.ILogger_GUI;
 /**
@@ -132,16 +130,23 @@ public class Gui implements IGUI_all {
         // Set up the simulation starter (called when the Start button is clicked)
         setSimulationStarter(() -> {
             try {
+                // Set simulation state to running
+                simulationRunning = true;
+                
                 // Get configuration parameters from GuiComponents
                 int numVoters = components.getNumVoters();
                 int queueSize = components.getQueueSize();
                 int votesToClose = components.getVotesToClose();
+                
+                // Update configuration values
+                setConfigValues(numVoters, queueSize, votesToClose);
                 
                 // Call ServerLogger's static method to start the server logic
                 serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
             } catch (Exception e) {
                 System.err.println("Error starting server: " + e.getMessage());
                 components.resetUI(); // Reset UI on error
+                simulationRunning = false;
                 if (frame != null) {
                     JOptionPane.showMessageDialog(frame, 
                         "Error starting server: " + e.getMessage(),
@@ -171,10 +176,14 @@ public class Gui implements IGUI_all {
                 int queueSize = components.getQueueSize();
                 int votesToClose = components.getVotesToClose();
                 
+                // Update configuration values
+                setConfigValues(numVoters, queueSize, votesToClose);
+                
                 // Start a new server instance
                 serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
             } catch (Exception e) {
                 System.err.println("Error restarting server: " + e.getMessage());
+                simulationRunning = false;
                 if (frame != null) {
                     JOptionPane.showMessageDialog(frame, 
                         "Error restarting server: " + e.getMessage(),
@@ -267,6 +276,11 @@ public class Gui implements IGUI_all {
         return simulationRestarter;
     }
     
+    // Alternative name for the same functionality (for backward compatibility)
+    public static Runnable getSimulationRestarter() {
+        return simulationRestarter;
+    }
+    
     // Method to set config values from UI
     public static void setConfigValues(int numVoters, int queueSize, int votesToClose) {
         configNumVoters = numVoters;
@@ -296,6 +310,7 @@ public class Gui implements IGUI_all {
         queueSize = 0;
         currentVoterInBooth = "";
         simulationStartTime = System.currentTimeMillis();
+        simulationRunning = true;  // Set to true as we're restarting the simulation
         
         // Reset the components
         components.resetUI();

@@ -294,7 +294,16 @@ public class GuiComponents {
         startButton.addActionListener(e -> {
             if (!Gui.isSimulationRunning() && Gui.getSimulationStarter() != null) {
                 if (validateConfigInputs()) {
-                    new Thread(Gui.getSimulationStarter()).start();
+                    try {
+                        new Thread(Gui.getSimulationStarter()).start();
+                        startButton.setEnabled(false);
+                        startButton.setText("Server Running...");
+                        restartButton.setEnabled(false); // Disable restart until server is fully started
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(Gui.getFrame(), 
+                            "Error starting server: " + ex.getMessage(),
+                            "Start Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -305,7 +314,16 @@ public class GuiComponents {
         restartButton.setEnabled(false); // Initially disabled
         restartButton.addActionListener(e -> {
             if (Gui.getRestarter() != null) {
-                new Thread(Gui.getRestarter()).start();
+                try {
+                    new Thread(Gui.getRestarter()).start();
+                    // Update button state immediately for better user feedback
+                    startButton.setText("Server Restarting...");
+                    restartButton.setEnabled(false);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(Gui.getFrame(), 
+                        "Error restarting server: " + ex.getMessage(),
+                        "Restart Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         buttonPanel.add(restartButton);
@@ -528,21 +546,33 @@ public class GuiComponents {
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             String line;
             
-            // Read header info (first line)
-            // if ((line = reader.readLine()) != null) {
-            //     System.out.println("Header info: " + line);
-            // }
-            
-            // Skip the column headers and delimiter lines
-            reader.readLine(); // column headers
-            reader.readLine(); // delimiter
+            // Skip the column headers and delimiter lines if they exist
+            if ((line = reader.readLine()) != null) {
+                // Skip header line - contains column headers
+                if ((line = reader.readLine()) != null) {
+                    // Skip delimiter line (usually dashes)
+                    if (line.startsWith("-")) {
+                        line = reader.readLine(); // Read the next line for actual data
+                    }
+                }
+            }
             
             // Read and parse log entries
+            int entriesAdded = 0;
             while ((line = reader.readLine()) != null) {
-                parseLine(line);
+                if (parseLine(line)) {
+                    entriesAdded++;
+                }
             }
             
             reader.close();
+            
+            // Notify user about loaded entries
+            if (entriesAdded == 0) {
+                JOptionPane.showMessageDialog(Gui.getFrame(), 
+                    "No valid log entries found in log file.",
+                    "Empty Log", JOptionPane.INFORMATION_MESSAGE);
+            }
             
         } catch (IOException e) {
             JOptionPane.showMessageDialog(Gui.getFrame(), 
@@ -554,15 +584,16 @@ public class GuiComponents {
     
     /**
      * Parse a line from the log file
+     * @return true if line was successfully parsed and added to the table
      */
-    private void parseLine(String line) {
-        if (line.trim().isEmpty()) return;
+    private boolean parseLine(String line) {
+        if (line.trim().isEmpty()) return false;
         
         String[] columns = new String[8];
         line = line.trim();
         
         // Skip lines that don't match our expected format
-        if (!line.startsWith("|")) return;
+        if (!line.startsWith("|")) return false;
         
         try {
             // Split the line by the pipe character and extract each column
@@ -574,11 +605,13 @@ public class GuiComponents {
                 
                 // Add the row to the table model
                 tableModel.addRow(columns);
+                return true;
             }
         } catch (Exception e) {
             System.err.println("Error parsing line: " + line);
             e.printStackTrace();
         }
+        return false;
     }
     
     // Getters for components
