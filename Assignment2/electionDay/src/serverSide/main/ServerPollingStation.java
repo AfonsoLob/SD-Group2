@@ -88,7 +88,7 @@ public class ServerPollingStation {
       waitConnection = true;
       while (waitConnection)
       {   sconi = scon.accept();                                    // enter listening procedure
-      Proxy = new PPollingStationProxy (sconi,pollingStation);  // start a service provider agent to address
+      Proxy = PPollingStationProxy.getInstance(sconi,pollingStation);  // start a service provider agent to address
       Proxy.start ();                                         //   the request of service
       }
       scon.end ();                                                   // operations termination

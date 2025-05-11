@@ -14,7 +14,79 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
+import    /**
+     * Load the log file into the table
+     */
+    public void loadLogFile() {
+      /**
+     * Parse a line from the log file
+     */
+    private void parseLine(String line) {
+        if (line.trim().isEmpty()) return;
+        
+        String[] columns = new String[8];
+        line = line.trim();
+        
+        // Skip lines that don't match our expected format
+        if (!line.startsWith("|")) return;
+        
+        try {
+            // Split the line by the pipe character and extract each column
+            String[] parts = line.split("\\|");
+            if (parts.length >= 9) {
+                for (int i = 1; i < 9; i++) {
+                    columns[i-1] = parts[i].trim();
+                }
+                
+                // Add the row to the table model
+                tableModel.addRow(columns);
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing line: " + line);
+            e.printStackTrace();
+        }
+    }  try {
+            // Clear current table data
+            tableModel.setRowCount(0);
+            
+            // Check if file exists first
+            File logFile = new File("log.txt");
+            if (!logFile.exists()) {
+                JOptionPane.showMessageDialog(Gui.getFrame(), 
+                    "Log file not found: " + logFile.getAbsolutePath(),
+                    "File Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Read the log file
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            String line;
+            
+            // Skip the column headers and delimiter lines if they exist
+            reader.readLine(); // potential header or column names
+            reader.readLine(); // potential delimiter line
+            
+            // Read and parse log entries
+            while ((line = reader.readLine()) != null) {
+                parseLine(line);
+            }
+            
+            reader.close();
+            
+            // Notify user if no data was loaded
+            if (tableModel.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(Gui.getFrame(), 
+                    "No valid log entries found in file.",
+                    "Empty Log", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(Gui.getFrame(), 
+                "Error loading log file: " + e.getMessage(),
+                "File Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }ax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -257,11 +329,34 @@ public class GuiComponents {
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!Gui.isSimulationRunning() && Gui.getSimulationStarter() != null) {
-                    Gui.setSimulationRunning(true);
+                // Get the simulation starter from the GUI class
+                Runnable starter = Gui.getSimulationStarter();
+                if (starter != null) {
+                    starter.run();
                     startButton.setEnabled(false);
                     startButton.setText("Simulation Running...");
-                    new Thread(() -> Gui.getSimulationStarter().run()).start();
+                    
+                    // Enable the restart button once simulation has started
+                    if (restartButton != null) {
+                        restartButton.setEnabled(true);
+                    }
+                }
+            }
+        });
+        
+        // Add Restart button
+        restartButton = new JButton("Restart Simulation");
+        restartButton.setFont(GuiStyles.LABEL_FONT);
+        restartButton.setEnabled(false); // Initially disabled
+        restartButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Get the simulation restarter from the GUI class
+                Runnable restarter = Gui.getSimulationRestarter();
+                if (restarter != null) {
+                    restarter.run();
+                    // Start button remains disabled but text is updated
+                    startButton.setText("Simulation Running...");
                 }
             }
         });
@@ -273,19 +368,14 @@ public class GuiComponents {
         exitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int confirmed = JOptionPane.showConfirmDialog(Gui.getFrame(), 
-                    "Are you sure you want to exit the program?", "Exit Program",
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (confirmed == JOptionPane.YES_OPTION) {
-                    System.exit(0);
-                }
+                System.exit(0);
             }
         });
         
         // Removed load and refresh buttons
         
         buttonPanel.add(startButton);
+        buttonPanel.add(restartButton);
         buttonPanel.add(exitButton);
         
         return buttonPanel;
@@ -458,6 +548,29 @@ public class GuiComponents {
             System.err.println("Error parsing line: " + line);
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Reset the UI to its initial state
+     */
+    public void resetUI() {
+        // Reset state labels
+        JPanel pollingPanel = (JPanel) stationPanel.getComponent(0);
+        JLabel stationStatusLabel = (JLabel) pollingPanel.getComponent(0);
+        stationStatusLabel.setText("CLOSED");
+        stationStatusLabel.setForeground(GuiStyles.ERROR_COLOR);
+        
+        // Reset queue and booth labels
+        queueLabel.setText("Empty");
+        boothLabel.setText("Available");
+        
+        // Reset score and processed labels
+        scoreALabel.setText("Candidate A: 0");
+        scoreBLabel.setText("Candidate B: 0");
+        ((JLabel)resultsPanel.getComponent(2)).setText("Processed: 0");
+        
+        // Clear the log table
+        tableModel.setRowCount(0);
     }
     
     // Getters for components

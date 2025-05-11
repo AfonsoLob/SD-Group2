@@ -30,7 +30,7 @@ public class PPollingStationProxy extends Thread{
    }
 
 
-   public PPollingStationProxy getInstance (ServerCom.ServerComHandler sconi, IPollingStation_all pStationInter)
+   public static PPollingStationProxy getInstance (ServerCom.ServerComHandler sconi, IPollingStation_all pStationInter)
    {
       PPollingStationProxy proxy = new PPollingStationProxy (sconi, pStationInter);
       return proxy;

@@ -32,7 +32,7 @@ public class PExitPollProxy extends Thread {
    }
 
 
-   public PExitPollProxy getInstance (ServerCom.ServerComHandler sconi, IExitPoll_all pStationInter)
+   public static PExitPollProxy getInstance (ServerCom.ServerComHandler sconi, IExitPoll_all pStationInter)
    {
       PExitPollProxy proxy = new PExitPollProxy (sconi, pStationInter);
       return proxy;

@@ -1,7 +1,7 @@
-package GUI;
+package clientSide.GUI;
 
-import Interfaces.GUI.IGUI_all;
-import Interfaces.Logger.ILogger_GUI;
+import clientSide.interfaces.GUI.IGUI_all;
+import clientSide.interfaces.Logger.ILogger_GUI;
 import java.awt.BorderLayout;
 import java.io.File;
 import javax.swing.JFrame;
@@ -10,6 +10,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
+import serverSide.GUI.GuiAnimation;
+import serverSide.GUI.GuiComponents;
+import serverSide.GUI.GuiStyles;
 
 /**
  * Main GUI class implementing the IGUI_all interface.
@@ -34,12 +37,6 @@ public class Gui implements IGUI_all {
      * - 1.0f is normal speed (real-time)
      * - Values < 1.0 slow down the simulation (e.g., 0.5f = half speed)
      * - Values > 1.0 speed up the simulation (e.g., 2.0f = double speed)
-     * 
-     * The speed factor is used in various places:
-     * 1. Animation timing and frame rate
-     * 2. Voter movement and decision timing
-     * 3. Clerk processing rate
-     * 4. UI update frequency
      */
     private static float simulationSpeed = 1.0f; // Default speed
     
@@ -73,7 +70,7 @@ public class Gui implements IGUI_all {
     // Create a new GUI window
     public static void window() {
         // Create the main window
-        frame = new JFrame("Election Day Simulation");
+        frame = new JFrame("Election Day Simulation - Client");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1200, 800);
         frame.setLayout(new BorderLayout());
@@ -154,14 +151,9 @@ public class Gui implements IGUI_all {
         simulationStarter = starter;
     }
     
-    // Method for restarting the simulation
-    public static Runnable getSimulationRestarter() {
-        return simulationRestarter;
-    }
-    
-    // Method for restarting the simulation
-    public static Runnable getSimulationRestarter() {
-        return simulationRestarter;
+    // Method to set the simulation restarter callback
+    public static void setSimulationRestarter(Runnable restarter) {
+        simulationRestarter = restarter;
     }
     
     // Static method for backward compatibility
@@ -189,49 +181,24 @@ public class Gui implements IGUI_all {
     /**
      * Set a new simulation speed factor.
      * This affects the timing of all animated elements and thread sleeps.
-     * 
-     * @param speed The new speed factor:
-     *        - 0.05 to 0.5: Slow motion for detailed analysis
-     *        - 0.5 to 1.0: Comfortable pace for observation
-     *        - 1.0 to 2.0: Accelerated simulation for quick results
      */
     public static void setSpeedValue(float speed) {
         simulationSpeed = speed;
-        // Note: Each component will check this value when making timing decisions
     }
     
     public static Runnable getSimulationStarter() {
         return simulationStarter;
     }
     
+    public static Runnable getSimulationRestarter() {
+        return simulationRestarter;
+    }
+    
     public static JFrame getFrame() {
         return frame;
     }
     
-    public static void resetForRestart() {
-        // Reset state
-        scoreA = 0;
-        scoreB = 0;
-        votersProcessed = 0;
-        stationOpen = false;
-        queueSize = 0;
-        currentVoterInBooth = "";
-        simulationStartTime = System.currentTimeMillis();
-        
-        // Reset UI components
-        components.resetUI();
-        
-        // Reset animation
-        if (animation != null) {
-            animation.clearVoters();
-        }
-    }
-    
     // IGUI_Common interface implementation
-    /**
-     * Implementation of interface method to access simulation speed.
-     * Provides a non-static way for components to get the current speed factor.
-     */
     @Override
     public float getSimulationSpeed() {
         return simulationSpeed;
@@ -312,7 +279,7 @@ public class Gui implements IGUI_all {
         }
     }
     
-    // Renamed static bridge methods to avoid conflicts
+    // Static bridge methods
     public static void staticUpdateFromLogger(ILogger_GUI logger) {
         if (logger != null) {
             getInstance().updateFromLogger(
@@ -361,5 +328,10 @@ public class Gui implements IGUI_all {
     
     public static void staticVoterReborn(int oldId, int newId) {
         getInstance().voterReborn(oldId, newId);
+    }
+    
+    public static void resetUI() {
+        animation.clearVoters();
+        components.resetUI();
     }
 }

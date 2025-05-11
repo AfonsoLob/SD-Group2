@@ -83,7 +83,7 @@ public class ServerExitPoll {
       waitConnection = true;
       while (waitConnection)
       {   sconi = scon.accept();                                    // enter listening procedure
-      Proxy = new PExitPollProxy(sconi, exitPoll);           // service provider agent is generated
+      Proxy = PExitPollProxy.getInstance(sconi, exitPoll);           // service provider agent is generated
       Proxy.start();                                         //   the request of service
       }
       scon.end ();                                                   // operations termination
