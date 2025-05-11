@@ -17,8 +17,8 @@ public class TvoterMain {
         final String CONFIG_FILE = "config.properties";               // Path to the configuration 
         int ServerPollingStationPortNumber = -1;                       // port number for listening to service requests
         int ServerExitPollPortNumber = -1;                       // port number for listening to service requests
-        String hostPollingStationName = "pollingStation";
-        String hostExitPollName = "exitPoll";
+        String hostPollingStationName = "localhost";       // default to localhost
+        String hostExitPollName = "localhost";             // default to localhost
         // String reposServerName;                                        // name of the platform where is located the server for the general repository
         // int reposPortNumb;                                        // port nunber where the server for the general repository is listening to service requests
 

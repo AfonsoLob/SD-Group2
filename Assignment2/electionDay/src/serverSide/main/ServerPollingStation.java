@@ -1,16 +1,12 @@
 package serverSide.main;
 
-import java.net.SocketTimeoutException;
-import genclass.GenericIO;
-import serverSide.entities.PPollingStationProxy;
-import serverSide.sharedRegions.MPollingStation;
+import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import commInfra.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-
-import commInfra.*;
-
-import clientSide.interfaces.Pollingstation.IPollingStation_all;
+import serverSide.entities.PPollingStationProxy;
+import serverSide.sharedRegions.MPollingStation;
 
 
 
@@ -48,7 +44,7 @@ public class ServerPollingStation {
           ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("portNumber"));
           reposPortNumb = Integer.parseInt(props.getProperty("reposPortNumber"));
       } catch (IOException | NumberFormatException e) {
-          GenericIO.writelnString("Error reading configuration file!");
+          System.err.println("Error reading configuration file!");
           System.exit(1);
       }
   
@@ -59,18 +55,18 @@ public class ServerPollingStation {
               reposServerName = args[1];
               reposPortNumb = Integer.parseInt(args[2]);
           } catch (NumberFormatException e) {
-              GenericIO.writelnString("Invalid number format in arguments!");
+              System.err.println("Invalid number format in arguments!");
               System.exit(1);
           }
       }
 
       // Validate port numbers
       if ((ServerPollingStationPortNumber < 4000) || (ServerPollingStationPortNumber >= 65536)) {
-          GenericIO.writelnString("Invalid port number!");
+          System.err.println("Invalid port number!");
           System.exit(1);
       }
       if ((reposPortNumb < 4000) || (reposPortNumb >= 65536)) {
-          GenericIO.writelnString("Invalid repository port number!");
+          System.err.println("Invalid repository port number!");
           System.exit(1);
       }
 
@@ -80,12 +76,14 @@ public class ServerPollingStation {
     //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
     //   pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
 
-      pollingStation = MPollingStation.getInstance(5, reposStub);                      // service is instantiated
+      // Create a logger stub for MPollingStation
+      // SLogger loggerStub = new SLogger("localhost", reposPortNumb);
+      pollingStation = (IPollingStation_all) MPollingStation.getInstance(5, null);                      // service is instantiated
        
       scon = new ServerCom (ServerPollingStationPortNumber);                    // listening channel at the public port is established
       scon.start();
-      GenericIO.writelnString ("Service is established!");
-      GenericIO.writelnString ("Server is listening for service requests.");
+      System.out.println("Service is established!");
+      System.out.println("Server is listening for service requests.");
 
      /* service request processing */
 
@@ -93,14 +91,11 @@ public class ServerPollingStation {
 
       waitConnection = true;
       while (waitConnection)
-      { try
-        { sconi = scon.accept();                                    // enter listening procedure
-          Proxy = new PPollingStationProxy (sconi,pollingStation);  // start a service provider agent to address
-          Proxy.start ();                                         //   the request of service
-        }
-        catch (SocketTimeoutException e) {}
+      {   sconi = scon.accept();                                    // enter listening procedure
+      Proxy = new PPollingStationProxy (sconi,pollingStation);  // start a service provider agent to address
+      Proxy.start ();                                         //   the request of service
       }
       scon.end ();                                                   // operations termination
-      GenericIO.writelnString ("Server was shutdown.");
+        System.err.println("Server was shutdown.");
    }
 }

@@ -1,15 +1,10 @@
 package serverSide.entities;
 
-import clientSide.interfaces.ExitPoll.IExitPoll_all;
-// import java.io.IOException;
-// import java.io.ObjectInputStream;
-// import java.io.ObjectOutputStream;
-// import java.net.Socket;
-
 import commInfra.Message;
 import commInfra.MessageException;
 import commInfra.MessageType;
 import commInfra.ServerCom;
+import serverSide.interfaces.ExitPoll.IExitPoll_all;
 
 /**
  * PMExitPollClientProxy - Thread that handles communication with an exit poll client.
@@ -18,8 +13,8 @@ import commInfra.ServerCom;
  */
 public class PExitPollProxy extends Thread {
     private static int nProxy = 0; // Number of instantiayed threads.
-   private ServerCom.ServerComHandler sconi; // communication channel
-   private IExitPoll_all exitPoll; 
+   private final ServerCom.ServerComHandler sconi; // communication channel
+   private final IExitPoll_all exitPoll; 
    private int voterId;
 
   /**

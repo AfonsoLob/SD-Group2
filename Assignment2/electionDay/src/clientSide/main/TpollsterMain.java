@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 import clientSide.entities.TPollster;
+import clientSide.interfaces.ExitPoll.IExitPoll_Pollster;
 import clientSide.stubs.SExitPollStub;
 import serverSide.main.SimulPar;
-import clientSide.interfaces.ExitPoll.IExitPoll_Pollster;
 
 public class TpollsterMain {
     public static void main(String[] args) {
@@ -15,7 +15,7 @@ public class TpollsterMain {
 
         final String CONFIG_FILE = "config.properties";               // Path to the configuration 
         int ServerExitPollPortNumber = -1;                           // port number for listening to service requests
-        String hostExitPollName = "exitPoll";                        // name of the platform where is located the exit poll server
+        String hostExitPollName = "localhost";                        // name of the platform where is located the exit poll server
 
         // Load default values from properties file
         Properties props = new Properties();
