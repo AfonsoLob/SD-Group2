@@ -1,16 +1,14 @@
 package clientSide.main;
 
+import clientSide.entities.TVoter;
+import clientSide.interfaces.ExitPoll.IExitPoll_Voter;
+import clientSide.interfaces.Pollingstation.IPollingStation_Voter;
+import clientSide.stubs.SExitPollStub;
+import clientSide.stubs.SPollingStationStub;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-
-import clientSide.entities.TVoter;
-import clientSide.stubs.SPollingStationStub;
 import serverSide.main.SimulPar;
-import clientSide.stubs.SExitPollStub;
-
-import clientSide.interfaces.Pollingstation.*;
-import clientSide.interfaces.ExitPoll.*;
 
 public class TvoterMain {
     public static void main(String[] args) {

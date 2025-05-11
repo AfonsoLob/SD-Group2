@@ -1,4 +1,5 @@
 package clientSide.entities;
+
 import clientSide.interfaces.ExitPoll.IExitPoll_Voter;
 import clientSide.interfaces.Pollingstation.IPollingStation_Voter;
 // import serverSide.GUI.Gui;
