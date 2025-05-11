@@ -17,8 +17,10 @@ public class TvoterMain {
         final String CONFIG_FILE = "config.properties";               // Path to the configuration 
         int ServerPollingStationPortNumber = -1;                       // port number for listening to service requests
         int ServerExitPollPortNumber = -1;                       // port number for listening to service requests
+        int loggerPortNumber = -1;
         String hostPollingStationName = "localhost";       // default to localhost
         String hostExitPollName = "localhost";             // default to localhost
+        String loggerHostName = "localhost";
         // String reposServerName;                                        // name of the platform where is located the server for the general repository
         // int reposPortNumb;                                        // port nunber where the server for the general repository is listening to service requests
 
@@ -30,15 +32,19 @@ public class TvoterMain {
             hostExitPollName = props.getProperty("hostExitPollName");
             ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("ServerPollingStationPortNumber"));
             ServerExitPollPortNumber = Integer.parseInt(props.getProperty("ServerExitPollPortNumber"));
+            loggerHostName = props.getProperty("loggerHostName");
+            loggerPortNumber = Integer.parseInt(props.getProperty("loggerPortNumber"));
             // reposPortNumb = Integer.parseInt(props.getProperty("reposPortNumber"));
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error reading configuration file!");
             System.exit(1);
         }
         
+        // Get logger host and port from properties
+
         // Stubs
-        IPollingStation_Voter pollingStation = new SPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber);
-        IExitPoll_Voter exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber);
+        IPollingStation_Voter pollingStation = new SPollingStationStub(hostPollingStationName, ServerPollingStationPortNumber, loggerHostName, loggerPortNumber);
+        IExitPoll_Voter exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber, loggerHostName, loggerPortNumber);
         
         // Create and start voter threads
         Thread[] voters = new Thread[SimulPar.N];

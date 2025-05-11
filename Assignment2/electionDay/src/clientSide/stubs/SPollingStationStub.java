@@ -9,15 +9,37 @@ import commInfra.MessageType;
 public class SPollingStationStub implements IPollingStation_all {
     private final String serverHostName;
     private final int serverPort;
+    private final String loggerHostName;
+    private final int loggerPort;
 
-    public SPollingStationStub(String host, int port) {
+    public SPollingStationStub(String host, int port, String loggerHost, int loggerPort) {
         this.serverHostName = host;
         this.serverPort = port;
+        this.loggerHostName = loggerHost;
+        this.loggerPort = loggerPort;
+    }
+
+    private void sendLogMessage(MessageType type, Object... args) {
+        ClientCom com = new ClientCom(loggerHostName, loggerPort);
+        Message outMessage = new Message(type, args);
+
+        while (!com.open()) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        com.sendAndReceive(outMessage);
+        com.close();
     }
 
     // Methods from IPollingStation_Voter
     @Override
     public boolean enterPollingStation(int voterId) {
+        sendLogMessage(MessageType.LOG_VOTER_AT_DOOR, voterId);
+        
         ClientCom com = new ClientCom(serverHostName, serverPort);
         Message outMessage, inMessage;
 
@@ -32,6 +54,10 @@ public class SPollingStationStub implements IPollingStation_all {
         outMessage = new Message(MessageType.VOTER_ENTER_REQUEST, voterId);
         inMessage = com.sendAndReceive(outMessage);
         com.close();
+
+        if (inMessage.getType() == MessageType.VOTER_ENTER_GRANTED) {
+            sendLogMessage(MessageType.LOG_VOTER_ENTERING_QUEUE, voterId);
+        }
 
         return inMessage.getType() == MessageType.VOTER_ENTER_GRANTED;
     }
@@ -53,7 +79,10 @@ public class SPollingStationStub implements IPollingStation_all {
         inMessage = com.sendAndReceive(outMessage);
         com.close();
 
-        return inMessage.getType() == MessageType.ID_VALID;
+        boolean isValid = inMessage.getType() == MessageType.ID_VALID;
+        sendLogMessage(MessageType.LOG_VALIDATING_VOTER, voterId, isValid);
+
+        return isValid;
     }
 
     @Override
@@ -80,6 +109,8 @@ public class SPollingStationStub implements IPollingStation_all {
 
         com.sendAndReceive(outMessage);
         com.close();
+        
+        sendLogMessage(MessageType.LOG_VOTER_IN_BOOTH, voterId, vote); // TODO: Check if it's here or in callNextVoter
     }
 
     @Override
@@ -138,6 +169,8 @@ public class SPollingStationStub implements IPollingStation_all {
 
         com.sendAndReceive(outMessage);
         com.close();
+        
+        sendLogMessage(MessageType.LOG_STATION_OPENING);
     }
 
     @Override
@@ -155,6 +188,8 @@ public class SPollingStationStub implements IPollingStation_all {
 
         com.sendAndReceive(outMessage);
         com.close();
+        
+        sendLogMessage(MessageType.LOG_STATION_CLOSING);
     }
 
     @Override

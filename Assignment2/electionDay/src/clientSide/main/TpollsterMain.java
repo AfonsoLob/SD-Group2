@@ -16,6 +16,8 @@ public class TpollsterMain {
         final String CONFIG_FILE = "config.properties";               // Path to the configuration 
         int ServerExitPollPortNumber = -1;                           // port number for listening to service requests
         String hostExitPollName = "localhost";                        // name of the platform where is located the exit poll server
+        String loggerHostName = "localhost";
+        int loggerPortNumber = -1;
 
         // Load default values from properties file
         Properties props = new Properties();
@@ -23,13 +25,15 @@ public class TpollsterMain {
             props.load(fis);
             hostExitPollName = props.getProperty("hostExitPollName");
             ServerExitPollPortNumber = Integer.parseInt(props.getProperty("ServerExitPollPortNumber"));
+            loggerHostName = props.getProperty("loggerHostName");
+            loggerPortNumber = Integer.parseInt(props.getProperty("loggerPortNumber"));
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error reading configuration file!");
             System.exit(1);
         }
         
         // Stub
-        IExitPoll_Pollster exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber);
+        IExitPoll_Pollster exitPoll = new SExitPollStub(hostExitPollName, ServerExitPollPortNumber, loggerHostName, loggerPortNumber);
         
         // Create and start pollster thread
         Thread pollster = new Thread(TPollster.getInstance(exitPoll));

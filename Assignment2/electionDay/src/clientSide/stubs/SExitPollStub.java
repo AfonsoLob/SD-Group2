@@ -8,17 +8,19 @@ import commInfra.MessageType;
 public class SExitPollStub implements IExitPoll_all {
     private final String serverHostName;
     private final int serverPort;
+    private final String loggerHostName;
+    private final int loggerPort;
 
-    public SExitPollStub(String host, int port) {
+    public SExitPollStub(String host, int port, String loggerHost, int loggerPort) {
         this.serverHostName = host;
         this.serverPort = port;
+        this.loggerHostName = loggerHost;
+        this.loggerPort = loggerPort;
     }
 
-    // Methods from IExitPoll_Voter
-    @Override
-    public void exitPollingStation(int voterId, boolean myVote, boolean response) {
-        ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_ENTER, voterId, myVote, response); // TODO: create a new message constructor?
+    private void sendLogMessage(MessageType type, Object... args) {
+        ClientCom com = new ClientCom(loggerHostName, loggerPort);
+        Message outMessage = new Message(type, args);
 
         while (!com.open()) {
             try {
@@ -30,6 +32,26 @@ public class SExitPollStub implements IExitPoll_all {
 
         com.sendAndReceive(outMessage);
         com.close();
+    }
+
+    // Methods from IExitPoll_Voter
+    @Override
+    public void exitPollingStation(int voterId, boolean myVote, boolean response) {
+        ClientCom com = new ClientCom(serverHostName, serverPort);
+        Message outMessage = new Message(MessageType.EXIT_POLL_ENTER, voterId, myVote, response);
+
+        while (!com.open()) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        com.sendAndReceive(outMessage);
+        com.close();
+        
+        sendLogMessage(MessageType.LOG_EXIT_POLL_VOTE, voterId, myVote ? "A" : "B");
     }
 
     @Override
