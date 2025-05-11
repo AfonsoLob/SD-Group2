@@ -25,11 +25,12 @@ public class TClerk implements Runnable {
 
     @Override
     public void run() {
-                pollingStation.openPollingStation();
+        pollingStation.openPollingStation();
         int votes = 0;
         while (votes < maxVotes) {
             // instance.openStation();
             try {
+                System.out.println("Votes remaining: " + (maxVotes - votes));
                 System.out.println("Clerk calling next voter");
                 boolean response = pollingStation.callNextVoter();
                 System.out.println(response);

@@ -170,7 +170,7 @@ public class SPollingStationStub implements IPollingStation_all {
         inMessage = com.sendAndReceive(outMessage);
         com.close();
 
-        return inMessage.getType() == MessageType.VOTER_ENTER_GRANTED;
+        return inMessage.getType() == MessageType.ID_VALID;
     }
 
     @Override

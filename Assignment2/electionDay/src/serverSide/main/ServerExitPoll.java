@@ -85,7 +85,8 @@ public class ServerExitPoll {
       {   sconi = scon.accept();                                    // enter listening procedure
       Proxy = PExitPollProxy.getInstance(sconi, exitPoll);           // service provider agent is generated
       Proxy.start();                                         //   the request of service
-      }
+      System.out.println("New client connection accepted and started proxy thread ExitPoll: " + Proxy.getName());
+   }
       scon.end ();                                                   // operations termination
       System.err.println ("Server was shutdown.");
    }

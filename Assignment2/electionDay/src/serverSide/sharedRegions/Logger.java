@@ -46,7 +46,7 @@ public class Logger implements ILogger_all {
     private int currentQueueSize = 0;
     
     // Map to track voter rebirths
-    private java.util.Map<Integer, Integer> voterRebirthMap = new java.util.HashMap<>();
+    // private java.util.Map<Integer, Integer> voterRebirthMap = new java.util.HashMap<>();
     
     // Map to track voter last activity for rebirth detection
     private Map<Integer, Long> lastVoterActivity = new HashMap<>();
