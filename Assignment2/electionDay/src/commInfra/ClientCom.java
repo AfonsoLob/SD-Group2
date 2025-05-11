@@ -99,17 +99,20 @@ public class ClientCom {
         Message messageReceived = null;
         
         try {
+            
             out.writeObject(messageToSend);
             out.flush();
             messageReceived = (Message) in.readObject();
+            // System.out.println("WEZA 1 Client: sending message: " + messageToSend);
         } catch (IOException e) {
-            System.err.println("Client: error sending/receiving message: " + e.getMessage());
+            // System.err.println("Client: error sending/receiving message: " + e.getMessage());
             messageReceived = null;
         } catch (ClassNotFoundException e) {
-            System.err.println("Client: received object is not of the expected type: " + e.getMessage());
+            // System.err.println("Client: received object is not of the expected type: " + e.getMessage());
             messageReceived = null;
         }
-        
+
+        System.out.println("WEZA 2 lient: sending message: " + messageToSend);
         return messageReceived;
     }
 }

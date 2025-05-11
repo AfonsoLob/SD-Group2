@@ -145,7 +145,7 @@ public class PExitPollProxy extends Thread {
 
          // CLERK MESSAGES
          case EXIT_POLL_CLOSE:             
-            exitPoll.closeIn(inMessage.getCloseIn());;
+            exitPoll.closeIn(inMessage.getCloseIn());
             outMessage = new Message (MessageType.EXIT_POLL_CLOSED);                          
          break;
          

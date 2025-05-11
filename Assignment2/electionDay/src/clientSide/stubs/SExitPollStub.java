@@ -103,6 +103,8 @@ public class SExitPollStub implements IExitPoll_all {
             }
         }
 
+
+
         com.sendAndReceive(outMessage);
         com.close();
     }
@@ -120,6 +122,8 @@ public class SExitPollStub implements IExitPoll_all {
             }
         }
 
+
+
         com.sendAndReceive(outMessage);
         com.close();
     }
@@ -128,7 +132,7 @@ public class SExitPollStub implements IExitPoll_all {
     @Override
     public void closeIn(int stillVotersInQueue) {
         ClientCom com = new ClientCom(serverHostName, serverPort);
-        Message outMessage = new Message(MessageType.EXIT_POLL_CLOSED, -1, stillVotersInQueue);
+        Message outMessage = new Message(MessageType.EXIT_POLL_CLOSE, -1, stillVotersInQueue);
 
         while (!com.open()) {
             try {

@@ -94,13 +94,16 @@ public class SPollingStationStub implements IPollingStation_all {
             }
         }
 
+        // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 1");
         outMessage = new Message(MessageType.ID_CHECK_REQUEST, voterId);
+        // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 1.1");
         inMessage = com.sendAndReceive(outMessage);
+       
         com.close();
-
+        // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 2");
         boolean isValid = inMessage.getType() == MessageType.ID_VALID;
         sendLogMessage(MessageType.LOG_VALIDATING_VOTER, voterId, isValid);
-
+        // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 3");
         return isValid;
     }
 
