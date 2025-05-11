@@ -37,7 +37,7 @@ public class ServerExitPoll {
           props.load(fis);
           ServerExitPollPortNumber = Integer.parseInt(props.getProperty("ServerExitPollPortNumber"));
       } catch (IOException | NumberFormatException e) {
-          System.err.println("Error reading configuration file!");
+          System.err.println("Exitpoll main: Error reading configuration file!");
           System.exit(1);
       }
   

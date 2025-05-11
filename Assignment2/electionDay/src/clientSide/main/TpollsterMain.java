@@ -25,10 +25,10 @@ public class TpollsterMain {
             props.load(fis);
             hostExitPollName = props.getProperty("hostExitPollName");
             ServerExitPollPortNumber = Integer.parseInt(props.getProperty("ServerExitPollPortNumber"));
-            loggerHostName = props.getProperty("loggerHostName");
-            loggerPortNumber = Integer.parseInt(props.getProperty("loggerPortNumber"));
+            loggerHostName = props.getProperty("hostLoggerName");
+            loggerPortNumber = Integer.parseInt(props.getProperty("reposPortNumber"));
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Error reading configuration file!");
+            System.out.println("Pollster main: Error reading configuration file!");
             System.exit(1);
         }
         

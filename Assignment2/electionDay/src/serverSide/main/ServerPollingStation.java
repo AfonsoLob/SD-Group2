@@ -40,7 +40,7 @@ public class ServerPollingStation {
           props.load(fis);
           ServerPollingStationPortNumber = Integer.parseInt(props.getProperty("ServerPollingStationPortNumber"));
       } catch (IOException | NumberFormatException e) {
-          System.err.println("Error reading configuration file!");
+          System.err.println("Polling Station main: Error reading configuration file!");
           System.exit(1);
       }
   

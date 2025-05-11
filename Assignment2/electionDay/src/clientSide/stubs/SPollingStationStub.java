@@ -21,7 +21,26 @@ public class SPollingStationStub implements IPollingStation_all {
 
     private void sendLogMessage(MessageType type, Object... args) {
         ClientCom com = new ClientCom(loggerHostName, loggerPort);
-        Message outMessage = new Message(type, args);
+        Message outMessage;
+
+        // Create appropriate message based on type and args
+        switch (type) {
+            case LOG_VOTER_AT_DOOR:
+            case LOG_VOTER_ENTERING_QUEUE:
+            case LOG_VALIDATING_VOTER:
+                outMessage = new Message(type, (int) args[0]);
+                break;
+            case LOG_VOTER_IN_BOOTH:
+                outMessage = new Message(type, (int) args[0], (boolean) args[1]);
+                break;
+            case LOG_STATION_OPENING:
+            case LOG_STATION_CLOSING:
+                outMessage = new Message(type);
+                break;
+            default:
+                System.err.println("Invalid log message type: " + type);
+                return;
+        }
 
         while (!com.open()) {
             try {

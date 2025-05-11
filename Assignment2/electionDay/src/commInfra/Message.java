@@ -106,6 +106,7 @@ public class Message implements Serializable {
         this.votingOption = votingOption;
     }
 
+    
    
     
     // Getters and setters
