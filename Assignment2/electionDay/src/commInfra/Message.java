@@ -17,6 +17,9 @@ public class Message implements Serializable {
     private boolean votingOption;    // The voting option chosen (if applicable)
     private boolean voted;           // In the exit poll if the voter did not vote it automatically leaves (false)
     private int closeIn;             // Number of voters until the exit poll closes
+    private int queueSize;           // Size of the queue (if applicable)
+    private boolean isStationOpen;   // Whether the station is open or closed
+
     private Object content;          // Additional content or data payload
     private String message;         // Message content (if needed)
     
@@ -167,5 +170,18 @@ public class Message implements Serializable {
     @Override
     public String toString() {
         return "Message [type=" + type + ", Id=" + id + ", votingOption=" + votingOption + "]";
+    }
+
+    public boolean getIsStationOpen() {
+        return isStationOpen;
+    }
+
+    public int getIntVal() {
+        return 0;
+    }
+
+    public int getQueueSize() {
+        
+        return queueSize;
     }
 }

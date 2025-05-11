@@ -106,7 +106,10 @@ public class SLogger implements ILogger_all {
             System.err.println("SLogger: Failed to open connection for exitPollVote (" + voterId + ", '" + vote + "').");
             return;
         }
-        outMessage = new Message(MessageType.LOG_EXIT_POLL_VOTE, voterId, vote);
+        // Using a constructor that accepts MessageType and setting the values separately
+        outMessage = new Message(MessageType.LOG_EXIT_POLL_VOTE);
+        outMessage.setId(voterId);
+        outMessage.setStringVal(vote);
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage == null || inMessage.getType() != MessageType.LOG_ACK) {
@@ -187,7 +190,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_VOTERS_PROCESSED) {
-            votersProcessed = inMessage.getIntVal();
+            votersProcessed = inMessage.getId();
         } else {
             System.err.println("SLogger: Error in getVotersProcessed communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }
@@ -209,7 +212,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_IS_STATION_OPEN) {
-            isOpen = inMessage.getBoolVal();
+            isOpen = inMessage.getIsStationOpen();
         } else {
             System.err.println("SLogger: Error in isStationOpen communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }
@@ -253,7 +256,7 @@ public class SLogger implements ILogger_all {
         inMessage = cc.sendAndReceive(outMessage);
 
         if (inMessage != null && inMessage.getType() == MessageType.REP_CURRENT_QUEUE_SIZE) {
-            queueSize = inMessage.getIntVal();
+            queueSize = inMessage.getQueueSize();
         } else {
             System.err.println("SLogger: Error in getCurrentQueueSize communication or unexpected reply: " + (inMessage != null ? inMessage.getType() : "null"));
         }
