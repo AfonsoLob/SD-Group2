@@ -62,7 +62,7 @@ public class ClientCom {
             System.err.println("Client: " + serverHostname + " is unknown");
             success = false;
         } catch (IOException e) {
-            System.err.println("Client: couldn't establish connection to " + serverHostname + ":" + serverPortNum);
+            // System.err.println("Client: couldn't establish connection to " + serverHostname + ":" + serverPortNum);
             success = false;
         }
         

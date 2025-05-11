@@ -44,36 +44,7 @@ public class ServerPollingStation {
           System.exit(1);
       }
   
-      // Override with command line arguments if provided
-    //   if (args.length == 3) {
-    //       try {
-    //           ServerPollingStationPortNumber = Integer.parseInt(args[0]);
-    //           reposServerName = args[1];
-    //           reposPortNumb = Integer.parseInt(args[2]);
-    //       } catch (NumberFormatException e) {
-    //           System.err.println("Invalid number format in arguments!");
-    //           System.exit(1);
-    //       }
-    //   }
-
-    //   // Validate port numbers
-    //   if ((ServerPollingStationPortNumber < 4000) || (ServerPollingStationPortNumber >= 65536)) {
-    //       System.err.println("Invalid port number!");
-    //       System.exit(1);
-    //   }
-    //   if ((reposPortNumb < 4000) || (reposPortNumb >= 65536)) {
-    //       System.err.println("Invalid repository port number!");
-    //       System.exit(1);
-    //   }
-
-     /* service is established */
-
-    //   reposStub = new GeneralReposStub (reposServerName, reposPortNumb);     // communication to the general repository is instantiated
-    //   pollingStation = new MPollingStation (reposStub);                      // service is instantiated
-    //   pStationInter = new PollingStationInterface(pollingStation);             // interface to the service is instantiated
-
-      // Create a logger stub for MPollingStation
-      // SLogger loggerStub = new SLogger("localhost", reposPortNumb);
+    
       pollingStation = (IPollingStation_all) MPollingStation.getInstance(SimulPar.K);                      // service is instantiated
        
       scon = new ServerCom (ServerPollingStationPortNumber);                    // listening channel at the public port is established

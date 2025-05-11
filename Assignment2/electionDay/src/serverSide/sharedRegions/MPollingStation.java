@@ -135,12 +135,12 @@ public class MPollingStation implements IPollingStation_all {
     public boolean callNextVoter() {
         queue_lock.lock();
         try {
-            System.out.println("Got here");
             if (votersQueue.isEmpty()) {
                 System.out.println("Waiting for voters");
                 notEmpty.await();
             }
             int id = votersQueue.poll();
+            System.out.println("Voter " + id + " is called");
             notFull.signal();
             return validateID(id);
         } catch (InterruptedException e) {
