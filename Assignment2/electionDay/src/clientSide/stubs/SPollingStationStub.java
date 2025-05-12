@@ -105,7 +105,7 @@ public class SPollingStationStub implements IPollingStation_all {
         // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 2");
         boolean isValid = inMessage.getType() == MessageType.ID_VALID;
         int valid = (isValid) ? 1 : 0;
-        System.out.println("WEZA Voter " + voterId + " : valid = " + isValid + ", " + valid);
+        // System.out.println("WEZA Voter " + voterId + " : valid = " + isValid + ", " + valid);
         sendLogMessage(MessageType.LOG_VALIDATING_VOTER, voterId, valid);
         // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 3");
         return isValid;

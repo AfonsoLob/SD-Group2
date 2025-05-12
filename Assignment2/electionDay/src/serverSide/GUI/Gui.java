@@ -2,6 +2,7 @@ package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -9,6 +10,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
+
 import serverSide.interfaces.GUI.IGUI_all;
 import serverSide.interfaces.Logger.ILogger_GUI;
 /**
@@ -334,16 +336,37 @@ public class Gui implements IGUI_all {
         return simulationSpeed;
     }
     
-    @Override
-    public void updateFromLogger(String voteCounts, int processedVoters, boolean isStationOpen) {
+    
+    public void updateUI(int scoreA, int scoreB, int votersProcessed, 
+                         boolean stationOpen, int queueSize, String currentVoterInBooth) {
         try {
-            scoreA = Integer.parseInt(voteCounts.split(", ")[0].split(": ")[1]);
-            scoreB = Integer.parseInt(voteCounts.split(", ")[1].split(": ")[1]);
-            votersProcessed = processedVoters;
-            stationOpen = isStationOpen;
-            components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
+            Gui.scoreA = scoreA;
+            Gui.scoreB = scoreB;
+            Gui.votersProcessed = votersProcessed;
+            Gui.stationOpen = stationOpen;
+            Gui.queueSize = queueSize;
+            Gui.currentVoterInBooth = currentVoterInBooth;
+            
+            if (components != null) {
+                components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
+            }
+            
+            // If the station has closed, try to load the log file
+            if (!stationOpen && simulationRunning) {
+                if (components != null) {
+                    // Have a small delay to ensure log file is fully written
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            components.loadLogFile();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }).start();
+                }
+            }
         } catch (Exception e) {
-            System.err.println("Error updating GUI from logger: " + e.getMessage());
+            System.err.println("Error updating GUI: " + e.getMessage());
         }
     }
     
@@ -381,6 +404,21 @@ public class Gui implements IGUI_all {
     public void voterArrived(int voterId) {
         if (animation != null) {
             animation.voterArrived(voterId);
+        }
+        
+        // After a voter arrives, we might want to check the log file 
+        // if we're near the end of the simulation to catch any updates
+        if (votersProcessed > 0 && simulationRunning) {
+            maybeRefreshLogTable();
+        }
+    }
+    
+    private void maybeRefreshLogTable() {
+        // Only do periodic refreshes
+        if (Math.random() < 0.1) { // 10% chance to refresh to avoid doing it too often
+            if (components != null) {
+                components.loadLogFile();
+            }
         }
     }
     
@@ -469,4 +507,33 @@ public class Gui implements IGUI_all {
     public static void staticVoterReborn(int oldId, int newId) {
         getInstance().voterReborn(oldId, newId);
     }
+
+    // Method to periodically check and update log file during simulation
+    public static void startPeriodicLogChecker() {
+        if (simulationRunning && components != null) {
+            new Thread(() -> {
+                try {
+                    while (simulationRunning) {
+                        // Check for log file updates every few seconds
+                        components.loadLogFile();
+                        
+                        // Sleep for a reasonable interval based on simulation speed
+                        float speedFactor = getStaticSimulationSpeed();
+                        long checkInterval = Math.round(5000 / speedFactor); // 5 seconds adjusted by speed
+                        Thread.sleep(Math.max(2000, checkInterval)); // Minimum 2 seconds
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    System.err.println("Error in periodic log file checker: " + e.getMessage());
+                }
+            }).start();
+        }
+    }
+
+	@Override
+	public void updateFromLogger(String voteCounts, int votersProcessed, boolean stationOpen) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'updateFromLogger'");
+	}
 }

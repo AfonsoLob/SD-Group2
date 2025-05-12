@@ -1,11 +1,13 @@
 package serverSide.main;
 
-import commInfra.ServerCom;
-import commInfra.ServerCom.ServerComHandler;
 import java.io.FileInputStream; // Ensure this import is correct
 import java.io.IOException;
 import java.util.Properties;
+
 import javax.swing.SwingUtilities;
+
+import commInfra.ServerCom;
+import commInfra.ServerCom.ServerComHandler;
 import serverSide.GUI.Gui;
 import serverSide.entities.PLoggerProxy;
 import serverSide.interfaces.GUI.IGUI_all;
@@ -89,6 +91,9 @@ public class ServerLogger {
         if (gui != null) gui.displayMessage("Server started and listening on port " + portNumb);
 
         waitConnection = true; // Signal that the server is active
+        
+        // Start the periodic log file checker
+        Gui.startPeriodicLogChecker();
 
         guiUpdateThread = new Thread(() -> {
             try {
