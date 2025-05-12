@@ -28,6 +28,7 @@ public class MPollingStation implements IPollingStation_all {
     private final Condition notEmpty;
     private final Condition notFull;
     private final Condition aprovalReady;
+    private final Condition clerkAprovalReady;
 
     //voting 
     private final ReentrantLock voting_lock;
@@ -54,6 +55,7 @@ public class MPollingStation implements IPollingStation_all {
         this.notFull = queue_lock.newCondition();
         this.stationOpen = queue_lock.newCondition();
         this.aprovalReady = queue_lock.newCondition();
+        this.clerkAprovalReady = queue_lock.newCondition();
 
         this.voting_lock = new ReentrantLock();
         this.candidateA = 0;
@@ -120,6 +122,7 @@ public class MPollingStation implements IPollingStation_all {
             }
 
             aprovalId = -1;
+            clerkAprovalReady.signal();
             return isAproved;
 
         } catch (InterruptedException e) {
@@ -139,6 +142,11 @@ public class MPollingStation implements IPollingStation_all {
                 System.out.println("Waiting for voters");
                 notEmpty.await();
             }
+
+            if(aprovalId != -1) {
+                clerkAprovalReady.await();
+            }
+
             int id = votersQueue.poll();
             System.out.println("Voter " + id + " is called");
             notFull.signal();
@@ -168,6 +176,7 @@ public class MPollingStation implements IPollingStation_all {
         queue_lock.lock();
         try {
             isOpen = false;
+        System.out.println("IM CLOSED DO NOT ENTER");
         } finally {
             // logger.stationClosing();
             queue_lock.unlock();

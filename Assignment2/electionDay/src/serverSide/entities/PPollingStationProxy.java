@@ -7,7 +7,6 @@ import commInfra.MessageType;
 import commInfra.ServerCom;
 
 
-
 public class PPollingStationProxy extends Thread{
   
    private static int nProxy = 0; // Number of instantiayed threads.
@@ -142,9 +141,10 @@ public class PPollingStationProxy extends Thread{
 
          case POLLING_STATION_IS_OPEN:                              
             if (pollingStation.isOpen())
-               outMessage = new Message (MessageType.POLLING_STATION_READY);
+               outMessage = new Message (MessageType.POLLING_STATION_IS_OPENED);
             else
                outMessage = new Message (MessageType.POLLING_STATION_CLOSED);
+         break;
 
          // CLERK MESSAGES
          case POLLING_STATION_OPEN:                              

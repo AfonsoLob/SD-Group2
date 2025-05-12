@@ -153,7 +153,8 @@ public class ServerCom {
                 System.err.println("Server: received object is not of the expected type: " + e.getMessage());
                 return null;
             }
-            
+            System.out.println("server read message: " + message);
+
             return message;
         }
         
@@ -171,7 +172,7 @@ public class ServerCom {
                 System.err.println("Server: error sending message: " + e.getMessage());
                 return false;
             }
-            
+            System.out.println("server wrote message: " + message);
             return true;
         }
         

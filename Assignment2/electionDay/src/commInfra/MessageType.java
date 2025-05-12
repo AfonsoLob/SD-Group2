@@ -10,9 +10,12 @@ public enum MessageType {
     // Polling station status messages
     POLLING_STATION_OPEN,              // Sent BY Poll Clerk to notify voters that polling station is open
     POLLING_STATION_READY,             // Sent TO Poll Clerk to notify that polling station is ready
+
     POLLING_STATION_CLOSE,             // Sent BY Poll Clerk to notify that polling station is closed
     POLLING_STATION_CLOSED,            // Sent TO Poll Clerk to notify that polling station is closed
+
     POLLING_STATION_IS_OPEN,            // Sent TO Poll Clerk to notify that polling station is open
+    POLLING_STATION_IS_OPENED,         // Sent TO Poll Clerk to notify that polling station is closed
     VALIDATE_NEXT_VOTER,               // Sent by Poll Clerk to validate the next voter
 
     // POLLING_STATION_FULL,              // Sent when polling station reaches capacity
@@ -29,6 +32,7 @@ public enum MessageType {
     
     // ID verification messages
     ID_CHECK_REQUEST,                  // Voter requests ID verification
+    ID_CHECK_DONE,                     // ID verification done
     ID_VALID,                          // ID is validated successfully
     ID_INVALID,                        // ID is invalid or has already voted
     

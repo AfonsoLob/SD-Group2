@@ -112,7 +112,7 @@ public class ClientCom {
             messageReceived = null;
         }
 
-        System.out.println("WEZA 2 lient: sending message: " + messageToSend);
+        // System.out.println("sending message: " + messageToSend);
         return messageReceived;
     }
 }

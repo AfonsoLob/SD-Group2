@@ -152,7 +152,7 @@ public class SPollingStationStub implements IPollingStation_all {
         inMessage = com.sendAndReceive(outMessage);
         com.close();
 
-        return inMessage.getType() == MessageType.POLLING_STATION_READY;
+        return inMessage.getType() == MessageType.POLLING_STATION_IS_OPENED;
     }
 
     // Methods from IPollingStation_Clerk
