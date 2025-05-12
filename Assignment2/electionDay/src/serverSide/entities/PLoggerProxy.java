@@ -84,8 +84,9 @@ public class PLoggerProxy extends Thread {
 
             case LOG_VALIDATING_VOTER:
                 if (inMessage.getId() < 0)
-                     throw new MessageException("Invalid voterId for LOG_VALIDATING_VOTER!", inMessage);
-                loggerInter.validatingVoter(inMessage.getId(), inMessage.didHeVote());
+                    throw new MessageException("Invalid voterId for LOG_VALIDATING_VOTER!", inMessage);
+                    // System.out.println("WEZA Thread " + getName() + ": validating voter " + inMessage.getId() + " with option " + inMessage.getCloseIn());
+                    loggerInter.validatingVoter(inMessage.getId(), inMessage.getCloseIn());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
             case LOG_VOTER_IN_BOOTH:

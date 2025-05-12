@@ -27,8 +27,10 @@ public class SPollingStationStub implements IPollingStation_all {
         switch (type) {
             case LOG_VOTER_AT_DOOR:
             case LOG_VOTER_ENTERING_QUEUE:
-            case LOG_VALIDATING_VOTER:
                 outMessage = new Message(type, (int) args[0]);
+                break;
+            case LOG_VALIDATING_VOTER:
+                outMessage = new Message(type, (int) args[0], (int) args[1]);
                 break;
             case LOG_VOTER_IN_BOOTH:
                 outMessage = new Message(type, (int) args[0], (boolean) args[1]);
@@ -102,7 +104,9 @@ public class SPollingStationStub implements IPollingStation_all {
         com.close();
         // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 2");
         boolean isValid = inMessage.getType() == MessageType.ID_VALID;
-        sendLogMessage(MessageType.LOG_VALIDATING_VOTER, voterId, isValid);
+        int valid = (isValid) ? 1 : 0;
+        System.out.println("WEZA Voter " + voterId + " : valid = " + isValid + ", " + valid);
+        sendLogMessage(MessageType.LOG_VALIDATING_VOTER, voterId, valid);
         // System.out.println("Voter " + voterId + " waiting for ID validation WEZA 3");
         return isValid;
     }

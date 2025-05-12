@@ -68,7 +68,7 @@ public final class SimulPar
    *   Number of Max Votes
    */
 
-   public static final int MAX_VOTES = 5;
+   public static final int MAX_VOTES = 10;
 
   /**
    *   It can not be instantiated.

@@ -102,7 +102,7 @@ public class GuiAnimation {
     /**
      * Notify about voter validation result
      */
-    public void voterValidated(int voterId, boolean valid) {
+    public void voterValidated(int voterId, int valid) {
         if (animationPanel != null) {
             animationPanel.voterValidated(voterId, valid);
         }
@@ -291,14 +291,15 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterValidated(int voterId, boolean valid) {
+        public void voterValidated(int voterId, int valid) {
             synchronized(voters) {
+                boolean validp = (valid == 1);
                 VoterInfo voter = voters.get(voterId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
                     stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
                     
-                    VoterStage newStage = valid ? VoterStage.VALIDATION : VoterStage.REJECTED;
+                    VoterStage newStage = validp ? VoterStage.VALIDATION : VoterStage.REJECTED;
                     voter.stage = newStage;
                     voter.x = getWidth() / 8 * 3; // Will be adjusted in paintComponent
                     voter.y = findAvailableYPosition(newStage, getHeight());

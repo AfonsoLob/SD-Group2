@@ -392,7 +392,7 @@ public class Gui implements IGUI_all {
     }
     
     @Override
-    public void voterValidated(int voterId, boolean valid) {
+    public void voterValidated(int voterId, int valid) {
         if (animation != null) {
             animation.voterValidated(voterId, valid);
         }
@@ -454,7 +454,7 @@ public class Gui implements IGUI_all {
         getInstance().voterEnteringQueue(voterId);
     }
     
-    public static void staticVoterValidated(int voterId, boolean valid) {
+    public static void staticVoterValidated(int voterId, int valid) {
         getInstance().voterValidated(voterId, valid);
     }
     

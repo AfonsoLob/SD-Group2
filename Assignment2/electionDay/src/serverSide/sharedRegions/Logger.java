@@ -216,17 +216,18 @@ public class Logger implements ILogger_all {
     }
         
     @Override
-    public void validatingVoter(int voterId, boolean valid) {
+    public void validatingVoter(int voterId, int valid) {
         stateLock.lock();
+        boolean validp = (valid == 1);
         try {
             // Track validation statistics
-            if (valid) {
+            if (validp) {
                 validationSuccess++;
             } else {
                 validationFail++;
             }
             
-            String validationStr = String.valueOf(voterId) + (valid ? "+" : "-");
+            String validationStr = String.valueOf(voterId) + (validp ? "+" : "-");
             addEntry("", "", "", validationStr, "", "");
             
             // Use instance method through interface

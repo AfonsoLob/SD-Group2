@@ -19,6 +19,7 @@ public class Message implements Serializable {
     private int closeIn;             // Number of voters until the exit poll closes
     private int queueSize;           // Size of the queue (if applicable)
     private boolean isStationOpen;   // Whether the station is open or closed
+    private boolean isValidated;      // Whether the voter is validated or not
 
     private Object content;          // Additional content or data payload
     private String message;         // Message content (if needed)
@@ -106,7 +107,6 @@ public class Message implements Serializable {
         this.votingOption = votingOption;
     }
 
-    
    
     
     // Getters and setters
@@ -184,5 +184,13 @@ public class Message implements Serializable {
     public int getQueueSize() {
         
         return queueSize;
+    }
+
+    public boolean getIsValidated() {
+        return isValidated;
+    }
+
+    public void setIsValidated(boolean isValidated) {
+        this.isValidated = isValidated;
     }
 }
