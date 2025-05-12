@@ -86,7 +86,7 @@ public class SExitPollStub implements IExitPoll_all {
         inMessage = com.sendAndReceive(outMessage);
         com.close();
 
-        return inMessage.getType() == MessageType.EXIT_POLL_RESPONSE;
+        return inMessage.getType() == MessageType.EXIT_POLL_OPENED;
     }
 
     // Methods from IExitPoll_Pollster

@@ -55,7 +55,6 @@ public class TVoter implements Runnable {
                 }
                 
                 // Cast vote
-// System.out.println("Voter " + voterId + " ID validation correct!");
                 
                 if (Math.random() < 0.4) {
                     System.out.println(voterId + " voted for candidate A");

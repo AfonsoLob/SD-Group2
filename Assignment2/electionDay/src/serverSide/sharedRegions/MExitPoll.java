@@ -137,6 +137,7 @@ public class MExitPoll implements IExitPoll_all {
         try{
             if(stillVotersInQueue <= 0){
                 isOpen = false;
+                System.out.println("Exit poll closed (no voters in queue)");
                 voterReady.signal();
                 return;
             }
@@ -154,6 +155,7 @@ public class MExitPoll implements IExitPoll_all {
                 lock.lock();
                 try{
                     isOpen = false;
+                    System.out.println("Exit poll closed (no voters in queue)");
                     voterReady.signal();
                 }finally{
                     lock.unlock();
