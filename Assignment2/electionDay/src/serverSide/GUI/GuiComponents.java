@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -533,33 +534,128 @@ public class GuiComponents {
             // Clear current table data
             tableModel.setRowCount(0);
             
-            // Check if file exists first
+            // Try multiple times with a delay if the file doesn't exist immediately
+            // This addresses the case where the log file is created during the simulation
             File logFile = new File("log.txt");
-            if (!logFile.exists()) {
-                JOptionPane.showMessageDialog(Gui.getFrame(), 
-                    "Log file not found: " + logFile.getAbsolutePath(),
-                    "File Error", JOptionPane.ERROR_MESSAGE);
-                return;
+            int retryCount = 0;
+            int maxRetries = 5;
+            
+            while (!logFile.exists() && retryCount < maxRetries) {
+                System.out.println("Log file not found yet, waiting... (Attempt " + (retryCount + 1) + "/" + maxRetries + ")");
+                retryCount++;
+                
+                // Wait before retrying
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                // Check again
+                logFile = new File("log.txt");
             }
+            
+            if (!logFile.exists()) {
+                // File still doesn't exist after retries, look for alternatives
+                File currentDir = new File(".");
+                System.out.println("Looking for log.txt in: " + currentDir.getAbsolutePath());
+                
+                // Check if there's a log file with a different name or in a different location
+                File[] files = currentDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".txt"));
+                if (files != null && files.length > 0) {
+                    for (File f : files) {
+                        System.out.println("Found text file: " + f.getName());
+                    }
+                    
+                    // Ask user if they want to use one of the found files
+                    if (files.length == 1) {
+                        int response = JOptionPane.showConfirmDialog(
+                            Gui.getFrame(),
+                            "Log file not found. Use " + files[0].getName() + " instead?",
+                            "File Not Found",
+                            JOptionPane.YES_NO_OPTION
+                        );
+                        
+                        if (response == JOptionPane.YES_OPTION) {
+                            logFile = files[0];
+                        } else {
+                            return;
+                        }
+                    } else {
+                        // If there are multiple files, let the user choose
+                        String[] options = new String[files.length];
+                        for (int i = 0; i < files.length; i++) {
+                            options[i] = files[i].getName();
+                        }
+                        
+                        String selectedFile = (String) JOptionPane.showInputDialog(
+                            Gui.getFrame(),
+                            "Log.txt not found. Select a text file to use:",
+                            "Choose Log File",
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]
+                        );
+                        
+                        if (selectedFile != null) {
+                            for (File f : files) {
+                                if (f.getName().equals(selectedFile)) {
+                                    logFile = f;
+                                    break;
+                                }
+                            }
+                        } else {
+                            return;
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(Gui.getFrame(), 
+                        "Log file not found: " + logFile.getAbsolutePath(),
+                        "File Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+            
+            // Check if the file is empty or still being written
+            if (logFile.length() == 0) {
+                System.out.println("Log file exists but is empty. Waiting for content...");
+                try {
+                    Thread.sleep(1000); // Wait a moment for content to appear
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                if (logFile.length() == 0) {
+                    JOptionPane.showMessageDialog(Gui.getFrame(), 
+                        "Log file exists but is empty. Please wait for simulation to generate log data.",
+                        "Empty Log", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+            }
+            
+            System.out.println("Loading log file: " + logFile.getAbsolutePath());
             
             // Read the log file
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             String line;
             
-            // Skip the column headers and delimiter lines if they exist
-            if ((line = reader.readLine()) != null) {
-                // Skip header line - contains column headers
-                if ((line = reader.readLine()) != null) {
-                    // Skip delimiter line (usually dashes)
-                    if (line.startsWith("-")) {
-                        line = reader.readLine(); // Read the next line for actual data
-                    }
-                }
-            }
-            
             // Read and parse log entries
             int entriesAdded = 0;
             while ((line = reader.readLine()) != null) {
+                // Skip header lines
+                if (line.contains("Door") && line.contains("Voter") && line.contains("Clerk")) {
+                    continue;
+                }
+                // Skip delimiter lines
+                if (line.startsWith("+") || line.startsWith("-")) {
+                    continue;
+                }
+                // Skip the simulation parameters line
+                if (line.contains("Total of Voters:") || line.contains("Votes to end:")) {
+                    continue;
+                }
+                
                 if (parseLine(line)) {
                     entriesAdded++;
                 }
@@ -572,6 +668,8 @@ public class GuiComponents {
                 JOptionPane.showMessageDialog(Gui.getFrame(), 
                     "No valid log entries found in log file.",
                     "Empty Log", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                System.out.println("Successfully loaded " + entriesAdded + " log entries");
             }
             
         } catch (IOException e) {
@@ -587,7 +685,7 @@ public class GuiComponents {
      * @return true if line was successfully parsed and added to the table
      */
     private boolean parseLine(String line) {
-        if (line.trim().isEmpty()) return false;
+        if (line == null || line.trim().isEmpty()) return false;
         
         String[] columns = new String[8];
         line = line.trim();
@@ -599,7 +697,7 @@ public class GuiComponents {
             // Split the line by the pipe character and extract each column
             String[] parts = line.split("\\|");
             if (parts.length >= 9) {
-                for (int i = 1; i < 9; i++) {
+                for (int i = 1; i < Math.min(parts.length, 9); i++) {
                     columns[i-1] = parts[i].trim();
                 }
                 
