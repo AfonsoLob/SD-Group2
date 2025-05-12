@@ -166,7 +166,7 @@ public class PPollingStationProxy extends Thread{
 
          case VOTERS_QUEUE_REQUEST:                              
             int queueSize = pollingStation.numberVotersInQueue();
-            outMessage = new Message (MessageType.VOTERS_QUEUE_RESPONSE, queueSize);
+            outMessage = new Message (MessageType.VOTERS_QUEUE_RESPONSE, inMessage.getId(), queueSize);
          break;
 
          default:

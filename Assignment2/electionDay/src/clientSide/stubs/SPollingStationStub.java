@@ -236,7 +236,7 @@ public class SPollingStationStub implements IPollingStation_all {
         com.close();
 
         if (inMessage.getType() == MessageType.VOTERS_QUEUE_RESPONSE) {
-            return inMessage.getId(); // Assuming content is an Integer
+            return inMessage.getCloseIn(); // Assuming content is an Integer
         }
 
         return -1; // Return -1 if the response is invalid

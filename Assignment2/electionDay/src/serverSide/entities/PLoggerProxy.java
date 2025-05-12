@@ -95,14 +95,20 @@ public class PLoggerProxy extends Thread {
                 loggerInter.voterInBooth(inMessage.getId(), inMessage.getVotingOption());
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
+
             case LOG_EXIT_POLL_VOTE:
                 if (inMessage.getId() < 0)
                     throw new MessageException("Invalid voterId for LOG_EXIT_POLL_VOTE!", inMessage);
-                if(inMessage.getVotingOption())
-                    loggerInter.exitPollVote(inMessage.getId(), "A");
-                else
-                    loggerInter.exitPollVote(inMessage.getId(), "B");
 
+                // System.out.println("didHeVote: " + inMessage.didHeVote());
+                if(!inMessage.didHeVote())
+                    loggerInter.exitPollVote(inMessage.getId(), "");
+                else
+                    if(inMessage.getVotingOption())
+                        loggerInter.exitPollVote(inMessage.getId(), "A");
+                    else
+                        loggerInter.exitPollVote(inMessage.getId(), "B");
+               
                 outMessage = new Message(commInfra.MessageType.LOG_ACK);
                 break;
 

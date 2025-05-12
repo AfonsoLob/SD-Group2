@@ -24,7 +24,7 @@ public class SExitPollStub implements IExitPoll_all {
         // Create appropriate message based on type and args
         switch (type) {
             case LOG_EXIT_POLL_VOTE:
-                outMessage = new Message(type, (int) args[0], (boolean) args[1]);  // voterId, myVote
+                outMessage = new Message(type, (int) args[0], (boolean) args[1], (boolean) args[2]);  // voterId, myVote
                 break;
             // case LOG_EXIT_POLL_CLOSED:
             //     outMessage = new Message(type, (int) args[0]);  // stillVotersInQueue
@@ -32,6 +32,7 @@ public class SExitPollStub implements IExitPoll_all {
             // case LOG_EXIT_POLL_RESULTS:
             //     outMessage = new Message(type);
             //     break;
+            
             default:
                 System.err.println("Invalid log message type: " + type);
                 return;
@@ -66,7 +67,7 @@ public class SExitPollStub implements IExitPoll_all {
         com.sendAndReceive(outMessage);
         com.close();
         
-        sendLogMessage(MessageType.LOG_EXIT_POLL_VOTE, voterId, myVote);
+        sendLogMessage(MessageType.LOG_EXIT_POLL_VOTE, voterId, myVote, response);
     }
 
     @Override
