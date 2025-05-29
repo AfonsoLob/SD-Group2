@@ -88,7 +88,7 @@ public class ClerkClient {
         for (int i = 0; i < NUM_CLERKS; i++) {
             // TClerk constructor will need to be adapted to not take a logger instance.
             // It will take its ID and the pollingStation stub.
-            clerks[i] = new TClerk(i, pollingStation);
+            clerks[i] = new TClerk( pollingStation,i);
             clerks[i].start();
             System.out.println("ClerkClient: TClerk " + i + " created and started.");
         }

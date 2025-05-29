@@ -1,24 +1,16 @@
 package serverSide.sharedRegions;
 
-<<<<<<< HEAD
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-=======
-import serverSide.GUI.Gui;
-import serverSide.interfaces.GUI.IGUI_Statistics;
-import serverSide.interfaces.GUI.IGUI_Voter;
-import serverSide.interfaces.Logger.ILogger_all;
-import java.io.File;
-import java.io.PrintWriter;
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-<<<<<<< HEAD
+
 import serverSide.GUI.Gui;
 import serverSide.interfaces.GUI.IGUI_Statistics;
 import serverSide.interfaces.GUI.IGUI_Voter;
@@ -26,11 +18,6 @@ import serverSide.interfaces.Logger.ILogger_all;
 
 public class Logger extends UnicastRemoteObject implements ILogger_all {
     private static final long serialVersionUID = 1L; // Added for UnicastRemoteObject
-
-=======
-
-public class Logger implements ILogger_all {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     // Constants for column headers
     private static final String[] HEADERS = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit", "ExitPollA", "ExitPollB"};
     private static final int NUM_COLUMNS = HEADERS.length;
@@ -86,12 +73,9 @@ public class Logger implements ILogger_all {
     private IGUI_Voter guiVoter;
     private IGUI_Statistics guiStats;
     
-<<<<<<< HEAD
     private Logger(int maxVoters, int maxCapacity, int maxVotes) throws RemoteException {
         super(); // Call to UnicastRemoteObject constructor
-=======
-    private Logger(int maxVoters, int maxCapacity, int maxVotes) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         this.logEntries = new ArrayList<>();
         this.votersProcessed = 0;
         this.scoreA = 0;
@@ -134,11 +118,9 @@ public class Logger implements ILogger_all {
         }
     }
     
-<<<<<<< HEAD
+
     public static Logger getInstance(int maxVoters, int maxCapacity, int maxVotes) throws RemoteException {
-=======
-    public static Logger getInstance(int maxVoters, int maxCapacity, int maxVotes) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         return new Logger(maxVoters, maxCapacity, maxVotes);
     }
 
@@ -196,12 +178,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void voterAtDoor(int voterId) throws RemoteException {
-=======
-    public void voterAtDoor(int voterId) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
-        stateLock.lock();
+
         try {
             // Record entry time for timing statistics
             voterEntryTimes.put(voterId, System.currentTimeMillis());
@@ -233,11 +211,7 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void voterEnteringQueue(int voterId) throws RemoteException {
-=======
-    public void voterEnteringQueue(int voterId) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         stateLock.lock();
         try {
             currentQueueSize++;
@@ -251,11 +225,8 @@ public class Logger implements ILogger_all {
     }
         
     @Override
-<<<<<<< HEAD
     public void validatingVoter(int voterId, int valid) throws RemoteException {
-=======
-    public void validatingVoter(int voterId, int valid) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         stateLock.lock();
         boolean validp = (valid == 1);
         try {
@@ -280,12 +251,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void voterInBooth(int voterId, boolean voteA) throws RemoteException {
-=======
-    public void voterInBooth(int voterId, boolean voteA) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
-        stateLock.lock();
+
         try {
             String boothStr = String.valueOf(voterId) + (voteA ? "A" : "B");
             currentVoterInBooth = boothStr;
@@ -307,11 +274,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void exitPollVote(int voterId, String vote) throws RemoteException {
-=======
-    public void exitPollVote(int voterId, String vote) {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         stateLock.lock();
         try {
             // Record exit time for timing statistics
@@ -397,13 +361,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void stationOpening() throws RemoteException {
-=======
-    public void stationOpening() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         stateLock.lock();
-        try {
             isStationOpen = true;
             addEntry("Op", "", "", "", "", "");
         } finally {
@@ -412,11 +371,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void stationClosing() throws RemoteException {
-=======
-    public void stationClosing() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         stateLock.lock();
         try {
             isStationOpen = false;
@@ -442,11 +398,8 @@ public class Logger implements ILogger_all {
     }
 
     @Override
-<<<<<<< HEAD
     public void saveCloseFile() throws RemoteException {
-=======
-    public void saveCloseFile() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         logLock.lock();
         try {
             if (writer != null) {
@@ -462,11 +415,8 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public void clear() throws RemoteException {
-=======
-    public void clear() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         logLock.lock();
         try {
             logEntries.clear();
@@ -476,11 +426,7 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public String getVoteCounts() throws RemoteException {
-=======
-    public String getVoteCounts() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         stateLock.lock();
         try {
             return "Candidate A: " + scoreA + ", Candidate B: " + scoreB;
@@ -490,11 +436,9 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
+
     public int getVotersProcessed() throws RemoteException {
-=======
-    public int getVotersProcessed() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         stateLock.lock();
         try {
             return votersProcessed;
@@ -504,11 +448,9 @@ public class Logger implements ILogger_all {
     }
 
     @Override
-<<<<<<< HEAD
+
     public boolean isStationOpen() throws RemoteException {
-=======
-    public boolean isStationOpen() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+
         stateLock.lock();
         try {
             return isStationOpen;
@@ -518,11 +460,7 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public String getCurrentVoterInBooth() throws RemoteException {
-=======
-    public String getCurrentVoterInBooth() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         stateLock.lock();
         try {
             return currentVoterInBooth;
@@ -532,11 +470,7 @@ public class Logger implements ILogger_all {
     }
     
     @Override
-<<<<<<< HEAD
     public int getCurrentQueueSize() throws RemoteException {
-=======
-    public int getCurrentQueueSize() {
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         stateLock.lock();
         try {
             return currentQueueSize;
