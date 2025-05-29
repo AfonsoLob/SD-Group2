@@ -1,4 +1,4 @@
-package serverSide.interfaces.GUI;
+package clientSide.interfaces.GUI;
 
 /**
  * Combined GUI interface with all functionality
