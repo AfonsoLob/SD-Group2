@@ -1,0 +1,104 @@
+Running all scripts
+Building all project components...
+Current directory: /home/daniel/Documentos/MEI/1ano/2semestre/SD/SD-Project/Assignment2/electionDay
+Cleaned bin directory
+Checking for required source files...
+Found 73 Java files (see project_files.txt for details)
+Using classpath: .:bin:lib/genclass.jar
+Compiling all Java files...
+Compilation successful!
+Build completed successfully.
+To run servers and clients, use the RunAll.sh script or individual run scripts.
+
+Starting Logger Server...
+Starting Logger Server on localhost:4002...
+Current working directory: /home/daniel/Documentos/MEI/1ano/2semestre/SD/SD-Project/Assignment2/electionDay
+Log file exists: true
+Log file path: /home/daniel/Documentos/MEI/1ano/2semestre/SD/SD-Project/Assignment2/electionDay/log.txt
+GUI initialized. Please use the GUI to start the server with desired parameters.
+Attempting to start server with parameters: Voters=5, QueueCapacity=3, VotesToClose=3
+Creating log file at: /home/daniel/Documentos/MEI/1ano/2semestre/SD/SD-Project/Assignment2/electionDay/log.txt
+Service is established!
+Server is listening for service requests on port 4002
+Server entering client acceptance loop...
+
+Starting Polling Station Server...
+Starting Polling Station Server on localhost:4000...
+Service is established!
+Server is listening for service requests.
+
+Starting Exit Poll Server...
+Starting Exit Poll Server on localhost:4001...
+
+Starting Clerk Client...
+Starting Clerk Client connecting to localhost servers...
+Clerk calling next voter
+Got here
+Waiting for voters
+
+Starting Pollster Client...
+Starting Pollster Client connecting to localhost servers...
+Pollster running
+
+Starting Voter Clients...
+Starting Voter Client connecting to localhost servers...
+false
+Clerk calling next voter
+Got here
+false
+Clerk calling next voter
+Got here
+false
+Clerk calling next voter
+Got here
+false
+Clerk calling next voter
+Got here
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+A total votes: 1
+Voter 3 leaving polling station (not selected for questioning)
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+A total votes: 2
+Voter 1003 leaving polling station (not selected for questioning)
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+A total votes: 3
+Voter 2003 leaving polling station (telling the truth)
+Pollster registered one more vote for A
+Prediction for A: 100 percent of the votes
+Prediction for B: 0 percent of the votes
+Pollster terminated
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+B total votes: 1
+Voter 3003 leaving polling station (telling the truth)
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+false
+Clerk calling next voter
+Got here
+Waiting for voters
+A total votes: 4
+Accepted null connection handler, but server is still waiting.
+Accepted null connection handler, but server is still waiting.
+
+All components are now running on localhost with different ports:
+- Logger Server: localhost:4002
+- Polling Station Server: localhost:4000
+- Exit Poll Server: localhost:4001
