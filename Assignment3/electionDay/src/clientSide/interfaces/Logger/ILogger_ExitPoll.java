@@ -1,5 +1,10 @@
-package clientSide.interfaces.Logger;
+package serverSide.interfaces.Logger;
 
-public interface ILogger_ExitPoll {
-    void exitPollVote(int voterId, String vote);
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface ILogger_ExitPoll extends Remote {
+    void exitPollVote(int voterId, String vote) throws RemoteException;
+
 }

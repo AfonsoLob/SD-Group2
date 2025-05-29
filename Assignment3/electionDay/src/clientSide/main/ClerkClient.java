@@ -33,15 +33,15 @@ public class ClerkClient {
         Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
-                System.out.println("ClerkClient: Attempting to connect to RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
-                                   " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("ClerkClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+
                 rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
+
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
+
                 System.out.println("ClerkClient: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("ClerkClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME +
-                                   "' via RMI Registry: " + e.getMessage());
+                System.err.println("ClerkClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
             if (registerServiceStub == null) {
@@ -57,13 +57,11 @@ public class ClerkClient {
         // 2. Look up PollingStationService via IRegister (with retry)
         while (pollingStation == null) {
             try {
-                System.out.println("ClerkClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("ClerkClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 pollingStation = (IPollingStation_all) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
                 System.out.println("ClerkClient: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("ClerkClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("ClerkClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 pollingStation = null;
             }
             if (pollingStation == null) {

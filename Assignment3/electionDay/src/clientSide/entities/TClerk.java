@@ -1,13 +1,13 @@
 package clientSide.entities;
 
 import java.rmi.RemoteException;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
+import serverSide.interfaces.PollingStation.IPollingStation_Clerk;
 
 public class TClerk extends Thread {
-    private final IPollingStation_all pollingStation;
+    private final IPollingStation_Clerk pollingStation;
     private final int numVoters; // To know when all voters have likely finished
 
-    public TClerk(IPollingStation_all pollingStation, int numVoters) {
+    public TClerk(IPollingStation_Clerk pollingStation, int numVoters) {
         this.pollingStation = pollingStation;
         this.numVoters = numVoters; // Needed for a more robust termination condition
     }
