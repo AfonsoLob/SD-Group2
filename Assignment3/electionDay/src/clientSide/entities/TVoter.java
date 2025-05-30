@@ -1,8 +1,8 @@
 package clientSide.entities;
 
 import java.rmi.RemoteException;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
+import interfaces.ExitPoll.IExitPoll_all;
+import interfaces.PollingStation.IPollingStation_all;
 
 public class TVoter extends Thread {
     private final int voterId;

@@ -10,12 +10,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-<<<<<<< HEAD
-=======
-
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -29,6 +26,13 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+
+import interfaces.GUI.IGUI_all;
+import interfaces.GUI.IGUI_Clerk;
+import interfaces.GUI.IGUI_Pollster;
+import interfaces.GUI.IGUI_Voter;
 
 /**
  * Class responsible for creating and managing GUI components
@@ -64,6 +68,23 @@ public class GuiComponents {
     private JLabel pollAccuracyRateLabel;
     private JLabel averageProcessingTimeLabel;
     private JLabel runningTimeLabel;
+    
+    private JPanel voterPanel;
+    private JLabel totalVotersLabel;
+    private JLabel processedVotersLabel;
+    private JLabel votesALabel;
+    private JLabel votesBLabel;
+    
+    private JPanel clerkPanel;
+    private JLabel clerkStateLabel;
+    
+    private JPanel pollsterPanel;
+    private JLabel pollsterStateLabel;
+    
+    private JPanel controlPanel;
+    private JButton stopButton;
+    
+    private IGUI_all gui;
     
     /**
      * Create the status panel containing station status, queue, booth, and results
@@ -274,31 +295,6 @@ public class GuiComponents {
         return statsPanel;
     }
     
-<<<<<<< HEAD
-
-        // In GuiComponents.java
-        
-        // Assuming you have JTextField members like these (names might vary):
-        // private JTextField numVotersField;
-        // private JTextField queueSizeField; // For Polling Station Capacity
-        // private JTextField votesToCloseField; // For Exit Poll Percentage
-        
-        public void setFieldsEnabled(boolean isEnabled) {
-            if (numVotersField != null) {
-                numVotersField.setEnabled(isEnabled);
-            }
-            if (queueSizeField != null) {
-                queueSizeField.setEnabled(isEnabled);
-            }
-            if (votesToCloseField != null) {
-                votesToCloseField.setEnabled(isEnabled);
-            }
-            // Add any other related input fields you want to control
-        }
-
-
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     /**
      * Create the table panel for log display
      */
@@ -505,12 +501,6 @@ public class GuiComponents {
         if (restartButton != null) {
             restartButton.setEnabled(false);
         }
-<<<<<<< HEAD
-
-        
-
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     }
     
     /**
@@ -782,5 +772,135 @@ public class GuiComponents {
 
     public JButton getRestartButton() {
         return restartButton;
+    }
+
+    private void setupVoterPanel() {
+        voterPanel = new JPanel(new BorderLayout());
+        voterPanel.setBorder(BorderFactory.createTitledBorder("Voter Information"));
+        
+        JPanel voterInfoPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        voterInfoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        // Add voter info fields
+        voterInfoPanel.add(new JLabel("Total Voters:"));
+        totalVotersLabel = new JLabel("0");
+        voterInfoPanel.add(totalVotersLabel);
+        
+        voterInfoPanel.add(new JLabel("Processed Voters:"));
+        processedVotersLabel = new JLabel("0");
+        voterInfoPanel.add(processedVotersLabel);
+        
+        voterInfoPanel.add(new JLabel("Votes A:"));
+        votesALabel = new JLabel("0");
+        voterInfoPanel.add(votesALabel);
+        
+        voterInfoPanel.add(new JLabel("Votes B:"));
+        votesBLabel = new JLabel("0");
+        voterInfoPanel.add(votesBLabel);
+        
+        voterPanel.add(voterInfoPanel, BorderLayout.CENTER);
+    }
+
+    private void setupClerkPanel() {
+        clerkPanel = new JPanel(new BorderLayout());
+        clerkPanel.setBorder(BorderFactory.createTitledBorder("Clerk Information"));
+        
+        JPanel clerkInfoPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        clerkInfoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        // Add clerk info fields
+        clerkInfoPanel.add(new JLabel("Clerk State:"));
+        clerkStateLabel = new JLabel("IDLE");
+        clerkInfoPanel.add(clerkStateLabel);
+        
+        clerkPanel.add(clerkInfoPanel, BorderLayout.CENTER);
+    }
+
+    private void setupPollsterPanel() {
+        pollsterPanel = new JPanel(new BorderLayout());
+        pollsterPanel.setBorder(BorderFactory.createTitledBorder("Pollster Information"));
+        
+        JPanel pollsterInfoPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        pollsterInfoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        // Add pollster info fields
+        pollsterInfoPanel.add(new JLabel("Pollster State:"));
+        pollsterStateLabel = new JLabel("IDLE");
+        pollsterInfoPanel.add(pollsterStateLabel);
+        
+        pollsterPanel.add(pollsterInfoPanel, BorderLayout.CENTER);
+    }
+
+    private void setupControlPanel() {
+        controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        startButton = new JButton("Start");
+        startButton.addActionListener(e -> {
+            try {
+                if (gui != null) {
+                    gui.setSimulationRunning(true);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error starting simulation: " + ex.getMessage());
+            }
+        });
+        
+        stopButton = new JButton("Stop");
+        stopButton.addActionListener(e -> {
+            try {
+                if (gui != null) {
+                    gui.setSimulationRunning(false);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error stopping simulation: " + ex.getMessage());
+            }
+        });
+        
+        controlPanel.add(startButton);
+        controlPanel.add(stopButton);
+    }
+
+    public void updateVoterInfo(int totalVoters, int processedVoters, int votesA, int votesB) {
+        SwingUtilities.invokeLater(() -> {
+            totalVotersLabel.setText(String.valueOf(totalVoters));
+            processedVotersLabel.setText(String.valueOf(processedVoters));
+            votesALabel.setText(String.valueOf(votesA));
+            votesBLabel.setText(String.valueOf(votesB));
+        });
+    }
+
+    public void updateClerkState(String state) {
+        SwingUtilities.invokeLater(() -> {
+            clerkStateLabel.setText(state);
+        });
+    }
+
+    public void updatePollsterState(String state) {
+        SwingUtilities.invokeLater(() -> {
+            pollsterStateLabel.setText(state);
+        });
+    }
+
+    public void setGui(IGUI_all gui) {
+        this.gui = gui;
+    }
+
+    public void setEnabled(boolean enabled) {
+        startButton.setEnabled(enabled);
+        stopButton.setEnabled(enabled);
+    }
+
+    public void setFieldsEnabled(boolean enabled) {
+        numVotersField.setEnabled(enabled);
+        queueSizeField.setEnabled(enabled);
+        votesToCloseField.setEnabled(enabled);
+    }
+
+    public void startServer() {
+        gui.setSimulationRunning(true);
+    }
+
+    public void shutdown() {
+        gui.setSimulationRunning(false);
     }
 }

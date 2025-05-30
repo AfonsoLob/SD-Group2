@@ -2,11 +2,7 @@ package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.io.File;
-<<<<<<< HEAD
 import java.rmi.RemoteException; // For setupParameters if it were an RMI call
-=======
-
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -14,16 +10,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
-<<<<<<< HEAD
-import serverSide.interfaces.GUI.IGUI_all;
-import serverSide.interfaces.Logger.ILogger_GUI;
-import serverSide.sharedRegions.MLogger; // Import MLogger
 
-=======
+import interfaces.GUI.IGUI_all;
+import interfaces.Logger.ILogger_GUI;
+import serverSide.sharedRegions.Logger; // Import Logger instead of MLogger
 
-import serverSide.interfaces.GUI.IGUI_all;
-import serverSide.interfaces.Logger.ILogger_GUI;
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 /**
  * Main GUI class implementing the IGUI_all interface.
  * This class uses a singleton pattern to ensure a single GUI instance.
@@ -69,12 +60,14 @@ public class Gui implements IGUI_all {
     // Callback for simulation starter and restarter
     private static Runnable simulationStarter;
     private static Runnable simulationRestarter;
-<<<<<<< HEAD
-
+    
     // Logger instance
-    private static MLogger mloggerInstance; // To hold the MLogger from LoggerServer
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+    private static Logger loggerInstance; // To hold the Logger from LoggerServer
+    
+    // Configuration parameters
+    private int numVoters;
+    private int pollingStationCapacity;
+    private int exitPollPercentage;
     
     // Private constructor for singleton pattern
     private Gui() {
@@ -85,18 +78,15 @@ public class Gui implements IGUI_all {
     public static Gui getInstance() {
         return INSTANCE;
     }
-<<<<<<< HEAD
-
+    
     /**
-     * Sets the MLogger instance for the GUI to use.
+     * Sets the Logger instance for the GUI to use.
      * This method should be called by LoggerServer before window() is called.
-     * @param logger The MLogger instance.
+     * @param logger The Logger instance.
      */
-    public static void setLoggerInstance(MLogger logger) {
-        mloggerInstance = logger;
+    public static void setLoggerInstance(Logger logger) {
+        loggerInstance = logger;
     }
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     
     // Create a new GUI window
     public static void window() {
@@ -166,90 +156,52 @@ public class Gui implements IGUI_all {
                 
                 // Get configuration parameters from GuiComponents
                 int numVoters = components.getNumVoters();
-<<<<<<< HEAD
-                int pollingStationCapacity = components.getQueueSize(); // Assuming queueSize is pollingStationCapacity
-                int exitPollPercentage = components.getVotesToClose(); // Assuming votesToClose is exitPollPercentage
+                int pollingStationCapacity = components.getQueueSize();
+                int exitPollPercentage = components.getVotesToClose();
                 
-                // Update local configuration values (optional, as MLogger is the source of truth now)
-                setConfigValues(numVoters, pollingStationCapacity, exitPollPercentage);
+                // Create and initialize the Logger instance using the factory method
+                Logger logger = Logger.getInstance(numVoters, pollingStationCapacity, exitPollPercentage);
                 
-                // Call MLogger's setupParameters method directly
-                if (mloggerInstance != null) {
-                    mloggerInstance.setupParameters(numVoters, pollingStationCapacity, exitPollPercentage);
-                    System.out.println("GUI: Parameters sent to MLogger -> Voters: " + numVoters + ", PS Capacity: " + pollingStationCapacity + ", EP Percentage: " + exitPollPercentage);
-                    // Update GUI to reflect that parameters are set, e.g., disable inputs
-                    components.getStartButton().setEnabled(false);
-                    components.getStartButton().setText("Parameters Set. Start Servers & Clients.");
-                    // Disable input fields after setting params
-                    components.setFieldsEnabled(false); // Assumes GuiComponents has this method
-
-                } else {
-                    System.err.println("GUI Error: MLogger instance is null. Cannot set parameters.");
-                    JOptionPane.showMessageDialog(frame, 
-                        "Critical Error: MLogger not initialized.",
-                        "Setup Error", JOptionPane.ERROR_MESSAGE);
-                    simulationRunning = false; // Revert state
-                    return;
-                }
+                // Set the Logger instance in the GUI
+                setLoggerInstance(logger);
+                
+                // Notify LoggerServer that the Logger is ready
+                serverSide.main.LoggerServer.initializeLoggerService(logger, true);
+                
+                // Update GUI to reflect that parameters are set
+                components.getStartButton().setEnabled(false);
+                components.getStartButton().setText("Parameters Set. Start Servers & Clients.");
+                components.setFieldsEnabled(false);
 
             } catch (NumberFormatException nfe) {
                 System.err.println("GUI Error: Invalid number format in input fields.");
                 JOptionPane.showMessageDialog(frame, 
                     "Invalid input. Please ensure all parameters are numbers.",
                     "Input Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
-                components.resetUI(); // Or just re-enable start button
-            } catch (RemoteException re) { // MLogger.setupParameters throws RemoteException
-                System.err.println("GUI Error: RemoteException while setting parameters in MLogger: " + re.getMessage());
+                simulationRunning = false;
+                components.resetUI();
+            } catch (RemoteException re) {
+                System.err.println("GUI Error: RemoteException while setting parameters in Logger: " + re.getMessage());
                 JOptionPane.showMessageDialog(frame, 
                     "Error communicating with Logger service: " + re.getMessage(),
                     "RMI Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
+                simulationRunning = false;
                 components.resetUI();
             } catch (Exception e) {
                 System.err.println("GUI Error starting simulation: " + e.getMessage());
                 JOptionPane.showMessageDialog(frame, 
                     "Error setting up simulation: " + e.getMessage(),
                     "Setup Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
-                components.resetUI(); 
-=======
-                int queueSize = components.getQueueSize();
-                int votesToClose = components.getVotesToClose();
-                
-                // Update configuration values
-                setConfigValues(numVoters, queueSize, votesToClose);
-                
-                // Call ServerLogger's static method to start the server logic
-                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
-            } catch (Exception e) {
-                System.err.println("Error starting server: " + e.getMessage());
-                components.resetUI(); // Reset UI on error
                 simulationRunning = false;
-                if (frame != null) {
-                    JOptionPane.showMessageDialog(frame, 
-                        "Error starting server: " + e.getMessage(),
-                        "Server Error", JOptionPane.ERROR_MESSAGE);
-                }
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+                components.resetUI();
             }
         });
         
         // Set up the simulation restarter (called when the Restart button is clicked)
         setSimulationRestarter(() -> {
-<<<<<<< HEAD
-            System.out.println("GUI: Restart requested.");
-            components.getStartButton().setEnabled(true);
-            // Enable input fields
-            components.setFieldsEnabled(true); // Assumes GuiComponents has this method
-            simulationRunning = false; // No longer running until params are set again
-            JOptionPane.showMessageDialog(frame, 
-                "Parameters can be re-entered. Please restart external server and client processes manually after setting new parameters.",
-                "Restart Simulation", JOptionPane.INFORMATION_MESSAGE);
-=======
             try {
                 // First, shut down the current server instance
-                serverSide.main.ServerLogger.shutdown();
+                // serverSide.main.ServerLogger.shutdown();
                 
                 // Allow a brief pause for shutdown to complete
                 try {
@@ -270,7 +222,7 @@ public class Gui implements IGUI_all {
                 setConfigValues(numVoters, queueSize, votesToClose);
                 
                 // Start a new server instance
-                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
+                // serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
             } catch (Exception e) {
                 System.err.println("Error restarting server: " + e.getMessage());
                 simulationRunning = false;
@@ -280,7 +232,6 @@ public class Gui implements IGUI_all {
                         "Server Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         });
         
         // Display the window
@@ -549,11 +500,15 @@ public class Gui implements IGUI_all {
     // Renamed static bridge methods to avoid conflicts
     public static void staticUpdateFromLogger(ILogger_GUI logger) {
         if (logger != null) {
-            getInstance().updateFromLogger(
-                logger.getVoteCounts(),
-                logger.getVotersProcessed(),
-                logger.isStationOpen()
-            );
+            try {
+                getInstance().updateFromLogger(
+                    logger.getVoteCounts(),
+                    logger.getVotersProcessed(),
+                    logger.isStationOpen()
+                );
+            } catch (java.rmi.RemoteException e) {
+                System.err.println("Gui: RemoteException in staticUpdateFromLogger: " + e.getMessage());
+            }
         }
     }
     
@@ -622,11 +577,27 @@ public class Gui implements IGUI_all {
 
 	@Override
 	public void updateFromLogger(String voteCounts, int votersProcessed, boolean stationOpen) {
-<<<<<<< HEAD
-		System.out.println("Gui.updateFromLogger called - VoteCounts: " + voteCounts + ", Processed: " + votersProcessed + ", Open: " + stationOpen);
-=======
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'updateFromLogger'");
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+        System.out.println("Gui.updateFromLogger called - VoteCounts: " + voteCounts + ", Processed: " + votersProcessed + ", Open: " + stationOpen);
 	}
+
+    @Override
+    public void updateClerkState(String state) {
+        if (components != null) {
+            components.updateClerkState(state);
+        }
+    }
+
+    @Override
+    public void updatePollsterState(String state) {
+        if (components != null) {
+            components.updatePollsterState(state);
+        }
+    }
+
+    public void setupParameters(int numVoters, int pollingStationCapacity, int exitPollPercentage) {
+        // Store the parameters for later use
+        this.numVoters = numVoters;
+        this.pollingStationCapacity = pollingStationCapacity;
+        this.exitPollPercentage = exitPollPercentage;
+    }
 }

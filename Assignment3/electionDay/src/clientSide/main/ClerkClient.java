@@ -5,8 +5,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry; // Assuming TClerk entity exists
-import serverSide.interfaces.PollingStation.IPollingStation_all;
-import serverSide.interfaces.Register.IRegister;
+import interfaces.PollingStation.IPollingStation_all;
+import interfaces.Register.IRegister;
 
 public class ClerkClient {
 

@@ -1,6 +1,5 @@
 package serverSide.sharedRegions;
 
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
@@ -12,13 +11,12 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import serverSide.GUI.Gui;
-import serverSide.interfaces.GUI.IGUI_Statistics;
-import serverSide.interfaces.GUI.IGUI_Voter;
-import serverSide.interfaces.Logger.ILogger_all;
+import interfaces.GUI.IGUI_Statistics;
+import interfaces.GUI.IGUI_Voter;
+import interfaces.Logger.ILogger_all;
 
 public class Logger extends UnicastRemoteObject implements ILogger_all {
-    private static final long serialVersionUID = 1L; // Added for UnicastRemoteObject
-    // Constants for column headers
+    private static final long serialVersionUID = 1L;
     private static final String[] HEADERS = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit", "ExitPollA", "ExitPollB"};
     private static final int NUM_COLUMNS = HEADERS.length;
     private PrintWriter writer;
@@ -72,6 +70,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     private IGUI_Voter guiVoter;
     private IGUI_Statistics guiStats;
+    
+    private int exitPollPercentage;
     
     private Logger(int maxVoters, int maxCapacity, int maxVotes) throws RemoteException {
         super(); // Call to UnicastRemoteObject constructor
@@ -179,7 +179,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void voterAtDoor(int voterId) throws RemoteException {
-
+        stateLock.lock();
         try {
             // Record entry time for timing statistics
             voterEntryTimes.put(voterId, System.currentTimeMillis());
@@ -228,9 +228,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     public void validatingVoter(int voterId, int valid) throws RemoteException {
 
         stateLock.lock();
-        boolean validp = (valid == 1);
         try {
-            // Track validation statistics
+            boolean validp = (valid == 1);
             if (validp) {
                 validationSuccess++;
             } else {
@@ -252,7 +251,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void voterInBooth(int voterId, boolean voteA) throws RemoteException {
-
+        stateLock.lock();
         try {
             String boothStr = String.valueOf(voterId) + (voteA ? "A" : "B");
             currentVoterInBooth = boothStr;
@@ -363,6 +362,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     @Override
     public void stationOpening() throws RemoteException {
         stateLock.lock();
+        try {
             isStationOpen = true;
             addEntry("Op", "", "", "", "", "");
         } finally {
@@ -477,5 +477,55 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         } finally {
             stateLock.unlock();
         }
+    }
+
+    @Override
+    public void logGeneral(String message) throws RemoteException {
+        stateLock.lock();
+        try {
+            addEntry("", "", "", "", "", message);
+        } finally {
+            stateLock.unlock();
+        }
+    }
+
+    public int getPollingStationCapacity() throws RemoteException {
+        return maxCapacity;
+    }
+
+    public void logClerkState(String state, String message) throws RemoteException {
+        // Minimal stub for compilation
+        logGeneral("ClerkState: " + state + ", " + message);
+    }
+
+    public void logVoterState(int voterId, String state, String message) throws RemoteException {
+        // Minimal stub for compilation
+        logGeneral("Voter " + voterId + " State: " + state + ", " + message);
+    }
+
+    public void logResults(String context, int a, int b) throws RemoteException {
+        // Minimal stub for compilation
+        logGeneral("Results for " + context + ": A=" + a + ", B=" + b);
+    }
+
+    public int getNumVoters() throws RemoteException {
+        return maxVoters;
+    }
+
+    public void logPollsterState(String state, String message) throws RemoteException {
+        // Minimal stub for compilation
+        logGeneral("PollsterState: " + state + ", " + message);
+    }
+
+    public int getExitPollPercentage() throws RemoteException {
+        // Default implementation
+        return 50; // 50% of voters will participate in exit poll
+    }
+
+    public void setupParameters(int numVoters, int pollingStationCapacity, int exitPollPercentage) throws RemoteException {
+        this.maxVoters = numVoters;
+        this.maxCapacity = pollingStationCapacity;
+        // Store exit poll percentage for later use
+        this.exitPollPercentage = exitPollPercentage;
     }
 }

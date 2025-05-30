@@ -5,9 +5,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.Logger.ILogger_all; // Or the specific ILogger interface MPollingStation needs
-import serverSide.interfaces.PollingStation.IPollingStation_all; // Assuming this is the remote interface for MPollingStation
-import serverSide.interfaces.Register.IRegister;
+import interfaces.Logger.ILogger_all; // Or the specific ILogger interface MPollingStation needs
+import interfaces.PollingStation.IPollingStation_all; // Assuming this is the remote interface for MPollingStation
+import interfaces.Register.IRegister;
 import serverSide.sharedRegions.MPollingStation;
 
 public class PollingStationServer {
@@ -80,7 +80,7 @@ public class PollingStationServer {
             // If MPollingStation needs other parameters (like numVoters), they need to be obtained.
             // For now, assuming it primarily needs the logger.
             // The number of voters might be fetched by MPollingStation from the logger if needed.
-            mPollingStation = new MPollingStation(loggerStub);
+            mPollingStation = MPollingStation.getInstance(loggerStub);
             pollingStation = (IPollingStation_all) mPollingStation; // Or export if not extending UnicastRemoteObject directly
             System.out.println("PollingStationServer: MPollingStation instance created.");
         } catch (RemoteException e) { // If MPollingStation constructor throws RemoteException (e.g. UnicastRemoteObject)

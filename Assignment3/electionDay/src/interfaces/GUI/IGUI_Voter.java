@@ -1,4 +1,4 @@
-package clientSide.interfaces.GUI;
+package interfaces.GUI;
 
 /**
  * GUI interface for voter-related UI updates

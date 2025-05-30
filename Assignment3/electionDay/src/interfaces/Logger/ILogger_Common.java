@@ -1,4 +1,4 @@
-package clientSide.interfaces.Logger;
+package interfaces.Logger;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

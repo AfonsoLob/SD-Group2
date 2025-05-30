@@ -5,9 +5,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all; // Assuming this is the remote interface for MExitPoll
-import serverSide.interfaces.Logger.ILogger_all; // Or the specific ILogger interface MExitPoll needs
-import serverSide.interfaces.Register.IRegister;
+import interfaces.ExitPoll.IExitPoll_all; // Assuming this is the remote interface for MExitPoll
+import interfaces.Logger.ILogger_all; // Or the specific ILogger interface MExitPoll needs
+import interfaces.Register.IRegister;
 import serverSide.sharedRegions.MExitPoll;
 
 public class ExitPollServer {

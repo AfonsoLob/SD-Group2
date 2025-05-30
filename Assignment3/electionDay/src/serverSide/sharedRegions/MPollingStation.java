@@ -10,8 +10,8 @@ import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import serverSide.interfaces.Logger.ILogger_PollingStation;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
+import interfaces.Logger.ILogger_PollingStation;
+import interfaces.PollingStation.IPollingStation_all;
 
 public class MPollingStation extends UnicastRemoteObject implements IPollingStation_all {
     private static final long serialVersionUID = 1L; // Added serialVersionUID
@@ -63,23 +63,16 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
         }
         this.capacity = effectiveCapacity;
         this.isOpen = false;
-
-
         this.isAproved = false;
         this.aprovalId = -1;
-
-
         this.votersQueue = new ArrayDeque<>();
         this.validatedIDs = new HashSet<>();
-
         this.queue_lock = new ReentrantLock(true);
-
         this.notEmpty = queue_lock.newCondition();
         this.notFull = queue_lock.newCondition();
         this.stationOpen = queue_lock.newCondition();
         this.aprovalReady = queue_lock.newCondition();
         this.clerkAprovalReady = queue_lock.newCondition();
-
         this.voting_lock = new ReentrantLock();
         this.candidateA = 0;
         this.candidateB = 0;
@@ -325,5 +318,10 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     public void printFinalResults() throws RemoteException {
         if (logger != null) logger.logResults("POLLING_STATION", candidateA, candidateB);
 
+    }
+
+    @Override
+    public int getNumberOfVotersConfigured() throws RemoteException {
+        return logger != null ? logger.getNumVoters() : 0;
     }
 }

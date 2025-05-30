@@ -1,0 +1,48 @@
+Total of Voters:5, Total Voters in Stations:3, Votes to end: 3 voters
+| Door       | Voter      | Clerk      | Validation | Booth      | ScoreA     | ScoreB     | Exit       | ExitPollA  | ExitPollB  |
+-----------------------------------------------------------------------------------------------------------------------------------
+|            |            |            |            |            |            |            | Polling Station Opened. | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: WAITING_VOTERS, Queue empty. | 00         | 00         |
+|            |            |            |            |            |            |            | PollsterState: INQUIRE_WAITING, Waiting for new vote. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: ARRIVED_PS, At polling station door. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: IN_QUEUE, Entered queue. Size: 1 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: ARRIVED_PS, At polling station door. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: ARRIVED_PS, At polling station door. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: ARRIVED_PS, At polling station door. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: ARRIVED_PS, At polling station door. | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: CALLING_VOTER, Calling voter 0 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: WAITING_ID_VALIDATION,  | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: VALIDATED_ID, Voter 0 validation: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: IN_QUEUE, Entered queue. Size: 1 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: IN_QUEUE, Entered queue. Size: 2 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: WAITING_ID_VALIDATION,  | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: IN_QUEUE, Entered queue. Size: 3 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: WAITING_ID_VALIDATION,  | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: WAITING_QUEUE_SPACE, Queue full, capacity: 3 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: WAITING_ID_VALIDATION,  | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: ID_VALIDATION_RESULT, Result: true | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: CALLING_VOTER, Calling voter 3 | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: VALIDATED_ID, Voter 3 validation: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: IN_QUEUE, Entered queue. Size: 3 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: ID_VALIDATION_RESULT, Result: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: WAITING_ID_VALIDATION,  | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: CALLING_VOTER, Calling voter 1 | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: VALIDATED_ID, Voter 1 validation: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: ID_VALIDATION_RESULT, Result: true | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: CALLING_VOTER, Calling voter 2 | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: VALIDATED_ID, Voter 2 validation: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: ID_VALIDATION_RESULT, Result: true | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: CALLING_VOTER, Calling voter 4 | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: VALIDATED_ID, Voter 4 validation: true | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: ID_VALIDATION_RESULT, Result: true | 00         | 00         |
+|            |            |            |            |            |            |            | ClerkState: WAITING_VOTERS, Queue empty. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: VOTED_A, Total A: 1 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 0 State: EXIT_POLL_DECLINED_TO_ANSWER, Did not want to answer. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: VOTED_A, Total A: 2 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 3 State: EXIT_POLL_NOT_SELECTED_CHANCE, Percentage chance not met. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: VOTED_B, Total B: 1 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 1 State: EXIT_POLL_DECLINED_TO_ANSWER, Did not want to answer. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: VOTED_B, Total B: 2 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 2 State: EXIT_POLL_NOT_SELECTED_CHANCE, Percentage chance not met. | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: VOTED_B, Total B: 3 | 00         | 00         |
+|            |            |            |            |            |            |            | Voter 4 State: EXIT_POLL_DECLINED_TO_ANSWER, Did not want to answer. | 00         | 00         |

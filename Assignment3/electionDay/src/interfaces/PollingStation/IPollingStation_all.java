@@ -1,4 +1,4 @@
-package clientSide.interfaces.PollingStation;
+package interfaces.PollingStation;
 
 // This interface aggregates other PollingStation interfaces and extends Remote implicitly through them.
 public interface IPollingStation_all extends IPollingStation_Voter, IPollingStation_Clerk {

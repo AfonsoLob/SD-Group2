@@ -1,4 +1,4 @@
-package serverSide.main;
+package serverSide.sharedRegions;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
@@ -8,7 +8,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import serverSide.interfaces.Register.IRegister;
+import interfaces.Register.IRegister;
 
 /**
  * Implementation of the {@link IRegister} interface.
@@ -24,15 +24,22 @@ public class RegisterRemoteObject extends UnicastRemoteObject implements IRegist
     private static final int RMI_REGISTRY_PORT = 22350; // Standard RMI registry port used by this project
     public static final String REGISTER_SERVICE_NAME = "RegisterService"; // Name for this service in RMI registry
     private static final long RETRY_DELAY_MS = 5000; // 5 seconds for retry
+    private Registry registry;
 
     /**
      * Constructs a new RegisterRemoteObject.
      * @throws RemoteException if the UnicastRemoteObject constructor fails.
      */
-    public RegisterRemoteObject() throws RemoteException {
+    public RegisterRemoteObject(String rmiRegHostName, int rmiRegPortNumb) throws RemoteException {
         super();
         this.bindings = new HashMap<>();
         System.out.println("RegisterRemoteObject: Instance created.");
+        try {
+            registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        } catch (RemoteException e) {
+            System.err.println("RegisterRemoteObject: Error creating registry: " + e.getMessage());
+            throw e;
+        }
     }
 
     @Override
@@ -42,6 +49,12 @@ public class RegisterRemoteObject extends UnicastRemoteObject implements IRegist
         }
         bindings.put(name, obj);
         System.out.println("RegisterRemoteObject: Bound '" + name + "'.");
+        try {
+            registry.bind(name, obj);
+        } catch (Exception e) {
+            System.err.println("RegisterRemoteObject: Error binding " + name + ": " + e.getMessage());
+            throw new RemoteException("Error binding " + name, e);
+        }
     }
 
     @Override
@@ -60,6 +73,12 @@ public class RegisterRemoteObject extends UnicastRemoteObject implements IRegist
             throw new NotBoundException("Name '" + name + "' is not bound, cannot unbind.");
         }
         System.out.println("RegisterRemoteObject: Unbound '" + name + "'.");
+        try {
+            registry.unbind(name);
+        } catch (Exception e) {
+            System.err.println("RegisterRemoteObject: Error unbinding " + name + ": " + e.getMessage());
+            throw new RemoteException("Error unbinding " + name, e);
+        }
     }
 
     @Override
@@ -79,7 +98,7 @@ public class RegisterRemoteObject extends UnicastRemoteObject implements IRegist
 
         RegisterRemoteObject registerService = null;
         try {
-            registerService = new RegisterRemoteObject();
+            registerService = new RegisterRemoteObject(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
         } catch (RemoteException e) {
             System.err.println("RegisterRemoteObject: CRITICAL - Failed to instantiate RegisterRemoteObject: " + e.getMessage());
             e.printStackTrace();

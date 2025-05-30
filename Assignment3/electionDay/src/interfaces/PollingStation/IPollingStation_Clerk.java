@@ -1,4 +1,4 @@
-package clientSide.interfaces.PollingStation;
+package interfaces.PollingStation;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

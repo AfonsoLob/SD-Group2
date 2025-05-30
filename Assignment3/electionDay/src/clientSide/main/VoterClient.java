@@ -5,9 +5,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
-import serverSide.interfaces.Register.IRegister; // For the registration service
+import interfaces.ExitPoll.IExitPoll_all;
+import interfaces.PollingStation.IPollingStation_all;
+import interfaces.Register.IRegister; // For the registration service
 
 public class VoterClient {
 

@@ -6,8 +6,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Logger.ILogger_ExitPoll; // Changed from ILogger_ExitPoll to ILogger_ExitPoll
+import interfaces.ExitPoll.IExitPoll_all;
+import interfaces.Logger.ILogger_ExitPoll; // Changed from ILogger_ExitPoll to ILogger_ExitPoll
 
 public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
     private static final long serialVersionUID = 1L; // Added serialVersionUID

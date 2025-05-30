@@ -1,7 +1,7 @@
 package clientSide.entities;
 
 import java.rmi.RemoteException;
-import serverSide.interfaces.PollingStation.IPollingStation_Clerk;
+import interfaces.PollingStation.IPollingStation_Clerk;
 
 public class TClerk extends Thread {
     private final IPollingStation_Clerk pollingStation;

@@ -5,8 +5,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Register.IRegister;
+import interfaces.ExitPoll.IExitPoll_all;
+import interfaces.Register.IRegister;
 
 public class PollsterClient {
 
@@ -86,9 +86,7 @@ public class PollsterClient {
         // If PollsterClient directly interacts, this part would be different.
         TPollster[] pollsters = new TPollster[NUM_POLLSTERS];
         for (int i = 0; i < NUM_POLLSTERS; i++) {
-            // TPollster constructor will need to be adapted.
-            // It will take its ID (if any) and the exitPoll stub.
-            pollsters[i] = new TPollster(i, exitPoll); // Example ID 'i'
+            pollsters[i] = new TPollster(exitPoll);
             pollsters[i].start();
             System.out.println("PollsterClient: TPollster " + i + " created and started.");
         }

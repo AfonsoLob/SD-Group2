@@ -6,17 +6,18 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-<<<<<<< HEAD
 
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
+import interfaces.GUI.IGUI_Voter;
 
 /**
  * Class responsible for handling voter animation in the GUI
@@ -90,7 +91,7 @@ public class GuiAnimation {
      */
     public void voterArrived(int voterId) {
         if (animationPanel != null) {
-            animationPanel.voterArrived(voterId);
+            animationPanel.addVoter(voterId);
         }
     }
     
@@ -99,7 +100,7 @@ public class GuiAnimation {
      */
     public void voterEnteringQueue(int voterId) {
         if (animationPanel != null) {
-            animationPanel.voterEnteringQueue(voterId);
+            animationPanel.moveVoterToQueue(voterId);
         }
     }
     
@@ -108,7 +109,7 @@ public class GuiAnimation {
      */
     public void voterValidated(int voterId, int valid) {
         if (animationPanel != null) {
-            animationPanel.voterValidated(voterId, valid);
+            animationPanel.moveVoterToValidation(voterId, valid == 1);
         }
     }
     
@@ -117,7 +118,7 @@ public class GuiAnimation {
      */
     public void voterVoting(int voterId, boolean voteA) {
         if (animationPanel != null) {
-            animationPanel.voterVoting(voterId, voteA);
+            animationPanel.moveVoterToBooth(voterId, voteA);
         }
     }
     
@@ -126,7 +127,7 @@ public class GuiAnimation {
      */
     public void voterExitPoll(int voterId, String vote) {
         if (animationPanel != null) {
-            animationPanel.voterExitPoll(voterId, vote);
+            animationPanel.moveVoterToExitPoll(voterId, vote);
         }
     }
     
@@ -135,26 +136,19 @@ public class GuiAnimation {
      */
     public void voterReborn(int oldId, int newId) {
         if (animationPanel != null) {
-            animationPanel.voterReborn(oldId, newId);
+            animationPanel.rebornVoter(oldId, newId);
         }
     }
     
     /**
      * Inner class to represent the animation panel
      */
-    class ElectionAnimationPanel extends JPanel {
-<<<<<<< HEAD
-        private static final long serialVersionUID = 1L; // Added serialVersionUID
-        private transient Map<Integer, VoterInfo> voters = new HashMap<>(); // Marked transient
-        private transient Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Marked transient
+    private class ElectionAnimationPanel extends JPanel {
+        private static final long serialVersionUID = 1L;
+        private transient final Map<Integer, VoterInfo> voters = new HashMap<>();
+        private transient final Map<Integer, Long> voterRemovalTimes = new HashMap<>();
+        private transient final Map<String, Integer> stageOccupancy = new HashMap<>();
         private Random random = new Random();
-        private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Marked transient
-=======
-        private Map<Integer, VoterInfo> voters = new HashMap<>();
-        private Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Track when to remove voters
-        private Random random = new Random();
-        private Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         private static final int VOTER_SIZE = 30;  // Size of voter circle
         private static final int VERTICAL_SPACING = 40;  // Minimum vertical spacing between voters
         private static final long REMOVAL_DELAY = 10000; // Increase from 5 to 10 seconds for longer visibility
@@ -174,7 +168,7 @@ public class GuiAnimation {
             setBackground(Color.WHITE);
             // Initialize occupancy counts for each stage
             for (VoterStage stage : VoterStage.values()) {
-                stageOccupancy.put(stage, 0);
+                stageOccupancy.put(stage.name(), 0);
             }
             
             // Create a timer to clean up old voters
@@ -194,7 +188,7 @@ public class GuiAnimation {
                         // Get the stage before removing to update occupancy
                         VoterInfo voter = voters.get(voterId);
                         if (voter != null) {
-                            stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                            stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                             toRemove.add(voterId);
                         }
                     }
@@ -214,7 +208,7 @@ public class GuiAnimation {
                 voters.clear();
                 voterRemovalTimes.clear();
                 // Reset all occupancy counts
-                for (VoterStage stage : stageOccupancy.keySet()) {
+                for (String stage : stageOccupancy.keySet()) {
                     stageOccupancy.put(stage, 0);
                 }
             }
@@ -264,13 +258,13 @@ public class GuiAnimation {
             }
             
             // If we couldn't find a free position by sampling, place systematically
-            int occupancy = stageOccupancy.get(stage);
+            int occupancy = stageOccupancy.get(stage.name());
             int yPos = topMargin + (occupancy * VERTICAL_SPACING) % (availableHeight - VERTICAL_SPACING);
-            stageOccupancy.put(stage, occupancy + 1);  // Increment occupancy for this stage
+            stageOccupancy.put(stage.name(), occupancy + 1);  // Increment occupancy for this stage
             return yPos;
         }
         
-        public void voterArrived(int voterId) {
+        public void addVoter(int voterId) {
             synchronized(voters) {
                 VoterInfo voter = new VoterInfo();
                 voter.id = voterId;
@@ -288,12 +282,12 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterEnteringQueue(int voterId) {
+        public void moveVoterToQueue(int voterId) {
             synchronized(voters) {
                 VoterInfo voter = voters.get(voterId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
-                    stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                    stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                     
                     voter.stage = VoterStage.QUEUE;
                     voter.x = getWidth() / 8 * 2; // Will be adjusted in paintComponent
@@ -303,15 +297,14 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterValidated(int voterId, int valid) {
+        public void moveVoterToValidation(int voterId, boolean valid) {
             synchronized(voters) {
-                boolean validp = (valid == 1);
                 VoterInfo voter = voters.get(voterId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
-                    stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                    stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                     
-                    VoterStage newStage = validp ? VoterStage.VALIDATION : VoterStage.REJECTED;
+                    VoterStage newStage = valid ? VoterStage.VALIDATION : VoterStage.REJECTED;
                     voter.stage = newStage;
                     voter.x = getWidth() / 8 * 3; // Will be adjusted in paintComponent
                     voter.y = findAvailableYPosition(newStage, getHeight());
@@ -320,12 +313,12 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterVoting(int voterId, boolean voteA) {
+        public void moveVoterToBooth(int voterId, boolean voteA) {
             synchronized(voters) {
                 VoterInfo voter = voters.get(voterId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
-                    stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                    stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                     
                     voter.stage = VoterStage.VOTING;
                     voter.voteA = voteA;
@@ -336,12 +329,12 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterExitPoll(int voterId, String vote) {
+        public void moveVoterToExitPoll(int voterId, String vote) {
             synchronized(voters) {
                 VoterInfo voter = voters.get(voterId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
-                    stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                    stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                     
                     voter.stage = VoterStage.EXIT_POLL;
                     voter.x = getWidth() / 8 * 5; // Will be adjusted in paintComponent
@@ -357,12 +350,12 @@ public class GuiAnimation {
             repaint();
         }
         
-        public void voterReborn(int oldId, int newId) {
+        public void rebornVoter(int oldId, int newId) {
             synchronized(voters) {
                 VoterInfo voter = voters.get(oldId);
                 if (voter != null) {
                     // Update stage and reduce occupancy for old stage
-                    stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
+                    stageOccupancy.put(voter.stage.name(), Math.max(0, stageOccupancy.get(voter.stage.name()) - 1));
                     voter.stage = VoterStage.REBIRTH_ORIGIN;
                     voter.x = getWidth() / 8 * 6; // Will be adjusted in paintComponent
                     voter.y = findAvailableYPosition(VoterStage.REBIRTH_ORIGIN, getHeight());
@@ -464,7 +457,7 @@ public class GuiAnimation {
             g2d.setColor(Color.BLACK);
             int y = 20;
             for (VoterStage stage : VoterStage.values()) {
-                g2d.drawString(stage + ": " + stageOccupancy.get(stage), 10, y);
+                g2d.drawString(stage + ": " + stageOccupancy.get(stage.name()), 10, y);
                 y += 15;
             }
             */
