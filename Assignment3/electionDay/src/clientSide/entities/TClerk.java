@@ -5,60 +5,71 @@ import serverSide.interfaces.PollingStation.IPollingStation_Clerk;
 
 public class TClerk extends Thread {
     private final IPollingStation_Clerk pollingStation;
-    private final int numVoters; // To know when all voters have likely finished
 
-    public TClerk(IPollingStation_Clerk pollingStation, int numVoters) {
+    private TClerk(IPollingStation_Clerk pollingStation) {
         this.pollingStation = pollingStation;
-        this.numVoters = numVoters; // Needed for a more robust termination condition
+    }
+
+    public static TClerk getInstance(IPollingStation_Clerk pollingStation) {
+        return new TClerk(pollingStation);
     }
 
     @Override
     public void run() {
         try {
-
             // 1. Open Polling Station
             pollingStation.openPollingStation();
-            // logger.logClerkState("PS_OPENED", "Polling station is now open."); // Logged by MPollingStation
-
-            int votersProcessed = 0; // Keep track of processed voters for a potential exit condition
-            // Loop while the polling station is open, or if it's closed but there are still voters in the queue.
-            while (pollingStation.isOpen() || pollingStation.numberVotersInQueue() > 0) {
-                if (pollingStation.numberVotersInQueue() > 0 || pollingStation.isOpen()) { // Double check to avoid calling on a closed empty station
-                    // logger.logClerkState("CALLING_VOTER_ATTEMPT", "Attempting to call next voter."); // Logged by MPollingStation
-                    boolean validationResult = pollingStation.callNextVoter(); // This blocks until a voter is available or station closes
-                    // callNextVoter internally handles logging of calling and validation result
-                    if (validationResult) {
-                        // Successfully called and validated a voter
-                        votersProcessed++;
-                    } else {
-                        // This might mean the voter called was not validated, or no voter was effectively called.
-                        // If callNextVoter returns false when no voters are left and station is closing, this is fine.
-                        // If pollingStation.isOpen() is false and queue is empty, loop will terminate.
-                        if (!pollingStation.isOpen() && pollingStation.numberVotersInQueue() == 0) {
-                            break; // Exit if station closed and queue is confirmed empty
-                        }
+            
+            // Get maxVotes from the polling station
+            int maxVotes = pollingStation.getMaxVotes();
+            
+            int votes = 0;
+            // Main voting loop - process votes until maxVotes limit is reached
+            while (votes < maxVotes) {
+                try {
+                    System.out.println("Votes remaining: " + (maxVotes - votes));
+                    System.out.println("Clerk calling next voter");
+                    boolean response = pollingStation.callNextVoter();
+                    
+                    if (response) {
+                        votes++;
                     }
-                } else {
-                    // Should not happen if loop condition is pollingStation.isOpen() || pollingStation.numberVotersInQueue() > 0
-                    break;
+                    
+                    // Add small delay between calls
+                    Thread.sleep(100);
+                    
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                // Add a small delay if desired, or rely on blocking calls
-                // Thread.sleep(50); // Example delay
+            }
+            
+            // 2. Close Polling Station after reaching vote limit
+            pollingStation.closePollingStation();
+            
+            // 3. Handle remaining voters in queue after closing
+            int stillVotersInQueue = pollingStation.numberVotersInQueue();
+            System.out.println("Day ended but there are still " + stillVotersInQueue + " voters inside");
+            
+            // Process remaining voters that were already in the queue
+            for (int i = 0; i < stillVotersInQueue; i++) {
+                try {
+                    System.out.println("Clerk calling next voter (after closing)");
+                    pollingStation.callNextVoter();
+                    
+                    Thread.sleep(100);
+                    
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
-            // 3. Close Polling Station
-            pollingStation.closePollingStation();
-            // logger.logClerkState("PS_CLOSED", "Polling station is now closed."); // Logged by MPollingStation
-
             // 4. Print Final Results
-            pollingStation.printFinalResults();
-            // logger.logClerkState("RESULTS_PRINTED", "Final results have been printed."); // Logged by MPollingStation
-
+            
+            System.out.println("Clerk terminated");
 
         } catch (RemoteException e) {
             System.err.println("Clerk RemoteException: " + e.getMessage());
-            // e.printStackTrace();
-        } catch (Exception e) { // Catching generic Exception for other unexpected issues
+        } catch (Exception e) {
             System.err.println("Clerk Exception: " + e.getMessage());
         }
     }

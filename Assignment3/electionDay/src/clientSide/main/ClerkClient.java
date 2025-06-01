@@ -84,9 +84,8 @@ public class ClerkClient {
         // 3. Create and start TClerk threads
         TClerk[] clerks = new TClerk[NUM_CLERKS];
         for (int i = 0; i < NUM_CLERKS; i++) {
-            // TClerk constructor will need to be adapted to not take a logger instance.
-            // It will take its ID and the pollingStation stub.
-            clerks[i] = new TClerk( pollingStation,i);
+            // TClerk constructor takes only the pollingStation stub
+            clerks[i] = TClerk.getInstance(pollingStation);
             clerks[i].start();
             System.out.println("ClerkClient: TClerk " + i + " created and started.");
         }

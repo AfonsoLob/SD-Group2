@@ -11,10 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-<<<<<<< HEAD
-
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -143,18 +139,11 @@ public class GuiAnimation {
      * Inner class to represent the animation panel
      */
     class ElectionAnimationPanel extends JPanel {
-<<<<<<< HEAD
         private static final long serialVersionUID = 1L; // Added serialVersionUID
-        private transient Map<Integer, VoterInfo> voters = new HashMap<>(); // Marked transient
-        private transient Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Marked transient
-        private Random random = new Random();
-        private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Marked transient
-=======
-        private Map<Integer, VoterInfo> voters = new HashMap<>();
-        private Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Track when to remove voters
-        private Random random = new Random();
-        private Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+        private transient Map<Integer, VoterInfo> voters = new HashMap<>();
+        private transient Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Track when to remove voters (transient as not serializable)
+        private transient Random random = new Random();
+        private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage (transient as not serializable)
         private static final int VOTER_SIZE = 30;  // Size of voter circle
         private static final int VERTICAL_SPACING = 40;  // Minimum vertical spacing between voters
         private static final long REMOVAL_DELAY = 10000; // Increase from 5 to 10 seconds for longer visibility

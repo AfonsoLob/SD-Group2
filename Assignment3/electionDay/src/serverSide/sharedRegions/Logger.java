@@ -1,6 +1,5 @@
 package serverSide.sharedRegions;
 
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
@@ -12,23 +11,22 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import serverSide.GUI.Gui;
-import serverSide.interfaces.GUI.IGUI_Statistics;
-import serverSide.interfaces.GUI.IGUI_Voter;
 import serverSide.interfaces.Logger.ILogger_all;
 
 public class Logger extends UnicastRemoteObject implements ILogger_all {
-    private static final long serialVersionUID = 1L; // Added for UnicastRemoteObject
+    private static final long serialVersionUID = 1L;
+    
     // Constants for column headers
     private static final String[] HEADERS = {"Door", "Voter", "Clerk", "Validation", "Booth", "ScoreA", "ScoreB", "Exit", "ExitPollA", "ExitPollB"};
     private static final int NUM_COLUMNS = HEADERS.length;
-    private PrintWriter writer;
+    private transient PrintWriter writer;
     
-    // Locks for thread safety
-    private final ReentrantLock logLock = new ReentrantLock();
-    private final ReentrantLock stateLock = new ReentrantLock();
+    // Locks for thread safety (transient as they cannot be serialized)
+    private final transient ReentrantLock logLock = new ReentrantLock();
+    private final transient ReentrantLock stateLock = new ReentrantLock();
     
     // Store the state of the system
-    private List<String[]> logEntries;
+    private transient List<String[]> logEntries;
     
     // Counters
     private Integer votersProcessed;
@@ -50,11 +48,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     private String currentVoterInBooth = "";
     private int currentQueueSize = 0;
     
-    // Map to track voter rebirths
-    // private java.util.Map<Integer, Integer> voterRebirthMap = new java.util.HashMap<>();
-    
     // Map to track voter last activity for rebirth detection
-    private Map<Integer, Long> lastVoterActivity = new HashMap<>();
+    private transient Map<Integer, Long> lastVoterActivity = new HashMap<>();
     
     // Statistics tracking
     private int validationSuccess = 0;
@@ -65,13 +60,12 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     private int pollResponses = 0;
     
     // Timing statistics
-    private Map<Integer, Long> voterEntryTimes = new HashMap<>();
-    private Map<Integer, Long> voterExitTimes = new HashMap<>();
+    private transient Map<Integer, Long> voterEntryTimes = new HashMap<>();
     private long totalProcessingTime = 0;
     private int processedVotersWithTime = 0;
     
-    private IGUI_Voter guiVoter;
-    private IGUI_Statistics guiStats;
+    // Direct reference to GUI instance (transient as GUI cannot be serialized)
+    private transient Gui gui;
     
     private Logger(int maxVoters, int maxCapacity, int maxVotes) throws RemoteException {
         super(); // Call to UnicastRemoteObject constructor
@@ -86,30 +80,19 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         this.maxCapacity = maxCapacity;
         this.maxVotes = maxVotes;
 
-        // Get the GUI interfaces
-        this.guiVoter = Gui.getInstance();
-        this.guiStats = Gui.getInstance();
+        // Get the GUI instance directly
+        this.gui = Gui.getInstance();
 
         // Initiate printWriter
         try {
-            // Make sure to use a path that's accessible and show the path for debugging
+            // Create log file in the current directory (same as Assignment 1 and 2)
             File logFile = new File("log.txt");
             System.out.println("Creating log file at: " + logFile.getAbsolutePath());
             
             this.writer = new PrintWriter(logFile);
-            // Print the header information
-            writer.println("Total of Voters:" + this.maxVoters + 
-                  ", Total Voters in Stations:" + this.maxCapacity + 
-                  ", Votes to end: " + this.maxVotes + " voters");
-            
-            // Print column headers
-            StringBuilder headerBuilder = new StringBuilder("|");
-            for (String header : HEADERS) {
-                headerBuilder.append(String.format(" %-10s |", header));
-            }
-            writer.println(headerBuilder.toString());
-            
-            // Print delimiter
+            // Update log format to match Assignment 2
+            writer.println("Total of Voters:" + this.maxVoters + ", Total Voters in Stations:" + this.maxCapacity + ", Votes to end: " + this.maxVotes + " voters");
+            writer.println("| Door       | Voter      | Clerk      | Validation | Booth      | ScoreA     | ScoreB     | Exit       | ExitPollA  | ExitPollB  |");
             writer.println(DELIMITER);
             writer.flush(); // Force flush to ensure data is written
         } catch (Exception e) {
@@ -118,23 +101,15 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         }
     }
     
-
     public static Logger getInstance(int maxVoters, int maxCapacity, int maxVotes) throws RemoteException {
-
         return new Logger(maxVoters, maxCapacity, maxVotes);
     }
 
     /**
      * Add a new log entry
-     * @param door activity at the door
-     * @param voter voter in the queue
-     * @param clerk clerk activity
-     * @param validation ID validation activity
-     * @param booth voting booth activity
-     * @param exit exit poll activity
      */
     private void addEntry(String door, String voter, String clerk, String validation, 
-                                     String booth, String exit) {
+                         String booth, String exit) {
         logLock.lock();
         try {
             String[] entry = new String[NUM_COLUMNS];
@@ -143,14 +118,22 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             entry[2] = clerk;
             entry[3] = validation;
             entry[4] = booth;
+            // Show ScoreA/ScoreB when booth column has data (when someone votes)
             if(!booth.isEmpty()) {
                 entry[5] = String.format("%02d", scoreA);
                 entry[6] = String.format("%02d", scoreB);
+            } else {
+                entry[5] = "";
+                entry[6] = "";
             }
             entry[7] = exit;
+            // Show ExitPollA/ExitPollB when exit column has data (when someone exits)
             if(!exit.isEmpty()) {
                 entry[8] = String.format("%02d", exitPollScoreA);
                 entry[9] = String.format("%02d", exitPollScoreB);
+            } else {
+                entry[8] = "";
+                entry[9] = "";
             }
             
             printStateToFile(entry);
@@ -179,23 +162,20 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void voterAtDoor(int voterId) throws RemoteException {
-
+        stateLock.lock();
         try {
             // Record entry time for timing statistics
             voterEntryTimes.put(voterId, System.currentTimeMillis());
             
             // Check if this might be a rebirth (a new voter ID appearing)
-            // If this ID is over 1000, it might be a rebirth
             if (voterId >= 1000 && !lastVoterActivity.containsKey(voterId)) {
-                // Check who disappeared recently (within last 500ms)
                 long currentTime = System.currentTimeMillis();
                 int possibleOriginalId = voterId - 1000;
                 
                 if (lastVoterActivity.containsKey(possibleOriginalId)) {
                     long lastActivity = lastVoterActivity.get(possibleOriginalId);
                     if (currentTime - lastActivity < 500) {
-                        // This is likely a rebirth
-                        guiVoter.voterReborn(possibleOriginalId, voterId);
+                        gui.voterReborn(possibleOriginalId, voterId);
                     }
                 }
             }
@@ -203,8 +183,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             addEntry("", String.valueOf(voterId), "", "", "", "");
             lastVoterActivity.put(voterId, System.currentTimeMillis());
             
-            // Use instance method through interface
-            guiVoter.voterArrived(voterId);
+            gui.voterArrived(voterId);
         } finally {
             stateLock.unlock();
         }
@@ -216,9 +195,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         try {
             currentQueueSize++;
             addEntry("", "", String.valueOf(voterId), "", "", "");
-            
-            // Use instance method through interface
-            guiVoter.voterEnteringQueue(voterId);
+            gui.voterEnteringQueue(voterId);
         } finally {
             stateLock.unlock();
         }
@@ -226,10 +203,10 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         
     @Override
     public void validatingVoter(int voterId, int valid) throws RemoteException {
-
         stateLock.lock();
-        boolean validp = (valid == 1);
         try {
+            boolean validp = (valid == 1);
+            
             // Track validation statistics
             if (validp) {
                 validationSuccess++;
@@ -240,10 +217,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             String validationStr = String.valueOf(voterId) + (validp ? "+" : "-");
             addEntry("", "", "", validationStr, "", "");
             
-            // Use instance method through interface
-            guiVoter.voterValidated(voterId, valid);
-            
-            // Update statistics in the GUI
+            gui.voterValidated(voterId, valid);
             updateGuiStatistics();
         } finally {
             stateLock.unlock();
@@ -252,7 +226,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void voterInBooth(int voterId, boolean voteA) throws RemoteException {
-
+        stateLock.lock();
         try {
             String boothStr = String.valueOf(voterId) + (voteA ? "A" : "B");
             currentVoterInBooth = boothStr;
@@ -265,9 +239,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             }
 
             addEntry("", "", "", "", boothStr, "");
-            
-            // Use instance method through interface
-            guiVoter.voterVoting(voterId, voteA);
+            gui.voterVoting(voterId, voteA);
+            updateGuiStatistics();
         } finally {
             stateLock.unlock();
         }
@@ -275,12 +248,10 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void exitPollVote(int voterId, String vote) throws RemoteException {
-
         stateLock.lock();
         try {
             // Record exit time for timing statistics
             long exitTime = System.currentTimeMillis();
-            voterExitTimes.put(voterId, exitTime);
             
             // If we have an entry time, calculate processing time
             if (voterEntryTimes.containsKey(voterId)) {
@@ -288,6 +259,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
                 long processingTime = exitTime - entryTime;
                 totalProcessingTime += processingTime;
                 processedVotersWithTime++;
+                // Remove the entry time to free memory
+                voterEntryTimes.remove(voterId);
             }
             
             // Track exit poll statistics
@@ -298,7 +271,6 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
                 pollResponses++;
                 
                 // Check if the exit poll matches the actual vote
-                // Note: This assumes we're tracking the actual vote somewhere
                 String actualVote = getActualVote(voterId);
                 if (vote.equals(actualVote)) {
                     pollAccurate++;
@@ -319,10 +291,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             // Update last activity time for rebirth detection
             lastVoterActivity.put(voterId, System.currentTimeMillis());
             
-            // Use instance method through interface
-            guiVoter.voterExitPoll(voterId, vote);
-            
-            // Update statistics in the GUI
+            gui.voterExitPoll(voterId, vote);
             updateGuiStatistics();
         } finally {
             stateLock.unlock();
@@ -330,10 +299,10 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     // Helper method to get the actual vote for a voter
-    // This is a simplification - in a real system, you would track this separately
     private String getActualVote(int voterId) {
         // For this example, we'll use the current score as an approximation
         // In a real implementation, you would track each voter's actual vote
+        // Note: voterId parameter kept for future implementation
         return (scoreA > scoreB) ? "A" : "B";
     }
     
@@ -346,7 +315,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
                 avgProcessingTime = totalProcessingTime / processedVotersWithTime;
             }
             
-            guiStats.updateStats(
+            gui.updateStats(
                 validationSuccess,
                 validationFail,
                 pollParticipants,
@@ -363,8 +332,11 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     @Override
     public void stationOpening() throws RemoteException {
         stateLock.lock();
+        try {
             isStationOpen = true;
             addEntry("Op", "", "", "", "", "");
+            // Update GUI
+            gui.stationOpening();
         } finally {
             stateLock.unlock();
         }
@@ -372,18 +344,18 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void stationClosing() throws RemoteException {
-
         stateLock.lock();
         try {
             isStationOpen = false;
             addEntry("Cl", "", "", "", "", "");
+            // Update GUI
+            gui.stationClosing();
         } finally {
             stateLock.unlock();
         }
     }
     
     private void printStateToFile(String[] entry) {
-        // Using logLock which is already acquired in addEntry
         // Print each log entry
         StringBuilder rowBuilder = new StringBuilder("|");
         for (String field : entry) {
@@ -399,7 +371,6 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
 
     @Override
     public void saveCloseFile() throws RemoteException {
-
         logLock.lock();
         try {
             if (writer != null) {
@@ -416,7 +387,6 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     
     @Override
     public void clear() throws RemoteException {
-
         logLock.lock();
         try {
             logEntries.clear();
@@ -436,9 +406,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-
     public int getVotersProcessed() throws RemoteException {
-
         stateLock.lock();
         try {
             return votersProcessed;
@@ -448,9 +416,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     }
 
     @Override
-
     public boolean isStationOpen() throws RemoteException {
-
         stateLock.lock();
         try {
             return isStationOpen;
@@ -474,6 +440,73 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         stateLock.lock();
         try {
             return currentQueueSize;
+        } finally {
+            stateLock.unlock();
+        }
+    }
+
+    // Methods from ILogger_Common
+    @Override
+    public int getNumVoters() throws RemoteException {
+        return maxVoters;
+    }
+
+    @Override
+    public void logGeneral(String message) throws RemoteException {
+        // Disabled - we only want the structured table format like Assignment 2
+        // This method was writing "LOG: " messages that don't match Assignment 2 format
+    }
+
+    // Additional methods for ILogger_ExitPoll
+    @Override
+    public int getExitPollPercentage() throws RemoteException {
+        return 20; // Default exit poll percentage
+    }
+
+    @Override
+    public void logVoterState(int voterId, String state, String message) throws RemoteException {
+        // Disabled - we only want the structured table format like Assignment 2
+        // This method was writing detailed state messages that don't match Assignment 2 format
+    }
+
+    @Override
+    public void logPollsterState(String state, String message) throws RemoteException {
+        // Disabled - we only want the structured table format like Assignment 2
+        // This method was writing detailed state messages that don't match Assignment 2 format
+    }
+
+    @Override
+    public void logResults(String pollType, int votesA, int votesB) throws RemoteException {
+
+    }
+
+    // Additional methods for ILogger_PollingStation
+    @Override
+    public int getPollingStationCapacity() throws RemoteException {
+        return maxCapacity > 0 ? maxCapacity : 2; // Default capacity of 2
+    }
+
+    @Override
+    public int getNumberOfVotersConfigured() throws RemoteException {
+        return maxVoters;
+    }
+
+    @Override
+    public void logClerkState(String state, String message) throws RemoteException {
+        // Disabled - we only want the structured table format like Assignment 2
+        // This method was writing detailed state messages that don't match Assignment 2 format
+    }
+
+    @Override
+    public int getMaxVotes() throws RemoteException {
+        return maxVotes;
+    }
+
+    @Override
+    public int getTotalVotes() throws RemoteException {
+        stateLock.lock();
+        try {
+            return scoreA + scoreB;
         } finally {
             stateLock.unlock();
         }

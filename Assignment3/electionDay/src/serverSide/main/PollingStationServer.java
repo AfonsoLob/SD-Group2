@@ -25,7 +25,6 @@ public class PollingStationServer {
         IRegister registerServiceStub = null;
         ILogger_all loggerStub = null;
         IPollingStation_all pollingStation = null; // The remote object instance
-        MPollingStation mPollingStation = null; // The actual implementation
 
         // 1. Look up the IRegister service (with retry)
         Registry rmiRegistry = null;
@@ -75,13 +74,9 @@ public class PollingStationServer {
 
         // 3. Instantiate MPollingStation
         try {
-            // Assuming MPollingStation constructor takes the logger stub.
-            // And that MPollingStation itself implements IPollingStation_all or can be cast/exported.
-            // If MPollingStation needs other parameters (like numVoters), they need to be obtained.
-            // For now, assuming it primarily needs the logger.
-            // The number of voters might be fetched by MPollingStation from the logger if needed.
-            mPollingStation = new MPollingStation(loggerStub);
-            pollingStation = (IPollingStation_all) mPollingStation; // Or export if not extending UnicastRemoteObject directly
+            System.out.println("PollingStationServer: Creating MPollingStation instance...");
+            
+            pollingStation = MPollingStation.getInstance(loggerStub); // Or export if not extending UnicastRemoteObject directly
             System.out.println("PollingStationServer: MPollingStation instance created.");
         } catch (RemoteException e) { // If MPollingStation constructor throws RemoteException (e.g. UnicastRemoteObject)
             System.err.println("PollingStationServer: CRITICAL - Failed to instantiate MPollingStation: " + e.getMessage());
@@ -94,14 +89,12 @@ public class PollingStationServer {
         boolean bound = false;
         while (!bound) {
             try {
-                System.out.println("PollingStationServer: Attempting to bind '" + POLLING_STATION_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("PollingStationServer: Attempting to bind '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 registerServiceStub.bind(POLLING_STATION_SERVICE_NAME, pollingStation);
                 System.out.println("PollingStationServer: '" + POLLING_STATION_SERVICE_NAME + "' registered successfully.");
                 bound = true;
             } catch (AlreadyBoundException e) {
-                System.err.println("PollingStationServer: '" + POLLING_STATION_SERVICE_NAME + "' already bound in '" +
-                                   REGISTER_SERVICE_LOOKUP_NAME + "'. Retrying...");
+                System.err.println("PollingStationServer: '" + POLLING_STATION_SERVICE_NAME + "' already bound in '" + REGISTER_SERVICE_LOOKUP_NAME + "'. Retrying...");
             } catch (RemoteException e) {
                 System.err.println("PollingStationServer: RemoteException during RMI binding of '" +
                                    POLLING_STATION_SERVICE_NAME + "': " + e.getMessage());

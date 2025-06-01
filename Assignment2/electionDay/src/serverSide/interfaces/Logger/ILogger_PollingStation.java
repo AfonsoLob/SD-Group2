@@ -7,6 +7,6 @@ public interface ILogger_PollingStation {
     void voterEnteringQueue(int voterId) throws RemoteException;
     void validatingVoter(int voterId, int valid) throws RemoteException;
     void voterInBooth(int voterId, boolean voteA) throws RemoteException;
-    void stationOpening();
+    void stationOpening() throws RemoteException;
     void stationClosing();
 }

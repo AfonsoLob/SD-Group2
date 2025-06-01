@@ -4,8 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-
-import serverSide.interfaces.Register.Register;
+import serverSide.interfaces.Register.IRegister;
 import serverSide.sharedRegions.RegisterRemoteObject;
 
 
@@ -54,20 +53,18 @@ public class RegisterRemoteObjectServer {
            System.exit (1);
          }
 
-     /* create and install the security manager */
-
-      if (System.getSecurityManager () == null)
-         System.setSecurityManager (new SecurityManager ());
-      System.out.println ("Security manager was installed!");
+     /* Security manager is no longer needed in modern Java versions */
+      
+      System.out.println ("Security manager setup skipped (deprecated in modern Java)!");
 
      /* instantiate a registration remote object and generate a stub for it */
 
       RegisterRemoteObject regEngine = new RegisterRemoteObject (rmiRegHostName, rmiRegPortNumb);  // object that enables the registration
                                                                                                    // of other remote objects
-      Register regEngineStub = null;                                                               // remote reference to it
+      IRegister regEngineStub = null;                                                               // remote reference to it
 
       try
-      { regEngineStub = (Register) UnicastRemoteObject.exportObject (regEngine, portNumb);
+      { regEngineStub = (IRegister) UnicastRemoteObject.exportObject (regEngine, portNumb);
       }
       catch (RemoteException e)
       { System.out.println ("RegisterRemoteObject stub generation exception: " + e.getMessage ());
@@ -77,18 +74,31 @@ public class RegisterRemoteObjectServer {
 
      /* register it with the local registry service */
 
-      String nameEntry = "RegisterHandler";                          // public name of the remote object that enables
+      String nameEntry = "RegisterService";                          // public name of the remote object that enables
                                                                      // the registration of other remote objects
       Registry registry = null;                                      // remote reference for registration in the RMI registry service
 
       try
-      { registry = LocateRegistry.getRegistry (rmiRegHostName, rmiRegPortNumb);
+      { 
+        // Create the RMI registry on the specified port
+        registry = LocateRegistry.createRegistry (rmiRegPortNumb);
+        System.out.println ("RMI registry was created on port " + rmiRegPortNumb + "!");
       }
       catch (RemoteException e)
-      { System.out.println ("RMI registry creation exception: " + e.getMessage ());
-        System.exit (1);
+      { 
+        // If creation fails, try to get existing registry
+        System.out.println ("Failed to create registry, trying to connect to existing one...");
+        try 
+        {
+          registry = LocateRegistry.getRegistry (rmiRegHostName, rmiRegPortNumb);
+          System.out.println ("Connected to existing RMI registry!");
+        }
+        catch (RemoteException e2)
+        {
+          System.out.println ("RMI registry creation/connection exception: " + e2.getMessage ());
+          System.exit (1);
+        }
       }
-      System.out.println ("RMI registry was created!");
 
       try
       { registry.rebind (nameEntry, regEngineStub);

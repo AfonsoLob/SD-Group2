@@ -140,7 +140,7 @@ public class VoterClient {
         for (int i = 0; i < numVoters; i++) {
             // TVoter constructor will need to be adapted to not take a logger instance.
             // For now, assuming TVoter(int, IPollingStation_all, IExitPoll_all)
-            voters[i] = new TVoter(i, pollingStation, exitPoll);
+            voters[i] = TVoter.getInstance(i, pollingStation, exitPoll);
             voters[i].start();
             System.out.println("VoterClient: TVoter " + i + " created and started.");
         }

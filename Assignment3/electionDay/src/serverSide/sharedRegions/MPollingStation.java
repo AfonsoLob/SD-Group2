@@ -3,13 +3,11 @@ package serverSide.sharedRegions;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
 import serverSide.interfaces.Logger.ILogger_PollingStation;
 import serverSide.interfaces.PollingStation.IPollingStation_all;
 
@@ -20,7 +18,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     private final int capacity;
     private boolean isOpen;
     private transient final Condition stationOpen; // Marked transient
-    private ILogger_PollingStation logger;
+    private transient ILogger_PollingStation logger; // Made transient as interface cannot be serialized
 
     // id validation
     private HashSet<Integer> validatedIDs;
@@ -111,7 +109,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             queue_lock.unlock();
         }
 
-        if (logger != null) logger.logClerkState("VALIDATED_ID", "Voter " + voterId + " validation: " + response);
+        if (logger != null) logger.validatingVoter(voterId, response ? 1 : 0);
 
         return response;
     }
@@ -119,34 +117,30 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     @Override
 
     public boolean enterPollingStation(int voterId) throws RemoteException {
-        if (logger != null) logger.logVoterState(voterId, "ARRIVED_PS", "At polling station door.");
+        if (logger != null) logger.voterAtDoor(voterId);
         queue_lock.lock();
         try {
             while (!isOpen) {
-                if (logger != null) logger.logVoterState(voterId, "WAITING_PS_OPEN", "Polling station closed.");
                 try {
                     stationOpen.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (logger != null) logger.logGeneral("MPollingStation: Interruption for voter " + voterId + " waiting for station to open: " + e.getMessage());
                     throw new RemoteException("Interrupted while waiting for station to open", e);
                 }
             }
 
             while (votersQueue.size() >= capacity) {
-                if (logger != null) logger.logVoterState(voterId, "WAITING_QUEUE_SPACE", "Queue full, capacity: " + capacity);
                 try {
                     notFull.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (logger != null) logger.logGeneral("MPollingStation: Interruption for voter " + voterId + " waiting for queue space: " + e.getMessage());
                     throw new RemoteException("Interrupted while waiting for queue to have space", e);
                 }
             }
 
             votersQueue.offer(voterId);
             notEmpty.signal();
-            if (logger != null) logger.logVoterState(voterId, "IN_QUEUE", "Entered queue. Size: " + votersQueue.size());
+            if (logger != null) logger.voterEnteringQueue(voterId);
             return true;
 
         } finally {
@@ -230,7 +224,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             isOpen = true;
             stationOpen.signalAll();
 
-            if (logger != null) logger.logGeneral("Polling Station Opened.");
+            if (logger != null) logger.stationOpening();
         } finally {
 
             queue_lock.unlock();
@@ -243,7 +237,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
         queue_lock.lock();
         try {
             isOpen = false;
-            if (logger != null) logger.logGeneral("Polling Station Closed.");
+            if (logger != null) logger.stationClosing();
             stationOpen.signalAll();
             notEmpty.signalAll();
         } finally {
@@ -291,7 +285,9 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             }
 
             candidateA++;
-            if (logger != null) logger.logVoterState(voterId, "VOTED_A", "Total A: " + candidateA);
+            if (logger != null) {
+                logger.voterInBooth(voterId, true); // vote A
+            }
         } finally {
 
             voting_lock.unlock();
@@ -313,7 +309,9 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             }
 
             candidateB++;
-            if (logger != null) logger.logVoterState(voterId, "VOTED_B", "Total B: " + candidateB);
+            if (logger != null) {
+                logger.voterInBooth(voterId, false); // vote B
+            }
         } finally {
 
             voting_lock.unlock();
@@ -325,5 +323,29 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     public void printFinalResults() throws RemoteException {
         if (logger != null) logger.logResults("POLLING_STATION", candidateA, candidateB);
 
+    }
+
+    @Override
+    public int getNumberOfVotersConfigured() throws RemoteException {
+        try {
+            if (logger != null) {
+                return logger.getNumberOfVotersConfigured();
+            }
+        } catch (RemoteException e) {
+            System.err.println("MPollingStation: Failed to get number of voters from logger: " + e.getMessage());
+        }
+        return 10; // Default fallback value
+    }
+
+    @Override
+    public int getMaxVotes() throws RemoteException {
+        try {
+            if (logger != null) {
+                return logger.getMaxVotes();
+            }
+        } catch (RemoteException e) {
+            System.err.println("MPollingStation: Failed to get max votes from logger: " + e.getMessage());
+        }
+        return 3; // Default fallback value
     }
 }

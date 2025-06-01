@@ -1,14 +1,19 @@
 package clientSide.entities;
 
 import java.rmi.RemoteException;
+
 import serverSide.interfaces.ExitPoll.IExitPoll_all;
 
 public class TPollster extends Thread {
     private final IExitPoll_all exitPoll;
     // numVoters could be used to estimate when to stop, but relying on exitPoll.isOpen() is more direct.
 
-    public TPollster(IExitPoll_all exitPoll) {
+    private TPollster(IExitPoll_all exitPoll) {
         this.exitPoll = exitPoll;
+    }
+
+    public static TPollster getInstance(IExitPoll_all exitPoll) {
+        return new TPollster(exitPoll);
     }
 
     @Override

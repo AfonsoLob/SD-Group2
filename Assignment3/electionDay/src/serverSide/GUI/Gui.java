@@ -2,11 +2,7 @@ package serverSide.GUI;
 
 import java.awt.BorderLayout;
 import java.io.File;
-<<<<<<< HEAD
-import java.rmi.RemoteException; // For setupParameters if it were an RMI call
-=======
-
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
+import java.rmi.RemoteException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -14,21 +10,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
-<<<<<<< HEAD
-import serverSide.interfaces.GUI.IGUI_all;
-import serverSide.interfaces.Logger.ILogger_GUI;
-import serverSide.sharedRegions.MLogger; // Import MLogger
+import serverSide.main.LoggerServer;
+import serverSide.sharedRegions.Logger;
 
-=======
-
-import serverSide.interfaces.GUI.IGUI_all;
-import serverSide.interfaces.Logger.ILogger_GUI;
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 /**
- * Main GUI class implementing the IGUI_all interface.
+ * Main GUI class for the Election Day simulation - Assignment 3 (RMI).
  * This class uses a singleton pattern to ensure a single GUI instance.
+ * The Logger component communicates directly with this GUI without interface abstractions.
  */
-public class Gui implements IGUI_all {
+public class Gui {
     // Log file path
     private static final String LOG_FILE = "log.txt";
     
@@ -53,10 +43,7 @@ public class Gui implements IGUI_all {
      * - Values < 1.0 slow down the simulation (e.g., 0.5f = half speed)
      * - Values > 1.0 speed up the simulation (e.g., 2.0f = double speed)
      */
-    private static float simulationSpeed = 0.5f;
-    
-    // Timing measurement
-    private static long simulationStartTime = 0;
+    private static float simulationSpeed = 0.2f;
     
     // Singleton instance
     private static final Gui INSTANCE = new Gui();
@@ -69,12 +56,6 @@ public class Gui implements IGUI_all {
     // Callback for simulation starter and restarter
     private static Runnable simulationStarter;
     private static Runnable simulationRestarter;
-<<<<<<< HEAD
-
-    // Logger instance
-    private static MLogger mloggerInstance; // To hold the MLogger from LoggerServer
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     
     // Private constructor for singleton pattern
     private Gui() {
@@ -85,23 +66,11 @@ public class Gui implements IGUI_all {
     public static Gui getInstance() {
         return INSTANCE;
     }
-<<<<<<< HEAD
-
-    /**
-     * Sets the MLogger instance for the GUI to use.
-     * This method should be called by LoggerServer before window() is called.
-     * @param logger The MLogger instance.
-     */
-    public static void setLoggerInstance(MLogger logger) {
-        mloggerInstance = logger;
-    }
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     
     // Create a new GUI window
     public static void window() {
         // Create the main window
-        frame = new JFrame("Election Day Simulation");
+        frame = new JFrame("Election Day Simulation - Assignment 3 (RMI)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1200, 800);
         frame.setLayout(new BorderLayout());
@@ -121,42 +90,35 @@ public class Gui implements IGUI_all {
         components.createStatusPanel();
         JPanel configPanel = components.createConfigPanel();
         JPanel controlPanel = components.createControlPanel();
+        JPanel buttonPanel = components.createButtonPanel();
         
-        // Create top panel with status, config, and controls
+        // Create top panel with status, config, controls, and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(components.getStationPanel(), BorderLayout.NORTH);
-        topPanel.add(configPanel, BorderLayout.CENTER);
-        topPanel.add(controlPanel, BorderLayout.SOUTH);
+        
+        // Combine config and control panels
+        JPanel configControlPanel = new JPanel(new BorderLayout());
+        configControlPanel.add(configPanel, BorderLayout.CENTER);
+        configControlPanel.add(controlPanel, BorderLayout.SOUTH);
+        topPanel.add(configControlPanel, BorderLayout.CENTER);
+        
+        // Add button panel at the bottom
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
         simulationTab.add(topPanel, BorderLayout.NORTH);
         
-        // Add animation panel as the main content
+        // Create bottom panel for animation
         animation = new GuiAnimation();
-        simulationTab.add(animation.getAnimationPanel(), BorderLayout.CENTER);
+        JPanel animationPanel = animation.getAnimationPanel();
+        simulationTab.add(animationPanel, BorderLayout.CENTER);
         
         tabbedPane.addTab("Simulation", simulationTab);
         
-        // Tab 2: Log view
-        components.createTablePanel();
-        JScrollPane scrollPane = new JScrollPane(components.getLogTable());
-        scrollPane.setBorder(GuiStyles.createTitledBorder("Simulation Log", TitledBorder.CENTER));
-        tabbedPane.addTab("Log", scrollPane);
+        // Tab 2: Log file viewer
+        JPanel logPanel = createLogViewerPanel();
+        tabbedPane.addTab("Log Viewer", logPanel);
         
-        // Tab 3: Statistics
-        JPanel statsTab = components.createStatsPanel();
-        tabbedPane.addTab("Statistics", statsTab);
-        
-        // Start stats update timer
-        Timer statsUpdateTimer = new Timer(1000, e -> updateStatistics());
-        statsUpdateTimer.start();
-        
-        // Add tabbed pane to main panel
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
-        
-        // Add button panel at the bottom
-        JPanel buttonPanel = components.createButtonPanel();
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        
-        frame.add(mainPanel, BorderLayout.CENTER);
+        frame.add(mainPanel);
         
         // Set up the simulation starter (called when the Start button is clicked)
         setSimulationStarter(() -> {
@@ -166,158 +128,208 @@ public class Gui implements IGUI_all {
                 
                 // Get configuration parameters from GuiComponents
                 int numVoters = components.getNumVoters();
-<<<<<<< HEAD
-                int pollingStationCapacity = components.getQueueSize(); // Assuming queueSize is pollingStationCapacity
-                int exitPollPercentage = components.getVotesToClose(); // Assuming votesToClose is exitPollPercentage
-                
-                // Update local configuration values (optional, as MLogger is the source of truth now)
-                setConfigValues(numVoters, pollingStationCapacity, exitPollPercentage);
-                
-                // Call MLogger's setupParameters method directly
-                if (mloggerInstance != null) {
-                    mloggerInstance.setupParameters(numVoters, pollingStationCapacity, exitPollPercentage);
-                    System.out.println("GUI: Parameters sent to MLogger -> Voters: " + numVoters + ", PS Capacity: " + pollingStationCapacity + ", EP Percentage: " + exitPollPercentage);
-                    // Update GUI to reflect that parameters are set, e.g., disable inputs
-                    components.getStartButton().setEnabled(false);
-                    components.getStartButton().setText("Parameters Set. Start Servers & Clients.");
-                    // Disable input fields after setting params
-                    components.setFieldsEnabled(false); // Assumes GuiComponents has this method
-
-                } else {
-                    System.err.println("GUI Error: MLogger instance is null. Cannot set parameters.");
-                    JOptionPane.showMessageDialog(frame, 
-                        "Critical Error: MLogger not initialized.",
-                        "Setup Error", JOptionPane.ERROR_MESSAGE);
-                    simulationRunning = false; // Revert state
-                    return;
-                }
-
-            } catch (NumberFormatException nfe) {
-                System.err.println("GUI Error: Invalid number format in input fields.");
-                JOptionPane.showMessageDialog(frame, 
-                    "Invalid input. Please ensure all parameters are numbers.",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
-                components.resetUI(); // Or just re-enable start button
-            } catch (RemoteException re) { // MLogger.setupParameters throws RemoteException
-                System.err.println("GUI Error: RemoteException while setting parameters in MLogger: " + re.getMessage());
-                JOptionPane.showMessageDialog(frame, 
-                    "Error communicating with Logger service: " + re.getMessage(),
-                    "RMI Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
-                components.resetUI();
-            } catch (Exception e) {
-                System.err.println("GUI Error starting simulation: " + e.getMessage());
-                JOptionPane.showMessageDialog(frame, 
-                    "Error setting up simulation: " + e.getMessage(),
-                    "Setup Error", JOptionPane.ERROR_MESSAGE);
-                simulationRunning = false; // Revert state
-                components.resetUI(); 
-=======
-                int queueSize = components.getQueueSize();
+                int localQueueSize = components.getQueueSize();
                 int votesToClose = components.getVotesToClose();
                 
                 // Update configuration values
-                setConfigValues(numVoters, queueSize, votesToClose);
+                setConfigValues(numVoters, localQueueSize, votesToClose);
                 
-                // Call ServerLogger's static method to start the server logic
-                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
-            } catch (Exception e) {
-                System.err.println("Error starting server: " + e.getMessage());
+                // Create Logger instance and notify LoggerServer
+                try {
+                    Logger loggerInstance = Logger.getInstance(numVoters, localQueueSize, votesToClose);
+                    LoggerServer.initializeLoggerService(loggerInstance, true);
+                } catch (RemoteException e) {
+                    System.err.println("Error initializing Logger: " + e.getMessage());
+                }
+                
+                System.out.println("GUI: Logger instance created and parameters set -> Voters: " + numVoters + 
+                                   ", Queue Capacity: " + localQueueSize + ", Votes to Close: " + votesToClose);
+                
+                // Update UI to reflect that parameters are set
+                components.getStartButton().setEnabled(false);
+                components.getStartButton().setText("Logger Service Started - Start External Clients");
+                
+            } catch (NullPointerException e) {
+                System.err.println("Error starting Logger service: " + e.getMessage());
                 components.resetUI(); // Reset UI on error
                 simulationRunning = false;
                 if (frame != null) {
                     JOptionPane.showMessageDialog(frame, 
-                        "Error starting server: " + e.getMessage(),
-                        "Server Error", JOptionPane.ERROR_MESSAGE);
+                        "Error starting Logger service: " + e.getMessage(),
+                        "Service Error", JOptionPane.ERROR_MESSAGE);
                 }
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
             }
         });
         
         // Set up the simulation restarter (called when the Restart button is clicked)
         setSimulationRestarter(() -> {
-<<<<<<< HEAD
-            System.out.println("GUI: Restart requested.");
-            components.getStartButton().setEnabled(true);
-            // Enable input fields
-            components.setFieldsEnabled(true); // Assumes GuiComponents has this method
-            simulationRunning = false; // No longer running until params are set again
-            JOptionPane.showMessageDialog(frame, 
-                "Parameters can be re-entered. Please restart external server and client processes manually after setting new parameters.",
-                "Restart Simulation", JOptionPane.INFORMATION_MESSAGE);
-=======
             try {
-                // First, shut down the current server instance
-                serverSide.main.ServerLogger.shutdown();
-                
-                // Allow a brief pause for shutdown to complete
-                try {
-                    Thread.sleep(500);  // 500ms pause
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                // Reset the GUI
+                // Reset the GUI and allow re-configuration
                 resetForRestart();
                 
-                // Get the current configuration values
-                int numVoters = components.getNumVoters();
-                int queueSize = components.getQueueSize();
-                int votesToClose = components.getVotesToClose();
-                
-                // Update configuration values
-                setConfigValues(numVoters, queueSize, votesToClose);
-                
-                // Start a new server instance
-                serverSide.main.ServerLogger.startServerLogic(numVoters, queueSize, votesToClose);
-            } catch (Exception e) {
-                System.err.println("Error restarting server: " + e.getMessage());
-                simulationRunning = false;
+                String resetMessage = """
+                System reset. You can enter new parameters and restart the Logger service.
+                """;
+                System.out.println("GUI: Restart requested - ready for new parameters");
+                JOptionPane.showMessageDialog(frame, 
+                    resetMessage,
+                    "Restart Complete", JOptionPane.INFORMATION_MESSAGE);
+                    
+            } catch (NullPointerException e) {
+                System.err.println("Error during restart: " + e.getMessage());
                 if (frame != null) {
                     JOptionPane.showMessageDialog(frame, 
-                        "Error restarting server: " + e.getMessage(),
-                        "Server Error", JOptionPane.ERROR_MESSAGE);
+                        "Error during restart: " + e.getMessage(),
+                        "Restart Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
         });
         
-        // Display the window
+        // Show the window
         frame.setVisible(true);
         
-        // Debug folder location
-        System.out.println("Current working directory: " + System.getProperty("user.dir"));
-        File logFile = new File(LOG_FILE);
-        System.out.println("Log file exists: " + logFile.exists());
-        System.out.println("Log file path: " + logFile.getAbsolutePath());
+        // Start the update timer
+        Timer updateTimer = new Timer(100, e -> INSTANCE.updateGui());
+        updateTimer.start();
+        
+        // Start log file monitoring
+        startLogFileMonitoring();
     }
     
-    private static void updateStatistics() {
-        if (!simulationRunning) return;
+    private static JPanel createLogViewerPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(new TitledBorder("Log File Viewer"));
         
-        // Update running time
-        if (simulationStartTime > 0) {
-            long currentTime = System.currentTimeMillis();
-            long elapsedTime = currentTime - simulationStartTime;
-            components.updateRunningTime(elapsedTime);
+        // Initialize the table before loading the log file
+        components.createTablePanel();
+        
+        // Use the GuiComponents log loading functionality
+        components.loadLogFile();
+        
+        // For now, create a simple display using the log table
+        JScrollPane scrollPane = new JScrollPane(components.getLogTable());
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private static void startLogFileMonitoring() {
+        // Start a background thread to monitor the log file
+        Timer timer = new Timer(2000, e -> {
+            loadLogFile();
+        });
+        timer.start();
+    }
+    
+    private static void loadLogFile() {
+        try {
+            File logFile = new File(LOG_FILE);
+            if (!logFile.exists()) {
+                // Try alternative locations
+                File[] possibleFiles = {
+                    new File("log.txt"),
+                    new File("electionDay/log.txt"),
+                    new File("src/log.txt"),
+                    new File("../log.txt")
+                };
+                
+                for (File altFile : possibleFiles) {
+                    if (altFile.exists()) {
+                        logFile = altFile;
+                        break;
+                    }
+                }
+            }
+            
+            if (logFile.exists()) {
+                try (java.util.Scanner scanner = new java.util.Scanner(logFile)) {
+                    boolean pastHeader = false;
+                    while (scanner.hasNextLine()) {
+                        String line = scanner.nextLine();
+                        if (pastHeader) {
+                            // Process log entries
+                        }
+                    }
+                } catch (java.io.FileNotFoundException e) {
+                    System.err.println("Log file not found: " + e.getMessage());
+                }
+            }
+        } catch (NullPointerException e) {
+            // Silently ignore file reading errors to avoid spam
         }
     }
     
-    // Method to set the simulation starter callback
+    private static void updateDisplays() {
+        if (components != null) {
+            components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
+            
+            // Animation update is handled internally by GuiAnimation
+            if (animation != null) {
+                // Animation updates itself through the individual method calls
+            }
+        }
+    }
+    
+    private static void resetForRestart() {
+        // Reset simulation state
+        simulationRunning = false;
+        scoreA = 0;
+        scoreB = 0;
+        votersProcessed = 0;
+        stationOpen = false;
+        queueSize = 0;
+        currentVoterInBooth = "";
+        
+        // Reset UI components
+        if (components != null) {
+            components.resetUI();
+        }
+        
+        // Reset animation
+        if (animation != null) {
+            animation.resetAnimation();
+        }
+    }
+    
+    // Getter and setter for simulation callbacks
+    public static Runnable getSimulationStarter() {
+        return simulationStarter;
+    }
+    
     public static void setSimulationStarter(Runnable starter) {
         simulationStarter = starter;
+        // Components will access the starter through getSimulationStarter()
     }
     
-    // Method to set the simulation restarter callback
+    public static Runnable getSimulationRestarter() {
+        return simulationRestarter;
+    }
+    
     public static void setSimulationRestarter(Runnable restarter) {
         simulationRestarter = restarter;
+        // Components will access the restarter through getRestarter()
     }
     
-    // Static method for backward compatibility
+    // Configuration getters and setters
+    public static void setConfigValues(int numVoters, int queueSize, int votesToClose) {
+        configNumVoters = numVoters;
+        configQueueSize = queueSize;
+        configVotesToClose = votesToClose;
+    }
+    
+    public static int getConfigNumVoters() { return configNumVoters; }
+    public static int getConfigQueueSize() { return configQueueSize; }
+    public static int getConfigVotesToClose() { return configVotesToClose; }
+    
+    // Speed control
+    public static float getSimulationSpeed() { return simulationSpeed; }
+    public static void setSimulationSpeed(float speed) { 
+        simulationSpeed = Math.max(0.1f, Math.min(5.0f, speed)); 
+    }
+    
     /**
-     * Get the current simulation speed factor.
-     * Used by interface components to adjust their timing.
+     * Get the current simulation speed for use by animation components.
+     * This is an alias for getSimulationSpeed() for compatibility.
      * @return The speed factor where 1.0f is normal speed
      */
     public static float getStaticSimulationSpeed() {
@@ -328,305 +340,161 @@ public class Gui implements IGUI_all {
         return simulationRunning;
     }
     
-    
-    @Override
-    public void setSimulationRunning(boolean running) {
-        Gui.simulationRunning = running; // Update the static field
-        if (running) {
-            Gui.simulationStartTime = System.currentTimeMillis();
-        }
-        // Update GUI components, e.g., enable/disable start button
-        if (components != null && components.getStartButton() != null) { // Assuming GuiComponents has getStartButton()
-            components.getStartButton().setEnabled(!running);
-            components.getStartButton().setText(running ? "Server Running..." : "Start Server");
-        }
-        if (components != null && components.getRestartButton() != null) { // Assuming GuiComponents has getRestartButton()
-             components.getRestartButton().setEnabled(running); // Enable restart only when running or after it ran
-        }
-    }
-
-    // The existing static method can remain or be called by the instance method
-    public static void setStaticSimulationRunning(boolean running) {
-        simulationRunning = running;
-        if (running) {
-            simulationStartTime = System.currentTimeMillis();
-        }
-    }
-    
     public static void setSpeedValue(float speed) {
-        simulationSpeed = speed;
+        setSimulationSpeed(speed);
     }
     
-    // Methods to access simulation starter
-    public static Runnable getSimulationStarter() {
-        return simulationStarter;
-    }
+    // ==============================================
+    // Getter methods for compatibility with GuiComponents
+    // ==============================================
     
-    // Method to access simulation restarter
-    public static Runnable getRestarter() {
-        return simulationRestarter;
-    }
-    
-    // Alternative name for the same functionality (for backward compatibility)
-    public static Runnable getSimulationRestarter() {
-        return simulationRestarter;
-    }
-    
-    // Method to set config values from UI
-    public static void setConfigValues(int numVoters, int queueSize, int votesToClose) {
-        configNumVoters = numVoters;
-        configQueueSize = queueSize;
-        configVotesToClose = votesToClose;
-    }
-    
-    // Methods to access config values
-    public static int getConfigNumVoters() {
-        return configNumVoters;
-    }
-    
-    public static int getConfigQueueSize() {
-        return configQueueSize;
-    }
-    
-    public static int getConfigVotesToClose() {
-        return configVotesToClose;
-    }
-    
-    // Method to reset UI for restart
-    public static void resetForRestart() {
-        scoreA = 0;
-        scoreB = 0;
-        votersProcessed = 0;
-        stationOpen = false;
-        queueSize = 0;
-        currentVoterInBooth = "";
-        simulationStartTime = System.currentTimeMillis();
-        simulationRunning = true;  // Set to true as we're restarting the simulation
-        
-        // Reset the components
-        components.resetUI();
-        
-        // Reset the animation
-        if (animation != null) {
-            animation.resetAnimation();
-        }
-    }
-    
-    // Method to get frame for dialog context
     public static JFrame getFrame() {
         return frame;
     }
     
+    public static Runnable getRestarter() {
+        return simulationRestarter;
+    }
+    
+    public static void setSimulationRunning(boolean running) {
+        simulationRunning = running;
+    }
+    
+    // ==============================================
+    // Methods called by Logger (direct GUI communication without interfaces)
+    // ==============================================
+    
     /**
-     * Provides a non-static way for components to get the current speed factor.
+     * Called when a voter arrives at the polling station
      */
-    @Override
-    public float getSimulationSpeed() {
-        return simulationSpeed;
-    }
-    
-    
-    public void updateUI(int scoreA, int scoreB, int votersProcessed, 
-                         boolean stationOpen, int queueSize, String currentVoterInBooth) {
-        try {
-            Gui.scoreA = scoreA;
-            Gui.scoreB = scoreB;
-            Gui.votersProcessed = votersProcessed;
-            Gui.stationOpen = stationOpen;
-            Gui.queueSize = queueSize;
-            Gui.currentVoterInBooth = currentVoterInBooth;
-            
-            if (components != null) {
-                components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
-            }
-            
-            // If the station has closed, try to load the log file
-            if (!stationOpen && simulationRunning) {
-                if (components != null) {
-                    // Have a small delay to ensure log file is fully written
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(1000);
-                            components.loadLogFile();
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }).start();
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error updating GUI: " + e.getMessage());
-        }
-    }
-    
-    @Override
-    public void displayMessage(String message) {
-        if (frame != null) {
-            JOptionPane.showMessageDialog(frame, message, "Server Message", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            // Fallback if frame is not available or for headless mode/testing
-            System.out.println("GUI Message (frame not available): " + message);
-        }
-    }
-
-    @Override
-    public void updateQueueAndBoothInfo(int queueCount, String voterInBooth) {
-        queueSize = queueCount;
-        currentVoterInBooth = voterInBooth;
-        components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
-    }
-    
-    // IGUI_Statistics interface implementation
-    @Override
-    public void updateStats(int validationSuccess, int validationFail, 
-                            int pollParticipants, int pollTotal,
-                            int pollAccurate, int pollResponses,
-                            long avgProcessingTime) {
-        components.updateStats(validationSuccess, validationFail,
-                               pollParticipants, pollTotal,
-                               pollAccurate, pollResponses,
-                               avgProcessingTime);
-    }
-    
-    // IGUI_Voter interface implementation
-    @Override
     public void voterArrived(int voterId) {
         if (animation != null) {
             animation.voterArrived(voterId);
         }
-        
-        // After a voter arrives, we might want to check the log file 
-        // if we're near the end of the simulation to catch any updates
-        if (votersProcessed > 0 && simulationRunning) {
-            maybeRefreshLogTable();
-        }
     }
     
-    private void maybeRefreshLogTable() {
-        // Only do periodic refreshes
-        if (Math.random() < 0.1) { // 10% chance to refresh to avoid doing it too often
-            if (components != null) {
-                components.loadLogFile();
-            }
-        }
-    }
-    
-    @Override
+    /**
+     * Called when a voter enters the queue
+     */
     public void voterEnteringQueue(int voterId) {
+        queueSize++;
         if (animation != null) {
             animation.voterEnteringQueue(voterId);
         }
     }
     
-    @Override
+    /**
+     * Called when a voter's ID is validated
+     */
     public void voterValidated(int voterId, int valid) {
-        if (animation != null) {
-            animation.voterValidated(voterId, valid);
+        if (valid == 1) {
+            scoreA++;
+        } else {
+            scoreB++;
         }
+        updateGui();
     }
     
-    @Override
+    /**
+     * Called when a voter is voting
+     */
     public void voterVoting(int voterId, boolean voteA) {
+        currentVoterInBooth = "Voter " + voterId;
+        if (voteA) {
+            scoreA++;
+        } else {
+            scoreB++;
+        }
         if (animation != null) {
             animation.voterVoting(voterId, voteA);
         }
     }
     
-    @Override
+    /**
+     * Called when a voter participates in the exit poll
+     */
     public void voterExitPoll(int voterId, String vote) {
+        votersProcessed++;
+        queueSize = Math.max(0, queueSize - 1);
+        currentVoterInBooth = "";
         if (animation != null) {
             animation.voterExitPoll(voterId, vote);
         }
     }
     
-    @Override
-    public void voterReborn(int oldId, int newId) {
+    /**
+     * Called when a voter is reborn (gets a new ID)
+     */
+    public void voterReborn(int originalId, int newId) {
         if (animation != null) {
-            animation.voterReborn(oldId, newId);
+            animation.voterReborn(originalId, newId);
         }
     }
     
-    // Renamed static bridge methods to avoid conflicts
-    public static void staticUpdateFromLogger(ILogger_GUI logger) {
-        if (logger != null) {
-            getInstance().updateFromLogger(
-                logger.getVoteCounts(),
-                logger.getVotersProcessed(),
-                logger.isStationOpen()
-            );
+    /**
+     * Called when the polling station opens
+     */
+    public void stationOpening() {
+        stationOpen = true;
+        System.out.println("GUI: Polling station opened");
+        updateDisplays(); // Update the GUI display
+    }
+    
+    /**
+     * Called when the polling station closes
+     */
+    public void stationClosing() {
+        stationOpen = false;
+        System.out.println("GUI: Polling station closed");
+        updateDisplays(); // Update the GUI display
+    }
+    
+    /**
+     * Update statistics display
+     */
+    public void updateStats(int validationSuccess, int validationFail, int pollParticipants, 
+                          int pollTotal, int pollAccurate, int pollResponses, long avgProcessingTime) {
+        if (components != null) {
+            components.updateStats(validationSuccess, validationFail, pollParticipants, 
+                                 pollTotal, pollAccurate, pollResponses, avgProcessingTime);
         }
     }
     
-    public static void staticUpdateQueueAndBoothInfo(int queueCount, String voterInBooth) {
-        getInstance().updateQueueAndBoothInfo(queueCount, voterInBooth);
-    }
-    
-    public static void staticUpdateStats(int validationSuccess, int validationFail, 
-                                  int pollParticipants, int pollTotal,
-                                  int pollAccurate, int pollResponses,
-                                  long avgProcessingTime) {
-        getInstance().updateStats(
-            validationSuccess, validationFail, 
-            pollParticipants, pollTotal,
-            pollAccurate, pollResponses,
-            avgProcessingTime
-        );
-    }
-    
-    public static void staticVoterArrived(int voterId) {
-        getInstance().voterArrived(voterId);
-    }
-    
-    public static void staticVoterEnteringQueue(int voterId) {
-        getInstance().voterEnteringQueue(voterId);
-    }
-    
-    public static void staticVoterValidated(int voterId, int valid) {
-        getInstance().voterValidated(voterId, valid);
-    }
-    
-    public static void staticVoterVoting(int voterId, boolean voteA) {
-        getInstance().voterVoting(voterId, voteA);
-    }
-    
-    public static void staticVoterExitPoll(int voterId, String vote) {
-        getInstance().voterExitPoll(voterId, vote);
-    }
-    
-    public static void staticVoterReborn(int oldId, int newId) {
-        getInstance().voterReborn(oldId, newId);
-    }
-
-    // Method to periodically check and update log file during simulation
-    public static void startPeriodicLogChecker() {
-        if (simulationRunning && components != null) {
-            new Thread(() -> {
-                try {
-                    while (simulationRunning) {
-                        // Check for log file updates every few seconds
-                        components.loadLogFile();
-                        
-                        // Sleep for a reasonable interval based on simulation speed
-                        float speedFactor = getStaticSimulationSpeed();
-                        long checkInterval = Math.round(5000 / speedFactor); // 5 seconds adjusted by speed
-                        Thread.sleep(Math.max(2000, checkInterval)); // Minimum 2 seconds
+    /**
+     * Update display from logger information
+     */
+    public void updateFromLogger(String voteCounts, int votersProcessed, boolean stationOpen) {
+        System.out.println("Gui.updateFromLogger called - VoteCounts: " + voteCounts + 
+                          ", Processed: " + votersProcessed + ", Open: " + stationOpen);
+        // Update local state based on logger information
+        Gui.votersProcessed = votersProcessed;
+        Gui.stationOpen = stationOpen;
+        
+        // Parse vote counts if provided
+        if (voteCounts != null && voteCounts.contains("Candidate A:")) {
+            try {
+                String[] parts = voteCounts.split(",");
+                for (String part : parts) {
+                    part = part.trim();
+                    if (part.startsWith("Candidate A:")) {
+                        scoreA = Integer.parseInt(part.substring(12).trim());
+                    } else if (part.startsWith("Candidate B:")) {
+                        scoreB = Integer.parseInt(part.substring(12).trim());
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } catch (Exception e) {
-                    System.err.println("Error in periodic log file checker: " + e.getMessage());
                 }
-            }).start();
+            } catch (Exception e) {
+                System.err.println("Error parsing vote counts: " + e.getMessage());
+            }
         }
     }
-
-	@Override
-	public void updateFromLogger(String voteCounts, int votersProcessed, boolean stationOpen) {
-<<<<<<< HEAD
-		System.out.println("Gui.updateFromLogger called - VoteCounts: " + voteCounts + ", Processed: " + votersProcessed + ", Open: " + stationOpen);
-=======
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'updateFromLogger'");
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
-	}
+    
+    /**
+     * Update GUI components with the latest statistics
+     */
+    public void updateGui() {
+        System.out.println("Updating GUI: Voters Processed=" + votersProcessed + ", Queue Size=" + queueSize + ", ScoreA=" + scoreA + ", ScoreB=" + scoreB);
+        
+        // Actually update the display components
+        updateDisplays();
+    }
 }

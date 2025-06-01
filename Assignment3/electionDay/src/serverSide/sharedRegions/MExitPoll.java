@@ -11,6 +11,7 @@ import serverSide.interfaces.Logger.ILogger_ExitPoll; // Changed from ILogger_Ex
 
 public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
     private static final long serialVersionUID = 1L; // Added serialVersionUID
+    private static MExitPoll instance = null; // Singleton instance
 
     private final ReentrantLock lock;
     private transient final Condition voterReady; // Marked transient
@@ -27,10 +28,10 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
     private int votesForB;
 
 
-    private ILogger_ExitPoll logger; // Changed from ILogger_ExitPoll to ILogger_ExitPoll
+    private transient ILogger_ExitPoll logger; // Changed from ILogger_ExitPoll to ILogger_ExitPoll (transient as interface cannot be serialized)
     private int localExitPollPercentage;
 
-    public MExitPoll(ILogger_ExitPoll logger) throws RemoteException { // Changed to ILogger_ExitPoll and made public
+    private MExitPoll(ILogger_ExitPoll logger) throws RemoteException { // Changed to ILogger_ExitPoll and made private
         super();
         this.logger = logger;
         this.lock = new ReentrantLock();
@@ -54,8 +55,11 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         }
     }
 
-    public static MExitPoll getInstance(ILogger_ExitPoll logger) throws RemoteException { // Changed to ILogger_ExitPoll
-        return new MExitPoll(logger);
+    public static synchronized MExitPoll getInstance(ILogger_ExitPoll logger) throws RemoteException { // Changed to ILogger_ExitPoll
+        if (instance == null) {
+            instance = new MExitPoll(logger);
+        }
+        return instance;
     }
 
     @Override
@@ -63,7 +67,8 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         tryClosingExitPoll();
 
         if (!response) {
-            if (logger != null) logger.logVoterState(voterId, "EXIT_POLL_SKIPPED", "Declined to participate or not selected initially.");
+            // Log exit poll vote with empty string for declined participation
+            if (logger != null) logger.exitPollVote(voterId, "");
             return;
         }
 
@@ -71,52 +76,46 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
             lock.lock();
 
             if (Math.random() * 100 >= this.localExitPollPercentage) {
-                if (logger != null) logger.logVoterState(voterId, "EXIT_POLL_NOT_SELECTED_CHANCE", "Percentage chance not met.");
-
+                // Not selected by percentage chance
+                if (logger != null) logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
-
 
             if (Math.random() >= 0.6) {
-                if (logger != null) logger.logVoterState(voterId, "EXIT_POLL_DECLINED_TO_ANSWER", "Did not want to answer.");
-
+                // Declined to answer (40% don't want to answer)
+                if (logger != null) logger.exitPollVote(voterId, "");
                 voterReady.signal();
                 return;
             }
-
 
             while (newVoteReady == true) {
                 pollsterReady.await();
             }
 
             if (Math.random() >= 0.2) {
+                // 80% tell the truth
                 registeredVote = realVote;
-                if (logger != null) logger.logVoterState(voterId, "EXIT_POLL_TRUTH", "Registered vote: " + (registeredVote ? "A" : "B"));
+                System.out.println("Voter " + voterId + " leaving polling station (telling the truth)");
+                if (logger != null) logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             } else {
+                // 20% lie
                 registeredVote = !realVote;
-                if (logger != null) logger.logVoterState(voterId, "EXIT_POLL_LIE", "Registered vote: " + (registeredVote ? "A" : "B"));
-
+                System.out.println("Voter " + voterId + " leaving polling station (lying)");
+                if (logger != null) logger.exitPollVote(voterId, registeredVote ? "A" : "B");
             }
             newVoteReady = true;
             voterReady.signal();
         } catch (InterruptedException e) {
-
             Thread.currentThread().interrupt();
-            if (logger != null) logger.logGeneral("MExitPoll: Interruption in exitPollingStation for voter " + voterId + ": " + e.getMessage());
             throw new RemoteException("Interrupted while waiting in exit polling station", e);
-
         } finally {
             lock.unlock();
         }
-    }
-
-    @Override
-
+    }    @Override
     public void inquire() throws RemoteException {
         lock.lock();
         try {
-            if (logger != null) logger.logPollsterState("INQUIRE_WAITING", "Waiting for new vote.");
             while (newVoteReady == false && isOpen) {
                 voterReady.await();
             }
@@ -126,20 +125,15 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
                 pollsterReady.signal();
                 if (registeredVote) {
                     votesForA++;
-                    if (logger != null) logger.logPollsterState("INQUIRE_VOTE_A", "Votes A: " + votesForA);
+                    System.out.println("Pollster registered one more vote for A");
                 } else {
                     votesForB++;
-                    if (logger != null) logger.logPollsterState("INQUIRE_VOTE_B", "Votes B: " + votesForB);
+                    System.out.println("Pollster registered one more vote for B");
                 }
-            } else if (!isOpen) {
-                if (logger != null) logger.logPollsterState("INQUIRE_CLOSED", "Exit poll closed while waiting.");
             }
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            if (logger != null) logger.logGeneral("MExitPoll: Interruption in inquire: " + e.getMessage());
             throw new RemoteException("Interrupted while waiting to inquire", e);
-
         } finally {
             lock.unlock();
         }
@@ -155,27 +149,19 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         } finally {
             lock.unlock();
         }
-    }
-
-    @Override
-
+    }    @Override
     public void closeIn(int stillVotersInQueue) throws RemoteException {
         lock.lock();
         try {
             if (stillVotersInQueue <= 0) {
                 isOpen = false;
-                if (logger != null) logger.logGeneral("MExitPoll: Closing immediately, no voters in queue.");
                 System.out.println("Exit poll closed (no voters in queue)");
                 voterReady.signalAll();
                 pollsterReady.signalAll();
-
                 return;
             }
             this.closeIn = stillVotersInQueue;
             this.aboutToClose = true;
-
-            if (logger != null) logger.logGeneral("MExitPoll: About to close, will close in " + stillVotersInQueue + " voters.");
-
         } finally {
             lock.unlock();
         }
@@ -190,7 +176,6 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
                 if (closeIn <= 0) {
                     isOpen = false;
                     aboutToClose = false;
-                    if (logger != null) logger.logGeneral("MExitPoll: Now closed after countdown.");
                     System.out.println("Exit poll effectively closed after voter countdown.");
                     voterReady.signalAll();
                     pollsterReady.signalAll();
@@ -198,15 +183,17 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
             }
         } finally {
             lock.unlock();
-
         }
-    }
-
-    @Override
-
+    }    @Override
     public void printExitPollResults() throws RemoteException {
-        if (logger != null) logger.logResults("EXIT_POLL", votesForA, votesForB);
-        System.out.println("Exit Poll Results: A - " + votesForA + ", B - " + votesForB);
-
+        int totalVotes = votesForA + votesForB;
+        if (totalVotes > 0) {
+            double percentA = ((double)votesForA / totalVotes) * 100;
+            double percentB = ((double)votesForB / totalVotes) * 100;
+            System.out.println("Prediction for A: " + (int)percentA + " percent of the votes");
+            System.out.println("Prediction for B: " + (int)percentB + " percent of the votes");
+        } else {
+            System.out.println("No votes were recorded in the exit poll");
+        }
     }
 }

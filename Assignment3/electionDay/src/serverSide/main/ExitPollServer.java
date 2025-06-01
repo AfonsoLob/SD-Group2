@@ -76,7 +76,7 @@ public class ExitPollServer {
         try {
             // Assuming MExitPoll constructor takes the logger stub.
             // And MExitPoll itself implements IExitPoll_all or can be cast/exported.
-            mExitPoll = new MExitPoll(loggerStub);
+            mExitPoll = MExitPoll.getInstance(loggerStub);
             exitPoll = (IExitPoll_all) mExitPoll; // Or export if not extending UnicastRemoteObject directly
             System.out.println("ExitPollServer: MExitPoll instance created.");
         } catch (RemoteException e) { // If MExitPoll constructor throws RemoteException

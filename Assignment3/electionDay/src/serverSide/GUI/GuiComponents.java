@@ -12,10 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-<<<<<<< HEAD
-=======
-
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -274,31 +270,6 @@ public class GuiComponents {
         return statsPanel;
     }
     
-<<<<<<< HEAD
-
-        // In GuiComponents.java
-        
-        // Assuming you have JTextField members like these (names might vary):
-        // private JTextField numVotersField;
-        // private JTextField queueSizeField; // For Polling Station Capacity
-        // private JTextField votesToCloseField; // For Exit Poll Percentage
-        
-        public void setFieldsEnabled(boolean isEnabled) {
-            if (numVotersField != null) {
-                numVotersField.setEnabled(isEnabled);
-            }
-            if (queueSizeField != null) {
-                queueSizeField.setEnabled(isEnabled);
-            }
-            if (votesToCloseField != null) {
-                votesToCloseField.setEnabled(isEnabled);
-            }
-            // Add any other related input fields you want to control
-        }
-
-
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     /**
      * Create the table panel for log display
      */
@@ -356,6 +327,36 @@ public class GuiComponents {
             }
         });
         buttonPanel.add(restartButton);
+
+        // Add Load Log File button
+        JButton loadLogButton = new JButton("Load Log File");
+        loadLogButton.setFont(new Font("Arial", Font.BOLD, 12));
+        loadLogButton.addActionListener(e -> {
+            try {
+                loadLogFile();
+                JOptionPane.showMessageDialog(Gui.getFrame(), 
+                    "Log file loaded successfully!", 
+                    "Load Complete", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(Gui.getFrame(), 
+                    "Error loading log file: " + ex.getMessage(),
+                    "Load Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        buttonPanel.add(loadLogButton);
+
+        // Add Refresh Log button
+        JButton refreshLogButton = new JButton("Refresh Log");
+        refreshLogButton.setFont(new Font("Arial", Font.BOLD, 12));
+        refreshLogButton.addActionListener(e -> {
+            try {
+                loadLogFile();
+                System.out.println("Log file refreshed manually");
+            } catch (Exception ex) {
+                System.err.println("Error refreshing log file: " + ex.getMessage());
+            }
+        });
+        buttonPanel.add(refreshLogButton);
 
         exitButton = new JButton("Exit");
         exitButton.setFont(new Font("Arial", Font.BOLD, 12)); // Using default font
@@ -439,7 +440,7 @@ public class GuiComponents {
             if (Gui.isSimulationRunning()) {
                 startButton.setText("Simulation Finished");
                 restartButton.setEnabled(true);  // Enable restart button when finished
-                Gui.getInstance().setSimulationRunning(false);
+                Gui.setSimulationRunning(false);
                 
                 // Automatically load the log file when the simulation ends
                 loadLogFile();
@@ -505,12 +506,6 @@ public class GuiComponents {
         if (restartButton != null) {
             restartButton.setEnabled(false);
         }
-<<<<<<< HEAD
-
-        
-
-=======
->>>>>>> 77f28c76b37344e86d5129b3036572a92e56ad87
     }
     
     /**
@@ -565,6 +560,12 @@ public class GuiComponents {
      */
     public void loadLogFile() {
         try {
+            // Ensure table model is initialized before loading
+            if (tableModel == null) {
+                System.out.println("Table model not initialized yet - initializing now");
+                createTablePanel();
+            }
+            
             // Clear current table data
             tableModel.setRowCount(0);
             
@@ -644,9 +645,9 @@ public class GuiComponents {
                         }
                     }
                 } else {
-                    JOptionPane.showMessageDialog(Gui.getFrame(), 
-                        "Log file not found: " + logFile.getAbsolutePath(),
-                        "File Error", JOptionPane.ERROR_MESSAGE);
+                    // Log file not found - silently handle without showing error dialog
+                    System.out.println("Log file not found at startup: " + logFile.getAbsolutePath());
+                    System.out.println("Will attempt to load log file again later when simulation starts");
                     return;
                 }
             }
@@ -661,9 +662,8 @@ public class GuiComponents {
                 }
                 
                 if (logFile.length() == 0) {
-                    JOptionPane.showMessageDialog(Gui.getFrame(), 
-                        "Log file exists but is empty. Please wait for simulation to generate log data.",
-                        "Empty Log", JOptionPane.INFORMATION_MESSAGE);
+                    // Log file exists but is empty - silently handle without dialog
+                    System.out.println("Log file exists but is empty. Will check again later when simulation generates data.");
                     return;
                 }
             }

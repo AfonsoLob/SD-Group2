@@ -88,7 +88,7 @@ public class PollsterClient {
         for (int i = 0; i < NUM_POLLSTERS; i++) {
             // TPollster constructor will need to be adapted.
             // It will take its ID (if any) and the exitPoll stub.
-            pollsters[i] = new TPollster(i, exitPoll); // Example ID 'i'
+            pollsters[i] = TPollster.getInstance(exitPoll); // Fixed: TPollster only takes exitPoll parameter
             pollsters[i].start();
             System.out.println("PollsterClient: TPollster " + i + " created and started.");
         }

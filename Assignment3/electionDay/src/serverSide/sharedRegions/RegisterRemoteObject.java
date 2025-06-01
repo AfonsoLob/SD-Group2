@@ -1,4 +1,4 @@
-package serverSide.main;
+package serverSide.sharedRegions;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
@@ -6,8 +6,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import serverSide.interfaces.Register.IRegister;
 
 /**
@@ -16,118 +14,120 @@ import serverSide.interfaces.Register.IRegister;
  * themselves and be looked up by clients or other services.
  * It itself is bound to the standard RMI registry.
  */
-public class RegisterRemoteObject extends UnicastRemoteObject implements IRegister {
-
-    private static final long serialVersionUID = 1L; // Standard for UnicastRemoteObject
-    private final HashMap<String, Remote> bindings;
-    private static final String RMI_REGISTRY_HOSTNAME = "localhost"; // Or get from config
-    private static final int RMI_REGISTRY_PORT = 22350; // Standard RMI registry port used by this project
-    public static final String REGISTER_SERVICE_NAME = "RegisterService"; // Name for this service in RMI registry
-    private static final long RETRY_DELAY_MS = 5000; // 5 seconds for retry
+public class RegisterRemoteObject implements IRegister {
 
     /**
-     * Constructs a new RegisterRemoteObject.
-     * @throws RemoteException if the UnicastRemoteObject constructor fails.
+     * Name of the local host (where the RMI registering service is supposed to be located).
      */
-    public RegisterRemoteObject() throws RemoteException {
-        super();
-        this.bindings = new HashMap<>();
-        System.out.println("RegisterRemoteObject: Instance created.");
+    private String rmiRegHostName;
+
+    /**
+     * Port number where the local RMI registering service is listening to.
+     */
+    private int rmiRegPortNumb = 1099;
+
+    /**
+     * Instantiation of a registering object.
+     *
+     * @param rmiRegHostName name of local host
+     * @param rmiRegPortNumb port number where the local registering service is listening to
+     */
+    public RegisterRemoteObject(String rmiRegHostName, int rmiRegPortNumb) {
+        if ((rmiRegHostName == null) || ("".equals(rmiRegHostName)))
+            throw new NullPointerException("RegisterRemoteObject: null parameter on instantiation!");
+        this.rmiRegHostName = rmiRegHostName;
+        if ((rmiRegPortNumb >= 4000) && (rmiRegPortNumb <= 65535))
+            this.rmiRegPortNumb = rmiRegPortNumb;
     }
 
+    /**
+     * Binds a remote reference to the specified name in this registry.
+     *
+     * @param name the name to associate with the reference to the remote object
+     * @param ref reference to the remote object
+     * @throws RemoteException if either the invocation of the remote method, or the communication with the registry
+     *                         service fails
+     * @throws AlreadyBoundException if the name is already registered
+     */
     @Override
-    public synchronized void bind(String name, Remote obj) throws RemoteException, AlreadyBoundException {
-        if (bindings.containsKey(name)) {
-            throw new AlreadyBoundException("Name '" + name + "' is already bound.");
-        }
-        bindings.put(name, obj);
-        System.out.println("RegisterRemoteObject: Bound '" + name + "'.");
+    public void bind(String name, Remote ref) throws RemoteException, AlreadyBoundException {
+        Registry registry;
+
+        if ((name == null) || (ref == null))
+            throw new NullPointerException("RegisterRemoteObject: null parameter(s) on bind!");
+        registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        registry.bind(name, ref);
     }
 
+    /**
+     * Removes the binding for the specified name in this registry.
+     *
+     * @param name the name associated with the reference to the remote object
+     * @throws RemoteException if either the invocation of the remote method, or the communication with the registry
+     *                         service fails
+     * @throws NotBoundException if the name is not in registered
+     */
     @Override
-    public synchronized Remote lookup(String name) throws RemoteException, NotBoundException {
-        Remote obj = bindings.get(name);
-        if (obj == null) {
-            throw new NotBoundException("Name '" + name + "' is not bound.");
-        }
-        System.out.println("RegisterRemoteObject: Lookup for '" + name + "' successful.");
-        return obj;
+    public void unbind(String name) throws RemoteException, NotBoundException {
+        Registry registry;
+
+        if ((name == null))
+            throw new NullPointerException("RegisterRemoteObject: null parameter(s) on unbind!");
+        registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        registry.unbind(name);
     }
 
+    /**
+     * Replaces the binding for the specified name in this registry with the supplied remote reference.
+     *
+     * If a previous binding for the specified name exists, it is discarded.
+     *
+     * @param name the name to associate with the reference to the remote object
+     * @param ref reference to the remote object
+     * @throws RemoteException if either the invocation of the remote method, or the communication with the registry
+     *                         service fails
+     */
     @Override
-    public synchronized void unbind(String name) throws RemoteException, NotBoundException {
-        if (bindings.remove(name) == null) {
-            throw new NotBoundException("Name '" + name + "' is not bound, cannot unbind.");
-        }
-        System.out.println("RegisterRemoteObject: Unbound '" + name + "'.");
+    public void rebind(String name, Remote ref) throws RemoteException {
+        Registry registry;
+
+        if ((name == null) || (ref == null))
+            throw new NullPointerException("RegisterRemoteObject: null parameter(s) on rebind!");
+        registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        registry.rebind(name, ref);
     }
 
+    /**
+     * Looks up the specified name in this registry and returns its associated remote reference.
+     *
+     * @param name the name for the remote reference to look up
+     * @return a reference to a remote object
+     * @throws RemoteException if either the invocation of the remote method, or the communication with the registry
+     *                         service fails
+     * @throws NotBoundException if the name is not in registered
+     */
     @Override
-    public synchronized String[] list() throws RemoteException {
-        System.out.println("RegisterRemoteObject: Listing bindings.");
-        return bindings.keySet().toArray(new String[0]);
+    public Remote lookup(String name) throws RemoteException, NotBoundException {
+        Registry registry;
+
+        if ((name == null))
+            throw new NullPointerException("RegisterRemoteObject: null parameter(s) on lookup!");
+        registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        return registry.lookup(name);
     }
 
-    public static void main(String[] args) {
-        System.out.println("RegisterRemoteObject (Main RMI Registration Service) starting...");
+    /**
+     * Returns an array of the names bound in this registry.
+     *
+     * @return an array of names currently bound
+     * @throws RemoteException if either the invocation of the remote method, or the communication with the registry
+     *                         service fails
+     */
+    @Override
+    public String[] list() throws RemoteException {
+        Registry registry;
 
-        // Optional: Set RMI security manager if not already handled globally or by rmiregistry itself
-        // if (System.getSecurityManager() == null) {
-        //     System.setSecurityManager(new SecurityManager());
-        //     System.out.println("RegisterRemoteObject: Security Manager installed.");
-        // }
-
-        RegisterRemoteObject registerService = null;
-        try {
-            registerService = new RegisterRemoteObject();
-        } catch (RemoteException e) {
-            System.err.println("RegisterRemoteObject: CRITICAL - Failed to instantiate RegisterRemoteObject: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1); // Cannot proceed
-        }
-
-        Registry registry = null;
-        boolean bound = false;
-
-        while (!bound) {
-            try {
-                System.out.println("RegisterRemoteObject: Attempting to locate/create RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + "...");
-                try {
-                    registry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
-                    registry.list(); // Test if registry is active
-                    System.out.println("RegisterRemoteObject: RMI Registry located.");
-                } catch (RemoteException e) {
-                    System.out.println("RegisterRemoteObject: RMI Registry not found or not responding. Attempting to create...");
-                    registry = LocateRegistry.createRegistry(RMI_REGISTRY_PORT);
-                    System.out.println("RegisterRemoteObject: RMI Registry created on port " + RMI_REGISTRY_PORT + ".");
-                }
-
-                System.out.println("RegisterRemoteObject: Attempting to bind '" + REGISTER_SERVICE_NAME + "'...");
-                registry.bind(REGISTER_SERVICE_NAME, registerService);
-                System.out.println("RegisterRemoteObject: '" + REGISTER_SERVICE_NAME + "' bound successfully to RMI Registry.");
-                System.out.println("RegisterRemoteObject: Service is now running and ready to accept registrations.");
-                bound = true;
-            } catch (AlreadyBoundException e) {
-                System.err.println("RegisterRemoteObject: '" + REGISTER_SERVICE_NAME + "' already bound in RMI Registry. Assuming another instance is active or shutting down. Retrying...");
-                // If another instance is running, this one might wait or you might choose to exit.
-                // For simplicity, we retry, assuming the other might unbind.
-            } catch (RemoteException e) {
-                System.err.println("RegisterRemoteObject: RemoteException during RMI setup with RMI Registry: " + e.getMessage());
-                e.printStackTrace(); // More detailed error
-                registry = null; // Reset registry in case of connection issues
-            }
-
-            if (!bound) {
-                System.out.println("RegisterRemoteObject: RMI binding to RMI Registry failed. Retrying in " + RETRY_DELAY_MS / 1000 + " seconds...");
-                try {
-                    Thread.sleep(RETRY_DELAY_MS);
-                } catch (InterruptedException ie) {
-                    System.err.println("RegisterRemoteObject: Sleep interrupted, retrying RMI binding immediately.");
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        // Server keeps running to serve RMI requests for IRegister
+        registry = LocateRegistry.getRegistry(rmiRegHostName, rmiRegPortNumb);
+        return registry.list();
     }
 }
