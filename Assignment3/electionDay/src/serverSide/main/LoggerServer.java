@@ -145,4 +145,41 @@ public class LoggerServer {
             }
         }
     }
+    
+    /**
+     * Perform clean shutdown of RMI services
+     */
+    public static void performCleanShutdown() {
+        System.out.println("LoggerServer: Starting clean shutdown sequence...");
+        
+        try {
+            // Look up the register service
+            Registry rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
+            IRegister registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
+            
+            // Unbind the Logger service
+            try {
+                registerServiceStub.unbind(LOGGER_SERVICE_NAME);
+                System.out.println("LoggerServer: Successfully unbound '" + LOGGER_SERVICE_NAME + "' from registry.");
+            } catch (NotBoundException e) {
+                System.out.println("LoggerServer: '" + LOGGER_SERVICE_NAME + "' was not bound (already cleaned up).");
+            }
+            
+            // Unexport the logger instance if it exists
+            if (loggerInstance != null) {
+                try {
+                    java.rmi.server.UnicastRemoteObject.unexportObject(loggerInstance, true);
+                    System.out.println("LoggerServer: Successfully unexported Logger object.");
+                } catch (java.rmi.NoSuchObjectException e) {
+                    System.out.println("LoggerServer: Logger object was not exported (already cleaned up).");
+                }
+            }
+            
+            System.out.println("LoggerServer: Clean shutdown sequence completed successfully.");
+            
+        } catch (Exception e) {
+            System.err.println("LoggerServer: Error during clean shutdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

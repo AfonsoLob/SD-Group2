@@ -19,22 +19,29 @@ public class ExitPollServer {
     public static final String EXIT_POLL_SERVICE_NAME = "ExitPollService"; // To bind MExitPoll via IRegister
     private static final long RETRY_DELAY_MS = 5000; // 5 seconds
 
+    // Static references for cleanup
+    private static IRegister registerServiceStub = null;
+    private static IExitPoll_all exitPoll = null;
+    private static volatile boolean shutdownRequested = false;
+
     public static void main(String[] args) {
         System.out.println("ExitPollServer starting...");
 
-        IRegister registerServiceStub = null;
+        // Add shutdown hook for proper cleanup
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("ExitPollServer: Shutdown hook triggered, performing cleanup...");
+            performShutdown();
+        }));
+
         ILogger_all loggerStub = null;
-        IExitPoll_all exitPoll = null; // The remote object instance
-        MExitPoll mExitPoll = null; // The actual implementation
 
         // 1. Look up the IRegister service (with retry)
-        Registry rmiRegistry = null;
-        while (registerServiceStub == null) {
+        while (registerServiceStub == null && !shutdownRequested) {
             try {
                 System.out.println("ExitPollServer: Attempting to connect to RMI Registry at " +
                                    RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
                                    " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
+                Registry rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("ExitPollServer: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
@@ -42,17 +49,19 @@ public class ExitPollServer {
                                    "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
-            if (registerServiceStub == null) {
+            if (registerServiceStub == null && !shutdownRequested) {
                 System.out.println("ExitPollServer: Retrying IRegister lookup in " + RETRY_DELAY_MS / 1000 + " seconds...");
                 try { Thread.sleep(RETRY_DELAY_MS); } catch (InterruptedException ie) {
                     System.err.println("ExitPollServer: Sleep interrupted, retrying IRegister lookup immediately.");
                     Thread.currentThread().interrupt();
+                    shutdownRequested = true;
+                    return;
                 }
             }
         }
 
         // 2. Look up LoggerService via IRegister (with retry)
-        while (loggerStub == null) {
+        while (loggerStub == null && !shutdownRequested) {
             try {
                 System.out.println("ExitPollServer: Attempting to lookup '" + LOGGER_SERVICE_NAME +
                                    "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
@@ -63,11 +72,13 @@ public class ExitPollServer {
                                    "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 loggerStub = null;
             }
-            if (loggerStub == null) {
+            if (loggerStub == null && !shutdownRequested) {
                 System.out.println("ExitPollServer: Retrying LoggerService lookup in " + RETRY_DELAY_MS / 1000 + " seconds...");
                 try { Thread.sleep(RETRY_DELAY_MS); } catch (InterruptedException ie) {
                     System.err.println("ExitPollServer: Sleep interrupted, retrying LoggerService lookup immediately.");
                     Thread.currentThread().interrupt();
+                    shutdownRequested = true;
+                    return;
                 }
             }
         }
@@ -76,7 +87,7 @@ public class ExitPollServer {
         try {
             // Assuming MExitPoll constructor takes the logger stub.
             // And MExitPoll itself implements IExitPoll_all or can be cast/exported.
-            mExitPoll = MExitPoll.getInstance(loggerStub);
+            MExitPoll mExitPoll = MExitPoll.getInstance(loggerStub);
             exitPoll = (IExitPoll_all) mExitPoll; // Or export if not extending UnicastRemoteObject directly
             System.out.println("ExitPollServer: MExitPoll instance created.");
         } catch (RemoteException e) { // If MExitPoll constructor throws RemoteException
@@ -115,6 +126,49 @@ public class ExitPollServer {
         }
 
         System.out.println("ExitPollServer: Service is now bound and running.");
-        // Server keeps running to serve RMI requests for MExitPoll
+        
+        // Keep server running until shutdown is requested
+        while (!shutdownRequested) {
+            try {
+                Thread.sleep(1000); // Check every second
+            } catch (InterruptedException e) {
+                System.out.println("ExitPollServer: Interrupted, shutting down...");
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        
+        System.out.println("ExitPollServer: Main thread exiting.");
+    }
+    
+    /**
+     * Perform clean shutdown of the ExitPoll service
+     */
+    private static void performShutdown() {
+        shutdownRequested = true;
+        
+        try {
+            if (registerServiceStub != null && exitPoll != null) {
+                System.out.println("ExitPollServer: Unbinding " + EXIT_POLL_SERVICE_NAME + "...");
+                try {
+                    registerServiceStub.unbind(EXIT_POLL_SERVICE_NAME);
+                    System.out.println("ExitPollServer: Successfully unbound " + EXIT_POLL_SERVICE_NAME);
+                } catch (Exception e) {
+                    System.err.println("ExitPollServer: Error unbinding service: " + e.getMessage());
+                }
+                
+                System.out.println("ExitPollServer: Unexporting ExitPoll object...");
+                try {
+                    java.rmi.server.UnicastRemoteObject.unexportObject(exitPoll, true);
+                    System.out.println("ExitPollServer: Successfully unexported ExitPoll object");
+                } catch (Exception e) {
+                    System.err.println("ExitPollServer: Error unexporting object: " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ExitPollServer: Error during shutdown: " + e.getMessage());
+        }
+        
+        System.out.println("ExitPollServer: Shutdown complete.");
     }
 }

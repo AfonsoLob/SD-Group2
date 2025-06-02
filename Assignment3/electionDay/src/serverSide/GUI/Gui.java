@@ -34,7 +34,7 @@ public class Gui {
     // Configuration settings
     private static int configNumVoters = 5;
     private static int configQueueSize = 3;
-    private static int configVotesToClose = 3;
+    private static int configVotesToClose = 15;
     
     // Speed control
     /**
@@ -43,7 +43,7 @@ public class Gui {
      * - Values < 1.0 slow down the simulation (e.g., 0.5f = half speed)
      * - Values > 1.0 speed up the simulation (e.g., 2.0f = double speed)
      */
-    private static float simulationSpeed = 0.2f;
+    private static float simulationSpeed = 1.0f;
     
     // Singleton instance
     private static final Gui INSTANCE = new Gui();
@@ -164,22 +164,40 @@ public class Gui {
         // Set up the simulation restarter (called when the Restart button is clicked)
         setSimulationRestarter(() -> {
             try {
+                System.out.println("GUI: Restart requested - performing cleanup and reset...");
+                
+                // Clean up RMI services if simulation is running
+                if (simulationRunning) {
+                    System.out.println("GUI: Cleaning up RMI services for restart...");
+                    try {
+                        LoggerServer.performCleanShutdown();
+                        // Give time for cleanup to complete
+                        Thread.sleep(1500);
+                    } catch (Exception cleanupError) {
+                        System.err.println("GUI: Error during RMI cleanup: " + cleanupError.getMessage());
+                        // Continue with restart even if cleanup failed
+                    }
+                }
+                
                 // Reset the GUI and allow re-configuration
                 resetForRestart();
                 
                 String resetMessage = """
-                System reset. You can enter new parameters and restart the Logger service.
+                System reset complete. RMI services have been cleaned up.
+                You can now enter new parameters and restart the Logger service.
                 """;
-                System.out.println("GUI: Restart requested - ready for new parameters");
+                System.out.println("GUI: Restart complete - ready for new parameters");
                 JOptionPane.showMessageDialog(frame, 
                     resetMessage,
                     "Restart Complete", JOptionPane.INFORMATION_MESSAGE);
                     
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 System.err.println("Error during restart: " + e.getMessage());
+                e.printStackTrace();
                 if (frame != null) {
                     JOptionPane.showMessageDialog(frame, 
-                        "Error during restart: " + e.getMessage(),
+                        "Error during restart: " + e.getMessage() + 
+                        "\n\nThe system may need to be manually restarted.",
                         "Restart Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -437,6 +455,8 @@ public class Gui {
     public void stationOpening() {
         stationOpen = true;
         System.out.println("GUI: Polling station opened");
+        // chage the panel were the polling station status is displayed
+
         updateDisplays(); // Update the GUI display
     }
     
@@ -496,5 +516,31 @@ public class Gui {
         
         // Actually update the display components
         updateDisplays();
+    }
+    
+    /**
+     * Perform proper shutdown sequence with RMI cleanup
+     */
+    public static void performShutdownSequence() {
+        System.out.println("GUI: Starting shutdown sequence...");
+        
+        try {
+            // First notify the LoggerServer to clean up its RMI bindings
+            if (simulationRunning) {
+                System.out.println("GUI: Simulation is running, performing RMI cleanup...");
+                LoggerServer.performCleanShutdown();
+            }
+            
+            // Give a moment for RMI cleanup to complete
+            Thread.sleep(1000);
+            
+        } catch (Exception e) {
+            System.err.println("GUI: Error during shutdown sequence: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Always exit after attempting cleanup
+            System.out.println("GUI: Shutdown sequence complete. Exiting application.");
+            System.exit(0);
+        }
     }
 }

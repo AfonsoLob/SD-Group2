@@ -44,14 +44,14 @@ public class GuiAnimation {
             // Adjust animation refresh rate based on simulation speed:
             // - Slower speed = longer delay between frames = slower animation
             // - Faster speed = shorter delay between frames = faster animation
-            // - Multiplier of 2 ensures animation is generally slower than real-time
-            //   for better visibility of voter movement
+            // - Use inverse relationship to make speed control more responsive
             float speed = Gui.getStaticSimulationSpeed();
-            int newDelay = Math.max(50, Math.round((ANIMATION_DELAY * 2) / speed));
+            int newDelay = Math.max(30, Math.round(ANIMATION_DELAY / speed));
             
-            // Only update timer delay if it actually changed
-            if (animationTimer.getDelay() != newDelay) {
+            // Only update timer delay if it actually changed significantly
+            if (Math.abs(animationTimer.getDelay() - newDelay) > 5) {
                 animationTimer.setDelay(newDelay);
+                System.out.println("GuiAnimation: Updated animation delay to " + newDelay + "ms (speed: " + speed + "x)");
             }
             animationPanel.repaint();
         });

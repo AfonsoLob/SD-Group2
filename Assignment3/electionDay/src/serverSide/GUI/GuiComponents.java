@@ -133,31 +133,31 @@ public class GuiComponents {
         speedLabel.setFont(GuiStyles.LABEL_FONT);
         
         // Speed slider settings:
-        // - Min value 5 (0.05x) = very slow motion for detailed analysis
-        // - Max value 200 (2.0x) = double speed for quick review
-        // - Default value 50 (0.5x) = half speed for comfortable observation
-        speedSlider = new JSlider(JSlider.HORIZONTAL, 5, 200, 50);
+        // - Min value 10 (0.1x) = very slow motion for detailed analysis
+        // - Max value 300 (3.0x) = triple speed for quick review
+        // - Default value 100 (1.0x) = normal speed for comfortable observation
+        speedSlider = new JSlider(JSlider.HORIZONTAL, 10, 300, 100);
         speedSlider.setPreferredSize(new Dimension(200, 40));
-        speedSlider.setMajorTickSpacing(50);  // Show major ticks at 0.5x, 1.0x, 1.5x, 2.0x
-        speedSlider.setMinorTickSpacing(5);   // Show minor ticks every 0.05x
+        speedSlider.setMajorTickSpacing(50);  // Show major ticks at 0.5x, 1.0x, 1.5x, 2.0x, 2.5x, 3.0x
+        speedSlider.setMinorTickSpacing(10);   // Show minor ticks every 0.1x
         speedSlider.setPaintTicks(true);
         speedSlider.setPaintLabels(true);
         
-        speedValueLabel = new JLabel("0.5x", JLabel.LEFT);
+        speedValueLabel = new JLabel("1.0x", JLabel.LEFT);
         speedValueLabel.setFont(GuiStyles.LABEL_FONT);
         speedValueLabel.setPreferredSize(new Dimension(50, 20));
         
         // Update simulation speed whenever slider changes
         speedSlider.addChangeListener((ChangeEvent e) -> {
-            // Convert slider value (5-200) to simulation speed (0.05x-2.0x)
+            // Convert slider value (10-300) to simulation speed (0.1x-3.0x)
             float speed = speedSlider.getValue() / 100.0f;
             Gui.setSpeedValue(speed);
             speedValueLabel.setText(String.format("%.1fx", speed));
         });
         
-        // Quick reset button to return to half-speed (optimal for analysis)
+        // Quick reset button to return to normal speed (optimal for observation)
         JButton resetSpeedButton = new JButton("Normal Speed");
-        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(50)); // Set to 0.5x speed
+        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(100)); // Set to 1.0x speed
         
         controlPanel.add(speedLabel);
         controlPanel.add(speedSlider);
@@ -313,16 +313,45 @@ public class GuiComponents {
         restartButton.setFont(new Font("Arial", Font.BOLD, 12)); // Using default font
         restartButton.setEnabled(false); // Initially disabled
         restartButton.addActionListener(e -> {
-            if (Gui.getRestarter() != null) {
-                try {
-                    new Thread(Gui.getRestarter()).start();
-                    // Update button state immediately for better user feedback
-                    startButton.setText("Server Restarting...");
-                    restartButton.setEnabled(false);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(Gui.getFrame(), 
-                        "Error restarting server: " + ex.getMessage(),
-                        "Restart Error", JOptionPane.ERROR_MESSAGE);
+            if (Gui.getSimulationRestarter() != null) {
+                // Show confirmation dialog for restart
+                int confirmed = JOptionPane.showConfirmDialog(Gui.getFrame(),
+                    "Are you sure you want to restart the server?\n\n" +
+                    "This will:\n" +
+                    "• Stop the current simulation\n" +
+                    "• Clean up RMI services\n" +
+                    "• Reset all GUI state\n" +
+                    "• Allow new parameters to be entered",
+                    "Confirm Restart", JOptionPane.YES_NO_OPTION);
+                
+                if (confirmed == JOptionPane.YES_OPTION) {
+                    try {
+                        // Update UI immediately for user feedback
+                        startButton.setText("Restarting Server...");
+                        startButton.setEnabled(false);
+                        restartButton.setEnabled(false);
+                        
+                        // Run restart in background thread
+                        new Thread(() -> {
+                            try {
+                                Gui.getSimulationRestarter().run();
+                                // UI updates will be handled by the restart method
+                            } catch (Exception ex) {
+                                // Re-enable buttons on error
+                                javax.swing.SwingUtilities.invokeLater(() -> {
+                                    startButton.setText("Start Server");
+                                    startButton.setEnabled(true);
+                                    restartButton.setEnabled(true);
+                                });
+                                throw ex;
+                            }
+                        }).start();
+                        
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(Gui.getFrame(), 
+                            "Error restarting server: " + ex.getMessage(),
+                            "Restart Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -363,11 +392,12 @@ public class GuiComponents {
         exitButton.setForeground(GuiStyles.ERROR_COLOR);
         exitButton.addActionListener(e -> {
             int confirmed = JOptionPane.showConfirmDialog(Gui.getFrame(), 
-                "Are you sure you want to exit the program?", "Exit Program",
-                JOptionPane.YES_NO_OPTION);
+                "Are you sure you want to exit the program?\n\nThis will properly shutdown all RMI services.", 
+                "Exit Program", JOptionPane.YES_NO_OPTION);
             
             if (confirmed == JOptionPane.YES_OPTION) {
-                System.exit(0);
+                // Perform proper shutdown sequence
+                Gui.performShutdownSequence();
             }
         });
         buttonPanel.add(exitButton);
@@ -499,13 +529,16 @@ public class GuiComponents {
         // Clear log table
         tableModel.setRowCount(0);
 
+        // Reset button states for restart
         if (startButton != null) {
             startButton.setEnabled(true);
             startButton.setText("Start Server");
         }
         if (restartButton != null) {
-            restartButton.setEnabled(false);
+            restartButton.setEnabled(false); // Disabled until server starts again
         }
+        
+        System.out.println("GuiComponents: UI reset completed - ready for new configuration");
     }
     
     /**

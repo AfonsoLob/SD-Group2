@@ -10,6 +10,13 @@ import serverSide.sharedRegions.RegisterRemoteObject;
 
 public class RegisterRemoteObjectServer {
     
+    // Static references for cleanup
+    private static IRegister regEngineStub = null;
+    private static RegisterRemoteObject regEngine = null;
+    private static Registry registry = null;
+    private static volatile boolean shutdownRequested = false;
+    private static final String NAME_ENTRY = "RegisterService";
+    
   /**
    *  Main method.
    *
@@ -21,6 +28,14 @@ public class RegisterRemoteObjectServer {
 
    public static void main(String[] args)
    {
+      System.out.println("RegisterRemoteObjectServer starting...");
+
+      // Add shutdown hook for proper cleanup
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+          System.out.println("RegisterRemoteObjectServer: Shutdown hook triggered, performing cleanup...");
+          performShutdown();
+      }));
+
       int portNumb = -1;                                             // port number for listening to service requests
       String rmiRegHostName;                                         // name of the platform where is located the RMI registering service
       int rmiRegPortNumb = -1;                                       // port number where the registering service is listening to service requests
@@ -59,9 +74,8 @@ public class RegisterRemoteObjectServer {
 
      /* instantiate a registration remote object and generate a stub for it */
 
-      RegisterRemoteObject regEngine = new RegisterRemoteObject (rmiRegHostName, rmiRegPortNumb);  // object that enables the registration
+      regEngine = new RegisterRemoteObject (rmiRegHostName, rmiRegPortNumb);  // object that enables the registration
                                                                                                    // of other remote objects
-      IRegister regEngineStub = null;                                                               // remote reference to it
 
       try
       { regEngineStub = (IRegister) UnicastRemoteObject.exportObject (regEngine, portNumb);
@@ -73,10 +87,6 @@ public class RegisterRemoteObjectServer {
       System.out.println ("Stub was generated!");
 
      /* register it with the local registry service */
-
-      String nameEntry = "RegisterService";                          // public name of the remote object that enables
-                                                                     // the registration of other remote objects
-      Registry registry = null;                                      // remote reference for registration in the RMI registry service
 
       try
       { 
@@ -101,12 +111,57 @@ public class RegisterRemoteObjectServer {
       }
 
       try
-      { registry.rebind (nameEntry, regEngineStub);
+      { registry.rebind (NAME_ENTRY, regEngineStub);
       }
       catch (RemoteException e)
       { System.out.println ("RegisterRemoteObject remote exception on registration: " + e.getMessage ());
         System.exit (1);
       }
       System.out.println ("RegisterRemoteObject object was registered!");
+      
+      // Keep server running until shutdown is requested
+      System.out.println("RegisterRemoteObjectServer: Service is now running and waiting for requests...");
+      while (!shutdownRequested) {
+          try {
+              Thread.sleep(1000); // Check every second
+          } catch (InterruptedException e) {
+              System.out.println("RegisterRemoteObjectServer: Interrupted, shutting down...");
+              Thread.currentThread().interrupt();
+              break;
+          }
+      }
+      
+      System.out.println("RegisterRemoteObjectServer: Main thread exiting.");
+   }
+   
+   /**
+    * Perform clean shutdown of the RegisterRemoteObject service
+    */
+   private static void performShutdown() {
+       shutdownRequested = true;
+       
+       try {
+           if (registry != null && regEngineStub != null) {
+               System.out.println("RegisterRemoteObjectServer: Unbinding " + NAME_ENTRY + "...");
+               try {
+                   registry.unbind(NAME_ENTRY);
+                   System.out.println("RegisterRemoteObjectServer: Successfully unbound " + NAME_ENTRY);
+               } catch (Exception e) {
+                   System.err.println("RegisterRemoteObjectServer: Error unbinding service: " + e.getMessage());
+               }
+               
+               System.out.println("RegisterRemoteObjectServer: Unexporting RegisterRemoteObject...");
+               try {
+                   UnicastRemoteObject.unexportObject(regEngine, true);
+                   System.out.println("RegisterRemoteObjectServer: Successfully unexported RegisterRemoteObject");
+               } catch (Exception e) {
+                   System.err.println("RegisterRemoteObjectServer: Error unexporting object: " + e.getMessage());
+               }
+           }
+       } catch (Exception e) {
+           System.err.println("RegisterRemoteObjectServer: Error during shutdown: " + e.getMessage());
+       }
+       
+       System.out.println("RegisterRemoteObjectServer: Shutdown complete.");
    }
 }
