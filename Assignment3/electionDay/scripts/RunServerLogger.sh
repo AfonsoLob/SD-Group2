@@ -4,10 +4,13 @@
 # Get the current directory
 DIR=$(pwd)
 
+# Define Project Root relative to the script directory (scripts/ -> ../)
+PROJECT_ROOT=".."
+
 # Set the classpath to include the bin directory and any jar files
-CLASSPATH=".:bin"
-if [ -d "lib" ]; then
-  for jar in lib/*.jar; do
+CLASSPATH=".:$PROJECT_ROOT/bin"
+if [ -d "$PROJECT_ROOT/lib" ]; then
+  for jar in $PROJECT_ROOT/lib/*.jar; do
     CLASSPATH="$CLASSPATH:$jar"
   done
 fi

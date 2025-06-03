@@ -90,8 +90,9 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
 
         // Initiate printWriter
         try {
-            // Create log file in the current directory (same as Assignment 1 and 2)
-            File logFile = new File("log.txt");
+            // Create log file in the project root directory (not scripts directory)
+            // When running from scripts/, we need to go up one level to project root
+            File logFile = new File("../log.txt");
             System.out.println("Creating log file at: " + logFile.getAbsolutePath());
             
             this.writer = new PrintWriter(logFile);

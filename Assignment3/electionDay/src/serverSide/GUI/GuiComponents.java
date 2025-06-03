@@ -604,7 +604,7 @@ public class GuiComponents {
             
             // Try multiple times with a delay if the file doesn't exist immediately
             // This addresses the case where the log file is created during the simulation
-            File logFile = new File("log.txt");
+            File logFile = new File("../log.txt");
             int retryCount = 0;
             int maxRetries = 5;
             
