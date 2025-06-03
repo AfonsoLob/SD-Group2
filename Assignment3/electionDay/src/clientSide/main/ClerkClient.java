@@ -36,11 +36,8 @@ public class ClerkClient {
         while (registerServiceStub == null) {
             try {
                 System.out.println("ClerkClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-
                 Registry rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
-
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
-
                 System.out.println("ClerkClient: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("ClerkClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());

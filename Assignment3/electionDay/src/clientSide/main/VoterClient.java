@@ -33,15 +33,12 @@ public class VoterClient {
         Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
-                System.out.println("VoterClient: Attempting to connect to RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
-                                   " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("VoterClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("VoterClient: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("VoterClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME +
-                                   "' via RMI Registry: " + e.getMessage());
+                System.err.println("VoterClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
             if (registerServiceStub == null) {
@@ -57,13 +54,11 @@ public class VoterClient {
         // 2. Look up PollingStationService via IRegister (with retry)
         while (pollingStation == null) {
             try {
-                System.out.println("VoterClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("VoterClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 pollingStation = (IPollingStation_all) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
                 System.out.println("VoterClient: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("VoterClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("VoterClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 pollingStation = null;
             }
             if (pollingStation == null) {
@@ -79,13 +74,11 @@ public class VoterClient {
         // 3. Look up ExitPollService via IRegister (with retry)
         while (exitPoll == null) {
             try {
-                System.out.println("VoterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("VoterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
                 System.out.println("VoterClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("VoterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("VoterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 exitPoll = null;
             }
             if (exitPoll == null) {
@@ -115,8 +108,8 @@ public class VoterClient {
                 System.err.println("VoterClient: Error getting number of voters from '" + POLLING_STATION_SERVICE_NAME + "': " + e.getMessage());
                 numVoters = -1; // Ensure retry
             } catch (NullPointerException e) {
-                 System.err.println("VoterClient: PollingStation stub is null while trying to get numVoters. This shouldn't happen if lookup succeeded.");
-                 numVoters = -1; // Ensure retry, though this indicates a deeper issue.
+                System.err.println("VoterClient: PollingStation stub is null while trying to get numVoters. This shouldn't happen if lookup succeeded.");
+                numVoters = -1; // Ensure retry, though this indicates a deeper issue.
             }
             if (numVoters < 0) {
                 System.out.println("VoterClient: Retrying getNumberOfVotersConfigured in " + RETRY_DELAY_MS / 1000 + " seconds...");

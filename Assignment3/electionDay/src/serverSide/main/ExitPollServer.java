@@ -29,26 +29,19 @@ public class ExitPollServer {
     public static void main(String[] args) {
         System.out.println("ExitPollServer starting...");
 
-        // Add shutdown hook for proper cleanup
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("ExitPollServer: Shutdown hook triggered, performing cleanup...");
-            performShutdown();
-        }));
+
 
         ILogger_all loggerStub = null;
 
         // 1. Look up the IRegister service (with retry)
         while (registerServiceStub == null && !shutdownRequested) {
             try {
-                System.out.println("ExitPollServer: Attempting to connect to RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
-                                   " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("ExitPollServer: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 Registry rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("ExitPollServer: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("ExitPollServer: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME +
-                                   "' via RMI Registry: " + e.getMessage());
+                System.err.println("ExitPollServer: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
             if (registerServiceStub == null && !shutdownRequested) {
@@ -65,13 +58,11 @@ public class ExitPollServer {
         // 2. Look up LoggerService via IRegister (with retry)
         while (loggerStub == null && !shutdownRequested) {
             try {
-                System.out.println("ExitPollServer: Attempting to lookup '" + LOGGER_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("ExitPollServer: Attempting to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 loggerStub = (ILogger_all) registerServiceStub.lookup(LOGGER_SERVICE_NAME);
                 System.out.println("ExitPollServer: Successfully looked up '" + LOGGER_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("ExitPollServer: Failed to lookup '" + LOGGER_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("ExitPollServer: Failed to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 loggerStub = null;
             }
             if (loggerStub == null && !shutdownRequested) {
@@ -100,8 +91,7 @@ public class ExitPollServer {
             
             while (pollingStationStub == null && retryCount < maxRetries && !shutdownRequested) {
                 try {
-                    System.out.println("ExitPollServer: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + 
-                                       "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "' (attempt " + (retryCount + 1) + "/" + maxRetries + ")...");
+                    System.out.println("ExitPollServer: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "' (attempt " + (retryCount + 1) + "/" + maxRetries + ")...");
                     pollingStationStub = (IPollingStation_ExitPoll) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
                     System.out.println("ExitPollServer: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
                     
@@ -110,8 +100,7 @@ public class ExitPollServer {
                     System.out.println("ExitPollServer: Polling station reference set on exit poll for monitoring.");
                     
                 } catch (RemoteException | NotBoundException e) {
-                    System.err.println("ExitPollServer: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + 
-                                       "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                    System.err.println("ExitPollServer: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                     pollingStationStub = null;
                     retryCount++;
                     
@@ -128,8 +117,7 @@ public class ExitPollServer {
             }
             
             if (pollingStationStub == null) {
-                System.err.println("ExitPollServer: WARNING - Could not establish connection to PollingStation after " + 
-                                   maxRetries + " attempts. Exit poll will not automatically close when polling station closes.");
+                System.err.println("ExitPollServer: WARNING - Could not establish connection to PollingStation after " + maxRetries + " attempts. Exit poll will not automatically close when polling station closes.");
             }
             
         } catch (RemoteException e) { // If MExitPoll constructor throws RemoteException
@@ -142,22 +130,18 @@ public class ExitPollServer {
         boolean bound = false;
         while (!bound) {
             try {
-                System.out.println("ExitPollServer: Attempting to bind '" + EXIT_POLL_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("ExitPollServer: Attempting to bind '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 registerServiceStub.bind(EXIT_POLL_SERVICE_NAME, exitPoll);
                 System.out.println("ExitPollServer: '" + EXIT_POLL_SERVICE_NAME + "' registered successfully.");
                 bound = true;
             } catch (AlreadyBoundException e) {
-                System.err.println("ExitPollServer: '" + EXIT_POLL_SERVICE_NAME + "' already bound in '" +
-                                   REGISTER_SERVICE_LOOKUP_NAME + "'. Retrying...");
+                System.err.println("ExitPollServer: '" + EXIT_POLL_SERVICE_NAME + "' already bound in '" + REGISTER_SERVICE_LOOKUP_NAME + "'. Retrying...");
             } catch (RemoteException e) {
-                System.err.println("ExitPollServer: RemoteException during RMI binding of '" +
-                                   EXIT_POLL_SERVICE_NAME + "': " + e.getMessage());
+                System.err.println("ExitPollServer: RemoteException during RMI binding of '" + EXIT_POLL_SERVICE_NAME + "': " + e.getMessage());
             }
 
             if (!bound) {
-                System.out.println("ExitPollServer: RMI binding for '" + EXIT_POLL_SERVICE_NAME +
-                                   "' failed. Retrying in " + RETRY_DELAY_MS / 1000 + " seconds...");
+                System.out.println("ExitPollServer: RMI binding for '" + EXIT_POLL_SERVICE_NAME + "' failed. Retrying in " + RETRY_DELAY_MS / 1000 + " seconds...");
                 try {
                     Thread.sleep(RETRY_DELAY_MS);
                 } catch (InterruptedException ie) {
@@ -172,7 +156,7 @@ public class ExitPollServer {
         // Keep server running until shutdown is requested or exit poll closes
         while (!shutdownRequested) {
             try {
-                Thread.sleep(1000); // Check every second
+                Thread.sleep(2000); // Check every second
                 
                 // Check if exit poll is closed and shutdown accordingly
                 if (exitPoll != null) {
@@ -184,7 +168,6 @@ public class ExitPollServer {
                         }
                     } catch (RemoteException e) {
                         System.err.println("ExitPollServer: Error checking exit poll status: " + e.getMessage());
-                        // Continue running even if we can't check status
                     }
                 }
             } catch (InterruptedException e) {
@@ -195,6 +178,7 @@ public class ExitPollServer {
         }
         
         System.out.println("ExitPollServer: Main thread exiting.");
+        performShutdown();
     }
     
     /**

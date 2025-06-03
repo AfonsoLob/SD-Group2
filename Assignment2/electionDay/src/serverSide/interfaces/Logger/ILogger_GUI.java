@@ -1,5 +1,7 @@
 package serverSide.interfaces.Logger;
 
+import java.rmi.RemoteException;
+
 /**
  * Logger interface containing methods needed by the GUI
  */
@@ -8,6 +10,6 @@ public interface ILogger_GUI {
     String getVoteCounts();
     int getVotersProcessed();
     boolean isStationOpen();
-    String getCurrentVoterInBooth();
+    String getCurrentVoterInBooth() throws RemoteException;
     int getCurrentQueueSize();
 }

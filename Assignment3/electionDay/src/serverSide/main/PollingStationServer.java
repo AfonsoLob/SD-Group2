@@ -21,17 +21,12 @@ public class PollingStationServer {
 
     // Static references for cleanup
     private static IRegister registerServiceStub = null;
-    private static IPollingStation_all pollingStation = null;
+    private static serverSide.interfaces.PollingStation.IPollingStation_all pollingStation = null;
     private static volatile boolean shutdownRequested = false;
 
     public static void main(String[] args) {
         System.out.println("PollingStationServer starting...");
 
-        // Add shutdown hook for proper cleanup
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("PollingStationServer: Shutdown hook triggered, performing cleanup...");
-            performShutdown();
-        }));
 
         ILogger_all loggerStub = null;
 
@@ -44,8 +39,7 @@ public class PollingStationServer {
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("PollingStationServer: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("PollingStationServer: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME +
-                                   "' via RMI Registry: " + e.getMessage());
+                System.err.println("PollingStationServer: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
             if (registerServiceStub == null && !shutdownRequested) {
@@ -62,14 +56,12 @@ public class PollingStationServer {
         // 2. Look up LoggerService via IRegister (with retry)
         while (loggerStub == null) {
             try {
-                System.out.println("PollingStationServer: Attempting to lookup '" + LOGGER_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("PollingStationServer: Attempting to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 // Assuming ILogger_all is the correct interface type for the logger service
                 loggerStub = (ILogger_all) registerServiceStub.lookup(LOGGER_SERVICE_NAME);
                 System.out.println("PollingStationServer: Successfully looked up '" + LOGGER_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("PollingStationServer: Failed to lookup '" + LOGGER_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("PollingStationServer: Failed to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 loggerStub = null;
             }
             if (loggerStub == null) {
@@ -105,13 +97,11 @@ public class PollingStationServer {
             } catch (AlreadyBoundException e) {
                 System.err.println("PollingStationServer: '" + POLLING_STATION_SERVICE_NAME + "' already bound in '" + REGISTER_SERVICE_LOOKUP_NAME + "'. Retrying...");
             } catch (RemoteException e) {
-                System.err.println("PollingStationServer: RemoteException during RMI binding of '" +
-                                   POLLING_STATION_SERVICE_NAME + "': " + e.getMessage());
+                System.err.println("PollingStationServer: RemoteException during RMI binding of '" + POLLING_STATION_SERVICE_NAME + "': " + e.getMessage());
             }
 
             if (!bound) {
-                System.out.println("PollingStationServer: RMI binding for '" + POLLING_STATION_SERVICE_NAME +
-                                   "' failed. Retrying in " + RETRY_DELAY_MS / 1000 + " seconds...");
+                System.out.println("PollingStationServer: RMI binding for '" + POLLING_STATION_SERVICE_NAME + "' failed. Retrying in " + RETRY_DELAY_MS / 1000 + " seconds...");
                 try {
                     Thread.sleep(RETRY_DELAY_MS);
                 } catch (InterruptedException ie) {
@@ -126,7 +116,17 @@ public class PollingStationServer {
         // Keep server running until shutdown is requested
         while (!shutdownRequested) {
             try {
-                Thread.sleep(1000); // Check every second
+                Thread.sleep(10000); // Check every second
+                try {
+                    if(!pollingStation.isOpen()){
+                        System.out.println("PollingStationServer: Polling station is closed, shutting down...");
+                        shutdownRequested = true;
+                        break;
+                    }
+                } catch (RemoteException e) {
+                    System.err.println("PollingStationServer: Error checking polling station status: " + e.getMessage());
+                    shutdownRequested = true; // Exit if we can't check status
+                }
             } catch (InterruptedException e) {
                 System.out.println("PollingStationServer: Interrupted, shutting down...");
                 Thread.currentThread().interrupt();
@@ -135,6 +135,7 @@ public class PollingStationServer {
         }
         
         System.out.println("PollingStationServer: Main thread exiting.");
+        performShutdown();
     }
     
     /**

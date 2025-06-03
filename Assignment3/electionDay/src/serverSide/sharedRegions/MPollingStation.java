@@ -153,7 +153,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     @Override
 
     public boolean waitIdValidation(int voterId) throws RemoteException {
-        if (logger != null) logger.logVoterState(voterId, "WAITING_ID_VALIDATION", "");
         queue_lock.lock();
         try {
             while (aprovalId != voterId) {
@@ -161,7 +160,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
                     aprovalReady.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (logger != null) logger.logGeneral("MPollingStation: Interruption for voter " + voterId + " waiting for ID validation: " + e.getMessage());
                     throw new RemoteException("Interrupted while waiting for ID validation", e);
                 }
 
@@ -170,7 +168,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             aprovalId = -1;
             clerkAprovalReady.signal();
 
-            if (logger != null) logger.logVoterState(voterId, "ID_VALIDATION_RESULT", "Result: " + isAproved);
             return isAproved;
 
         } finally {
@@ -185,30 +182,25 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
         queue_lock.lock();
         try {
             while (votersQueue.isEmpty()) {
-                if (logger != null) logger.logClerkState("WAITING_VOTERS", "Queue empty.");
                 try {
                     notEmpty.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (logger != null) logger.logGeneral("MPollingStation: Clerk interrupted while waiting for voters: " + e.getMessage());
                     throw new RemoteException("Interrupted while waiting for voters", e);
                 }
             }
 
             if (aprovalId != -1) {
-                if (logger != null) logger.logClerkState("WAITING_VALIDATION_CYCLE", "Previous validation pending.");
                 try {
                     clerkAprovalReady.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (logger != null) logger.logGeneral("MPollingStation: Clerk interrupted while waiting for validation cycle: " + e.getMessage());
                     throw new RemoteException("Interrupted while waiting for clerk approval readiness", e);
                 }
             }
 
             int id = votersQueue.poll();
             notFull.signal();
-            if (logger != null) logger.logClerkState("CALLING_VOTER", "Calling voter " + id);
             return validateID(id);
 
         } finally {
@@ -281,7 +273,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                if (logger != null) logger.logGeneral("MPollingStation: Voter " + voterId + " interrupted during vote A delay: " + e.getMessage());
                 throw new RemoteException("Interrupted during voting delay for A", e);
             }
 
@@ -305,7 +296,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                if (logger != null) logger.logGeneral("MPollingStation: Voter " + voterId + " interrupted during vote B delay: " + e.getMessage());
                 throw new RemoteException("Interrupted during voting delay for B", e);
             }
 
@@ -322,7 +312,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     @Override
 
     public void printFinalResults() throws RemoteException {
-        if (logger != null) logger.logResults("POLLING_STATION", candidateA, candidateB);
 
     }
 

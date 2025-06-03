@@ -117,7 +117,9 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         } finally {
             lock.unlock();
         }
-    }    @Override
+    }    
+    
+    @Override
     public void inquire() throws RemoteException {
         lock.lock();
         try {

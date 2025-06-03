@@ -32,15 +32,12 @@ public class PollsterClient {
         Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
-                System.out.println("PollsterClient: Attempting to connect to RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
-                                   " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("PollsterClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("PollsterClient: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("PollsterClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME +
-                                   "' via RMI Registry: " + e.getMessage());
+                System.err.println("PollsterClient: Failed to connect to '" + REGISTER_SERVICE_LOOKUP_NAME + "' via RMI Registry: " + e.getMessage());
                 registerServiceStub = null;
             }
             if (registerServiceStub == null) {
@@ -56,13 +53,11 @@ public class PollsterClient {
         // 2. Look up ExitPollService via IRegister (with retry)
         while (exitPoll == null) {
             try {
-                System.out.println("PollsterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("PollsterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
                 System.out.println("PollsterClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
-                System.err.println("PollsterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME +
-                                   "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                System.err.println("PollsterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
                 exitPoll = null;
             }
             if (exitPoll == null) {

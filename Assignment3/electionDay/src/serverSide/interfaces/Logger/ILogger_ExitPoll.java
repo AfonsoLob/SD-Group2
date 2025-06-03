@@ -10,10 +10,5 @@ public interface ILogger_ExitPoll extends Remote {
     // Configuration methods
     int getExitPollPercentage() throws RemoteException;
     
-    // State logging methods
-    void logVoterState(int voterId, String state, String message) throws RemoteException;
-    void logPollsterState(String state, String message) throws RemoteException;
-    void logGeneral(String message) throws RemoteException;
-    void logResults(String pollType, int votesA, int votesB) throws RemoteException;
 
 }

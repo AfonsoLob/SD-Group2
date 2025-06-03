@@ -350,7 +350,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public void stationClosing() throws RemoteException {
+    public void stationClosing() {
         stateLock.lock();
         try {
             isStationOpen = false;
@@ -377,7 +377,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
 
     @Override
-    public void saveCloseFile() throws RemoteException {
+    public void saveCloseFile() {
         logLock.lock();
         try {
             if (writer != null) {
@@ -393,7 +393,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public void clear() throws RemoteException {
+    public void clear() {
         logLock.lock();
         try {
             logEntries.clear();
@@ -403,7 +403,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public String getVoteCounts() throws RemoteException {
+    public String getVoteCounts() {
         stateLock.lock();
         try {
             return "Candidate A: " + scoreA + ", Candidate B: " + scoreB;
@@ -413,7 +413,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public int getVotersProcessed() throws RemoteException {
+    public int getVotersProcessed() {
         stateLock.lock();
         try {
             return votersProcessed;
@@ -423,7 +423,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
 
     @Override
-    public boolean isStationOpen() throws RemoteException {
+    public boolean isStationOpen() {
         stateLock.lock();
         try {
             return isStationOpen;
@@ -443,7 +443,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public int getCurrentQueueSize() throws RemoteException {
+    public int getCurrentQueueSize() {
         stateLock.lock();
         try {
             return currentQueueSize;
@@ -458,34 +458,12 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
         return maxVoters;
     }
 
-    @Override
-    public void logGeneral(String message) throws RemoteException {
-        // Disabled - we only want the structured table format like Assignment 2
-        // This method was writing "LOG: " messages that don't match Assignment 2 format
-    }
-
     // Additional methods for ILogger_ExitPoll
     @Override
     public int getExitPollPercentage() throws RemoteException {
         return 20; // Default exit poll percentage
     }
 
-    @Override
-    public void logVoterState(int voterId, String state, String message) throws RemoteException {
-        // Disabled - we only want the structured table format like Assignment 2
-        // This method was writing detailed state messages that don't match Assignment 2 format
-    }
-
-    @Override
-    public void logPollsterState(String state, String message) throws RemoteException {
-        // Disabled - we only want the structured table format like Assignment 2
-        // This method was writing detailed state messages that don't match Assignment 2 format
-    }
-
-    @Override
-    public void logResults(String pollType, int votesA, int votesB) throws RemoteException {
-
-    }
 
     // Additional methods for ILogger_PollingStation
     @Override
@@ -498,11 +476,6 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
         return maxVoters;
     }
 
-    @Override
-    public void logClerkState(String state, String message) throws RemoteException {
-        // Disabled - we only want the structured table format like Assignment 2
-        // This method was writing detailed state messages that don't match Assignment 2 format
-    }
 
     @Override
     public int getMaxVotes() throws RemoteException {
