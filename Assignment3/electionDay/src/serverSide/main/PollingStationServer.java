@@ -39,9 +39,7 @@ public class PollingStationServer {
         Registry rmiRegistry = null;
         while (registerServiceStub == null && !shutdownRequested) {
             try {
-                System.out.println("PollingStationServer: Attempting to connect to RMI Registry at " +
-                                   RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT +
-                                   " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                System.out.println("PollingStationServer: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
                 rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
                 System.out.println("PollingStationServer: Successfully connected to '" + REGISTER_SERVICE_LOOKUP_NAME + "'.");

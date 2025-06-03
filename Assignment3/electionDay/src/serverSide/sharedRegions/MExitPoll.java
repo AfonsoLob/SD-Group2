@@ -7,7 +7,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Logger.ILogger_ExitPoll; // Changed from ILogger_ExitPoll to ILogger_ExitPoll
+import serverSide.interfaces.PollingStation.IPollingStation_ExitPoll;
+import serverSide.interfaces.Logger.ILogger_ExitPoll;
 
 public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
     private static final long serialVersionUID = 1L; // Added serialVersionUID
@@ -30,6 +31,10 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
 
     private transient ILogger_ExitPoll logger; // Changed from ILogger_ExitPoll to ILogger_ExitPoll (transient as interface cannot be serialized)
     private int localExitPollPercentage;
+    
+    private transient IPollingStation_ExitPoll pollingStationStatus; // Reference to check polling station status
+    private transient Thread pollingStationMonitor; // Background thread to monitor polling station status
+    private volatile boolean monitoringActive; // Flag to control monitoring thread
 
     private MExitPoll(ILogger_ExitPoll logger) throws RemoteException { // Changed to ILogger_ExitPoll and made private
         super();
@@ -139,7 +144,7 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         }
     }
 
-    @Override
+
 
     public boolean isOpen() throws RemoteException {
 
@@ -149,7 +154,9 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         } finally {
             lock.unlock();
         }
-    }    @Override
+    }    
+    
+    @Override
     public void closeIn(int stillVotersInQueue) throws RemoteException {
         lock.lock();
         try {
@@ -176,6 +183,7 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
                 if (closeIn <= 0) {
                     isOpen = false;
                     aboutToClose = false;
+                    monitoringActive = false; // Stop monitoring when exit poll closes
                     System.out.println("Exit poll effectively closed after voter countdown.");
                     voterReady.signalAll();
                     pollsterReady.signalAll();
@@ -184,7 +192,9 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
         } finally {
             lock.unlock();
         }
-    }    @Override
+    }   
+    
+    @Override
     public void printExitPollResults() throws RemoteException {
         int totalVotes = votesForA + votesForB;
         if (totalVotes > 0) {
@@ -194,6 +204,109 @@ public class MExitPoll extends UnicastRemoteObject implements IExitPoll_all {
             System.out.println("Prediction for B: " + (int)percentB + " percent of the votes");
         } else {
             System.out.println("No votes were recorded in the exit poll");
+        }
+    }
+
+    /**
+     * Set the polling station reference for status monitoring
+     * @param pollingStation the polling station to monitor
+     */
+    public void setPollingStationReference(IPollingStation_ExitPoll pollingStation) {
+        this.pollingStationStatus = pollingStation;
+        startPollingStationMonitoring();
+    }
+
+    /**
+     * Start background monitoring of the polling station status
+     */
+    private void startPollingStationMonitoring() {
+        if (pollingStationStatus == null) {
+            return;
+        }
+        
+        monitoringActive = true;
+        pollingStationMonitor = new Thread(() -> {
+            System.out.println("Exit poll: Starting polling station monitoring...");
+            
+            while (monitoringActive) {
+                try {
+                    // Check polling station status every 3 seconds
+                    Thread.sleep(3000);
+                    
+                    // Only check if exit poll is still open
+                    if (!isOpen) {
+                        break;
+                    }
+                    
+                    // Check if polling station is still open
+                    boolean pollingStationOpen = pollingStationStatus.isOpen();
+                    if (!pollingStationOpen) {
+                        System.out.println("Exit poll: Polling station is closed, initiating exit poll closure...");
+                        initiatePollingStationClosure();
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    System.out.println("Exit poll: Monitoring thread interrupted");
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (RemoteException e) {
+                    System.err.println("Exit poll: Error checking polling station status: " + e.getMessage());
+                    // Continue monitoring despite the error, but slow down to avoid spam
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+            
+            System.out.println("Exit poll: Polling station monitoring stopped");
+        });
+        
+        pollingStationMonitor.setDaemon(true);
+        pollingStationMonitor.start();
+    }
+
+    /**
+     * Initiate closure when polling station is closed
+     * Ensures all remaining voters are serviced first
+     */
+    private void initiatePollingStationClosure() {
+        lock.lock();
+        try {
+            if (!isOpen) {
+                return; // Already closed
+            }
+            
+            System.out.println("Exit poll: Polling station closed, initiating graceful shutdown...");
+            
+            // Check if there are any voters still being processed
+            if (newVoteReady) {
+                // There's still a vote being processed, wait for it to complete
+                System.out.println("Exit poll: Waiting for current voter to complete before closing...");
+                aboutToClose = true;
+                closeIn = 1; // Allow one more interaction to complete
+            } else {
+                // No voters currently being processed, close immediately
+                System.out.println("Exit poll: No voters being processed, closing immediately");
+                isOpen = false;
+                monitoringActive = false;
+                voterReady.signalAll();
+                pollsterReady.signalAll();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Stop the monitoring thread (for cleanup)
+     */
+    public void stopMonitoring() {
+        monitoringActive = false;
+        if (pollingStationMonitor != null && pollingStationMonitor.isAlive()) {
+            pollingStationMonitor.interrupt();
         }
     }
 }

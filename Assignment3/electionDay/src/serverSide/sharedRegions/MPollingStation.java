@@ -10,8 +10,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import serverSide.interfaces.Logger.ILogger_PollingStation;
 import serverSide.interfaces.PollingStation.IPollingStation_all;
+import serverSide.interfaces.PollingStation.IPollingStation_ExitPoll;
 
-public class MPollingStation extends UnicastRemoteObject implements IPollingStation_all {
+public class MPollingStation extends UnicastRemoteObject implements IPollingStation_all, IPollingStation_ExitPoll {
     private static final long serialVersionUID = 1L; // Added serialVersionUID
 
     private static MPollingStation instance;

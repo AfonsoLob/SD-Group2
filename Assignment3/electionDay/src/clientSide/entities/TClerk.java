@@ -2,6 +2,7 @@ package clientSide.entities;
 
 import java.rmi.RemoteException;
 import serverSide.interfaces.PollingStation.IPollingStation_Clerk;
+import serverSide.interfaces.ExitPoll.IExitPoll_Clerk;
 
 public class TClerk extends Thread {
     private final IPollingStation_Clerk pollingStation;
@@ -49,6 +50,8 @@ public class TClerk extends Thread {
             // 3. Handle remaining voters in queue after closing
             int stillVotersInQueue = pollingStation.numberVotersInQueue();
             System.out.println("Day ended but there are still " + stillVotersInQueue + " voters inside");
+            
+
             
             // Process remaining voters that were already in the queue
             for (int i = 0; i < stillVotersInQueue; i++) {

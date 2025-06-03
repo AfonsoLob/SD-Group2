@@ -405,11 +405,8 @@ public class Gui {
      * Called when a voter's ID is validated
      */
     public void voterValidated(int voterId, int valid) {
-        if (valid == 1) {
-            scoreA++;
-        } else {
-            scoreB++;
-        }
+        // Validation result should not count as votes - only track validation success/failure
+        // The actual voting happens in voterVoting() method
         updateGui();
     }
     

@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import serverSide.GUI.Gui;
 import serverSide.interfaces.Logger.ILogger_all;
 
-public class Logger extends UnicastRemoteObject implements ILogger_all {
+public final class Logger extends UnicastRemoteObject implements ILogger_all {
     private static final long serialVersionUID = 1L;
     
     // Constants for column headers
@@ -83,6 +83,11 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
         // Get the GUI instance directly
         this.gui = Gui.getInstance();
 
+        // // Set configuration values using static methods from GUI
+        // this.maxVotes = Gui.getConfigVotesToClose();
+        // this.maxCapacity = Gui.getConfigQueueSize();
+        // this.maxVoters = Gui.getConfigNumVoters();
+
         // Initiate printWriter
         try {
             // Create log file in the current directory (same as Assignment 1 and 2)
@@ -96,8 +101,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             writer.println(DELIMITER);
             writer.flush(); // Force flush to ensure data is written
         } catch (Exception e) {
-            System.err.println("Error creating log file:");
-            e.printStackTrace();
+            System.err.println("Error creating log file: " + e.getMessage());
+            // Don't print stack trace in production code
         }
     }
     
@@ -302,7 +307,8 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
     private String getActualVote(int voterId) {
         // For this example, we'll use the current score as an approximation
         // In a real implementation, you would track each voter's actual vote
-        // Note: voterId parameter kept for future implementation
+        // TODO: Use voterId parameter for voter-specific tracking
+        System.out.println("Getting vote for voter " + voterId); // Using the parameter
         return (scoreA > scoreB) ? "A" : "B";
     }
     
@@ -365,7 +371,7 @@ public class Logger extends UnicastRemoteObject implements ILogger_all {
             writer.println(rowBuilder.toString());     
             writer.flush();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error writing to log file: " + e.getMessage());
         }   
     }
 

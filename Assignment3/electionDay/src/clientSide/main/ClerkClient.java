@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry; // Assuming TClerk entity exists
 import serverSide.interfaces.PollingStation.IPollingStation_all;
+import serverSide.interfaces.ExitPoll.IExitPoll_all;
 import serverSide.interfaces.Register.IRegister;
 
 public class ClerkClient {
@@ -18,6 +19,7 @@ public class ClerkClient {
     // Service names to look up via IRegister
     private static final String REGISTER_SERVICE_LOOKUP_NAME = "RegisterService";
     private static final String POLLING_STATION_SERVICE_NAME = "PollingStationService";
+    private static final String EXIT_POLL_SERVICE_NAME = "ExitPollService";
     
     // Typically, there's a fixed number of clerks, e.g., 1 or 2
     // This could be a constant or fetched if dynamic (though less common for clerks)
@@ -28,14 +30,14 @@ public class ClerkClient {
 
         IRegister registerServiceStub = null;
         IPollingStation_all pollingStation = null;
+        IExitPoll_all exitPoll = null;
 
         // 1. Connect to RMI Registry and look up IRegister service (with retry)
-        Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
                 System.out.println("ClerkClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
 
-                rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
+                Registry rmiRegistry = LocateRegistry.getRegistry(RMI_REGISTRY_HOSTNAME, RMI_REGISTRY_PORT);
 
                 registerServiceStub = (IRegister) rmiRegistry.lookup(REGISTER_SERVICE_LOOKUP_NAME);
 
@@ -74,12 +76,32 @@ public class ClerkClient {
             }
         }
         
+        // 3. Look up ExitPollService via IRegister (with retry)
+        while (exitPoll == null) {
+            try {
+                System.out.println("ClerkClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
+                exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
+                System.out.println("ClerkClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
+            } catch (RemoteException | NotBoundException e) {
+                System.err.println("ClerkClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                exitPoll = null;
+            }
+            if (exitPoll == null) {
+                System.out.println("ClerkClient: Retrying ExitPollService lookup in " + RETRY_DELAY_MS / 1000 + " seconds...");
+                try { Thread.sleep(RETRY_DELAY_MS); } catch (InterruptedException ie) {
+                    System.err.println("ClerkClient: Sleep interrupted, retrying ExitPollService lookup immediately.");
+                    Thread.currentThread().interrupt();
+                    if (Thread.currentThread().isInterrupted()) { System.err.println("ClerkClient: Exiting due to interruption."); return; }
+                }
+            }
+        }
+        
         if (Thread.currentThread().isInterrupted()) {
             System.err.println("ClerkClient: Startup interrupted before creating clerk threads. Exiting.");
             return;
         }
 
-        System.out.println("ClerkClient: PollingStation service looked up. Creating clerk threads...");
+        System.out.println("ClerkClient: PollingStation and ExitPoll services looked up. Creating clerk threads...");
 
         // 3. Create and start TClerk threads
         TClerk[] clerks = new TClerk[NUM_CLERKS];

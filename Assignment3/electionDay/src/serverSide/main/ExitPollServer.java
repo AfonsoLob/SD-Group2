@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import serverSide.interfaces.ExitPoll.IExitPoll_all; // Assuming this is the remote interface for MExitPoll
+import serverSide.interfaces.PollingStation.IPollingStation_ExitPoll; // For polling station reference
 import serverSide.interfaces.Logger.ILogger_all; // Or the specific ILogger interface MExitPoll needs
 import serverSide.interfaces.Register.IRegister;
 import serverSide.sharedRegions.MExitPoll;
@@ -16,6 +17,7 @@ public class ExitPollServer {
     public static final int RMI_REGISTRY_PORT = 22350;
     public static final String REGISTER_SERVICE_LOOKUP_NAME = "RegisterService"; // To find IRegister
     public static final String LOGGER_SERVICE_NAME = "LoggerService"; // To lookup Logger via IRegister
+    public static final String POLLING_STATION_SERVICE_NAME = "PollingStationService"; // To lookup PollingStation via IRegister
     public static final String EXIT_POLL_SERVICE_NAME = "ExitPollService"; // To bind MExitPoll via IRegister
     private static final long RETRY_DELAY_MS = 5000; // 5 seconds
 
@@ -90,6 +92,46 @@ public class ExitPollServer {
             MExitPoll mExitPoll = MExitPoll.getInstance(loggerStub);
             exitPoll = (IExitPoll_all) mExitPoll; // Or export if not extending UnicastRemoteObject directly
             System.out.println("ExitPollServer: MExitPoll instance created.");
+            
+            // 3.1. Look up PollingStation service and set it on the exit poll
+            IPollingStation_ExitPoll pollingStationStub = null;
+            int retryCount = 0;
+            int maxRetries = 10; // Try for up to 50 seconds (10 * 5 seconds)
+            
+            while (pollingStationStub == null && retryCount < maxRetries && !shutdownRequested) {
+                try {
+                    System.out.println("ExitPollServer: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + 
+                                       "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "' (attempt " + (retryCount + 1) + "/" + maxRetries + ")...");
+                    pollingStationStub = (IPollingStation_ExitPoll) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
+                    System.out.println("ExitPollServer: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
+                    
+                    // Set the polling station reference on the exit poll for monitoring
+                    mExitPoll.setPollingStationReference(pollingStationStub);
+                    System.out.println("ExitPollServer: Polling station reference set on exit poll for monitoring.");
+                    
+                } catch (RemoteException | NotBoundException e) {
+                    System.err.println("ExitPollServer: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + 
+                                       "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
+                    pollingStationStub = null;
+                    retryCount++;
+                    
+                    if (retryCount < maxRetries) {
+                        System.out.println("ExitPollServer: Retrying PollingStation lookup in " + RETRY_DELAY_MS / 1000 + " seconds...");
+                        try { Thread.sleep(RETRY_DELAY_MS); } catch (InterruptedException ie) {
+                            System.err.println("ExitPollServer: Sleep interrupted, stopping PollingStation lookup.");
+                            Thread.currentThread().interrupt();
+                            shutdownRequested = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (pollingStationStub == null) {
+                System.err.println("ExitPollServer: WARNING - Could not establish connection to PollingStation after " + 
+                                   maxRetries + " attempts. Exit poll will not automatically close when polling station closes.");
+            }
+            
         } catch (RemoteException e) { // If MExitPoll constructor throws RemoteException
             System.err.println("ExitPollServer: CRITICAL - Failed to instantiate MExitPoll: " + e.getMessage());
             e.printStackTrace();
@@ -127,10 +169,24 @@ public class ExitPollServer {
 
         System.out.println("ExitPollServer: Service is now bound and running.");
         
-        // Keep server running until shutdown is requested
+        // Keep server running until shutdown is requested or exit poll closes
         while (!shutdownRequested) {
             try {
                 Thread.sleep(1000); // Check every second
+                
+                // Check if exit poll is closed and shutdown accordingly
+                if (exitPoll != null) {
+                    try {
+                        if (!exitPoll.isOpen()) {
+                            System.out.println("ExitPollServer: Exit poll is closed, initiating shutdown...");
+                            shutdownRequested = true;
+                            break;
+                        }
+                    } catch (RemoteException e) {
+                        System.err.println("ExitPollServer: Error checking exit poll status: " + e.getMessage());
+                        // Continue running even if we can't check status
+                    }
+                }
             } catch (InterruptedException e) {
                 System.out.println("ExitPollServer: Interrupted, shutting down...");
                 Thread.currentThread().interrupt();

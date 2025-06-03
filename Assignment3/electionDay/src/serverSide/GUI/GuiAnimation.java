@@ -46,7 +46,8 @@ public class GuiAnimation {
             // - Faster speed = shorter delay between frames = faster animation
             // - Use inverse relationship to make speed control more responsive
             float speed = Gui.getStaticSimulationSpeed();
-            int newDelay = Math.max(30, Math.round(ANIMATION_DELAY / speed));
+            // Improved formula for very slow speeds: minimum 10ms, maximum 2000ms
+            int newDelay = Math.max(10, Math.min(2000, Math.round(ANIMATION_DELAY / speed)));
             
             // Only update timer delay if it actually changed significantly
             if (Math.abs(animationTimer.getDelay() - newDelay) > 5) {
@@ -100,29 +101,41 @@ public class GuiAnimation {
     }
     
     /**
-     * Notify about voter validation result
+     * Notify about voter validation result with transition delay
      */
     public void voterValidated(int voterId, int valid) {
         if (animationPanel != null) {
-            animationPanel.voterValidated(voterId, valid);
+            // Add delay before state transition to make it more visible
+            new Timer(calculateStateTransitionDelay(), e -> {
+                animationPanel.voterValidated(voterId, valid);
+                ((Timer) e.getSource()).stop(); // Stop the timer after execution
+            }).start();
         }
     }
     
     /**
-     * Notify about voter's vote
+     * Notify about voter's vote with transition delay
      */
     public void voterVoting(int voterId, boolean voteA) {
         if (animationPanel != null) {
-            animationPanel.voterVoting(voterId, voteA);
+            // Add delay before state transition to make it more visible
+            new Timer(calculateStateTransitionDelay(), e -> {
+                animationPanel.voterVoting(voterId, voteA);
+                ((Timer) e.getSource()).stop(); // Stop the timer after execution
+            }).start();
         }
     }
     
     /**
-     * Notify about exit poll response
+     * Notify about exit poll response with transition delay
      */
     public void voterExitPoll(int voterId, String vote) {
         if (animationPanel != null) {
-            animationPanel.voterExitPoll(voterId, vote);
+            // Add delay before state transition to make it more visible
+            new Timer(calculateStateTransitionDelay(), e -> {
+                animationPanel.voterExitPoll(voterId, vote);
+                ((Timer) e.getSource()).stop(); // Stop the timer after execution
+            }).start();
         }
     }
     
@@ -133,6 +146,20 @@ public class GuiAnimation {
         if (animationPanel != null) {
             animationPanel.voterReborn(oldId, newId);
         }
+    }
+
+    /**
+     * Calculate delay for state transitions based on simulation speed
+     * @return delay in milliseconds for state transitions
+     */
+    private int calculateStateTransitionDelay() {
+        float speed = Gui.getStaticSimulationSpeed();
+        // Base delay of 800ms for state transitions, inversely proportional to speed
+        // At 0.02x speed: 800/0.02 = 40000ms (40 seconds) - very slow for detailed analysis
+        // At 0.5x speed: 800/0.5 = 1600ms (1.6 seconds) - good for observation
+        // At 1.0x speed: 800ms - normal transition time
+        int delay = Math.max(200, Math.round(800 / speed));
+        return delay;
     }
     
     /**
@@ -146,7 +173,7 @@ public class GuiAnimation {
         private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage (transient as not serializable)
         private static final int VOTER_SIZE = 30;  // Size of voter circle
         private static final int VERTICAL_SPACING = 40;  // Minimum vertical spacing between voters
-        private static final long REMOVAL_DELAY = 10000; // Increase from 5 to 10 seconds for longer visibility
+        private static final long REMOVAL_DELAY = 3000; // Reduced from 10 to 3 seconds for faster voter transitions
         
         // Stages for the animation (X positions)
         // Will be calculated dynamically in paintComponent

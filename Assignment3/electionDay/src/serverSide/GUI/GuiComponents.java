@@ -133,10 +133,10 @@ public class GuiComponents {
         speedLabel.setFont(GuiStyles.LABEL_FONT);
         
         // Speed slider settings:
-        // - Min value 10 (0.1x) = very slow motion for detailed analysis
+        // - Min value 2 (0.02x) = ultra slow motion for detailed state transition analysis
         // - Max value 300 (3.0x) = triple speed for quick review
-        // - Default value 100 (1.0x) = normal speed for comfortable observation
-        speedSlider = new JSlider(JSlider.HORIZONTAL, 10, 300, 100);
+        // - Default value 50 (0.5x) = half speed for better observation of transitions
+        speedSlider = new JSlider(JSlider.HORIZONTAL, 2, 300, 50);
         speedSlider.setPreferredSize(new Dimension(200, 40));
         speedSlider.setMajorTickSpacing(50);  // Show major ticks at 0.5x, 1.0x, 1.5x, 2.0x, 2.5x, 3.0x
         speedSlider.setMinorTickSpacing(10);   // Show minor ticks every 0.1x
@@ -155,9 +155,9 @@ public class GuiComponents {
             speedValueLabel.setText(String.format("%.1fx", speed));
         });
         
-        // Quick reset button to return to normal speed (optimal for observation)
-        JButton resetSpeedButton = new JButton("Normal Speed");
-        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(100)); // Set to 1.0x speed
+        // Quick reset button to return to half speed (optimal for transition observation)
+        JButton resetSpeedButton = new JButton("Half Speed");
+        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(50)); // Set to 0.5x speed
         
         controlPanel.add(speedLabel);
         controlPanel.add(speedSlider);
@@ -193,7 +193,7 @@ public class GuiComponents {
         JLabel votesToCloseLabel = new JLabel("Votes to Close: ");
         votesToCloseLabel.setFont(GuiStyles.LABEL_FONT);
         
-        votesToCloseField = new JTextField("3", 3);
+        votesToCloseField = new JTextField("10", 3);
         votesToCloseField.setFont(GuiStyles.CONTENT_FONT);
         
         // Add components to panel
