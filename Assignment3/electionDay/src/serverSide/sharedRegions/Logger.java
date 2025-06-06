@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import interfaces.Logger.ILogger_all;
 import serverSide.GUI.Gui;
-import serverSide.interfaces.Logger.ILogger_all;
 
 public final class Logger extends UnicastRemoteObject implements ILogger_all {
     private static final long serialVersionUID = 1L;
@@ -90,9 +90,8 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
 
         // Initiate printWriter
         try {
-            // Create log file in the project root directory (not scripts directory)
-            // When running from scripts/, we need to go up one level to project root
-            File logFile = new File("../log.txt");
+            // Create log file in the current working directory (same as GUI expects)
+            File logFile = new File("log.txt");
             System.out.println("Creating log file at: " + logFile.getAbsolutePath());
             
             this.writer = new PrintWriter(logFile);
@@ -307,8 +306,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     // Helper method to get the actual vote for a voter
     private String getActualVote(int voterId) {
         // For this example, we'll use the current score as an approximation
-        // In a real implementation, you would track each voter's actual vote
-        // TODO: Use voterId parameter for voter-specific tracking
+        // In a real implementation, you would track each voter's actual vot
         System.out.println("Getting vote for voter " + voterId); // Using the parameter
         return (scoreA > scoreB) ? "A" : "B";
     }
@@ -350,7 +348,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public void stationClosing() {
+    public void stationClosing() throws RemoteException {
         stateLock.lock();
         try {
             isStationOpen = false;
@@ -377,7 +375,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
 
     @Override
-    public void saveCloseFile() {
+    public void saveCloseFile() throws RemoteException {
         logLock.lock();
         try {
             if (writer != null) {
@@ -393,7 +391,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public void clear() {
+    public void clear() throws RemoteException {
         logLock.lock();
         try {
             logEntries.clear();
@@ -403,7 +401,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public String getVoteCounts() {
+    public String getVoteCounts() throws RemoteException {
         stateLock.lock();
         try {
             return "Candidate A: " + scoreA + ", Candidate B: " + scoreB;
@@ -413,7 +411,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public int getVotersProcessed() {
+    public int getVotersProcessed() throws RemoteException {
         stateLock.lock();
         try {
             return votersProcessed;
@@ -423,7 +421,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
 
     @Override
-    public boolean isStationOpen() {
+    public boolean isStationOpen() throws RemoteException {
         stateLock.lock();
         try {
             return isStationOpen;
@@ -443,7 +441,7 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     }
     
     @Override
-    public int getCurrentQueueSize() {
+    public int getCurrentQueueSize() throws RemoteException {
         stateLock.lock();
         try {
             return currentQueueSize;
@@ -458,13 +456,6 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
         return maxVoters;
     }
 
-    // Additional methods for ILogger_ExitPoll
-    @Override
-    public int getExitPollPercentage() throws RemoteException {
-        return 20; // Default exit poll percentage
-    }
-
-
     // Additional methods for ILogger_PollingStation
     @Override
     public int getPollingStationCapacity() throws RemoteException {
@@ -475,7 +466,6 @@ public final class Logger extends UnicastRemoteObject implements ILogger_all {
     public int getNumberOfVotersConfigured() throws RemoteException {
         return maxVoters;
     }
-
 
     @Override
     public int getMaxVotes() throws RemoteException {

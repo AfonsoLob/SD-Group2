@@ -20,7 +20,7 @@ import serverSide.sharedRegions.Logger;
  */
 public class Gui {
     // Log file path
-    private static final String LOG_FILE = "log.txt";
+    private static final String LOG_FILE = "../../log.txt"; // Relative path to the log file
     
     // Simulation state
     private static int scoreA = 0;
@@ -231,49 +231,68 @@ public class Gui {
         return panel;
     }
     
+    private static Timer logMonitorTimer;
+    private static long lastLogFileSize = 0;
+    private static long lastLogModified = 0;
+    
     private static void startLogFileMonitoring() {
-        // Start a background thread to monitor the log file
-        Timer timer = new Timer(2000, e -> {
-            loadLogFile();
+        // Start a background timer to monitor the log file for real-time updates
+        logMonitorTimer = new Timer(500, e -> {
+            if (components != null) {
+                checkAndRefreshLogFile();
+            }
         });
-        timer.start();
+        logMonitorTimer.start();
+        System.out.println("GUI: Started real-time log file monitoring");
+    }
+    
+    private static void checkAndRefreshLogFile() {
+        try {
+            File logFile = findLogFile();
+            if (logFile != null && logFile.exists()) {
+                long currentSize = logFile.length();
+                long currentModified = logFile.lastModified();
+                
+                // Check if file has been modified or grown
+                if (currentSize != lastLogFileSize || currentModified != lastLogModified) {
+                    lastLogFileSize = currentSize;
+                    lastLogModified = currentModified;
+                    
+                    // Refresh the log display in the GUI
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        components.loadLogFile();
+                    });
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle errors to avoid disrupting the GUI
+            System.err.println("Error monitoring log file: " + e.getMessage());
+        }
+    }
+    
+    private static File findLogFile() {
+        // Try multiple possible log file locations
+        File[] possibleFiles = {
+            new File("log.txt"),
+            new File(LOG_FILE),
+            new File("electionDay/log.txt"),
+            new File("src/log.txt"),
+            new File("../log.txt"),
+            new File("../../log.txt")
+        };
+        
+        for (File file : possibleFiles) {
+            if (file.exists() && file.canRead()) {
+                return file;
+            }
+        }
+        return null;
     }
     
     private static void loadLogFile() {
-        try {
-            File logFile = new File(LOG_FILE);
-            if (!logFile.exists()) {
-                // Try alternative locations
-                File[] possibleFiles = {
-                    new File("log.txt"),
-                    new File("electionDay/log.txt"),
-                    new File("src/log.txt"),
-                    new File("../log.txt")
-                };
-                
-                for (File altFile : possibleFiles) {
-                    if (altFile.exists()) {
-                        logFile = altFile;
-                        break;
-                    }
-                }
-            }
-            
-            if (logFile.exists()) {
-                try (java.util.Scanner scanner = new java.util.Scanner(logFile)) {
-                    boolean pastHeader = false;
-                    while (scanner.hasNextLine()) {
-                        String line = scanner.nextLine();
-                        if (pastHeader) {
-                            // Process log entries
-                        }
-                    }
-                } catch (java.io.FileNotFoundException e) {
-                    System.err.println("Log file not found: " + e.getMessage());
-                }
-            }
-        } catch (NullPointerException e) {
-            // Silently ignore file reading errors to avoid spam
+        // Delegate to GuiComponents for actual log loading
+        if (components != null) {
+            components.loadLogFile();
         }
     }
     
@@ -405,8 +424,6 @@ public class Gui {
      * Called when a voter's ID is validated
      */
     public void voterValidated(int voterId, int valid) {
-        // Validation result should not count as votes - only track validation success/failure
-        // The actual voting happens in voterVoting() method
         updateGui();
     }
     

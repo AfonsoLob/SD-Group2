@@ -1,4 +1,4 @@
-package serverSide.interfaces.ExitPoll;
+package interfaces.ExitPoll;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

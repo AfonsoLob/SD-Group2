@@ -1,4 +1,4 @@
-package clientSide.interfaces.Logger;
+package interfaces.Logger;
 
 
 import java.rmi.Remote;
@@ -18,10 +18,5 @@ public interface ILogger_PollingStation extends Remote {
     int getMaxVotes() throws RemoteException;
     int getTotalVotes() throws RemoteException;
     
-    // State logging methods
-    void logClerkState(String state, String message) throws RemoteException;
-    void logVoterState(int voterId, String state, String message) throws RemoteException;
-    void logGeneral(String message) throws RemoteException;
-    void logResults(String pollType, int votesA, int votesB) throws RemoteException;
 
 }

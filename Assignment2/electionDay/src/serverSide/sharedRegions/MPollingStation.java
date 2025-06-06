@@ -217,7 +217,7 @@ public class MPollingStation implements IPollingStation_all {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            // logger.voterInBooth(voterId, true); // vote A
+            logger.voterInBooth(voterId, true); // vote A - FIXED: Uncommented
             voting_lock.unlock();
         }
     }

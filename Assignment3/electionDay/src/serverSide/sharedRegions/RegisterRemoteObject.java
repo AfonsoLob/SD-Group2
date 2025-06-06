@@ -6,7 +6,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.Register.IRegister;
+
+import interfaces.Register.IRegister;
 
 /**
  * Implementation of the {@link IRegister} interface.

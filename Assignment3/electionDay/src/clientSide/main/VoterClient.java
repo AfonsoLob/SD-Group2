@@ -1,13 +1,13 @@
 package clientSide.main;
 
 import clientSide.entities.TVoter;
+import interfaces.ExitPoll.IExitPoll_Voter;
+import interfaces.PollingStation.IPollingStation_Voter;
+import interfaces.Register.IRegister;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
-import serverSide.interfaces.Register.IRegister; // For the registration service
+import java.rmi.registry.Registry; // For the registration service
 
 public class VoterClient {
 
@@ -25,11 +25,10 @@ public class VoterClient {
         System.out.println("Voter Client starting...");
 
         IRegister registerServiceStub = null;
-        IPollingStation_all pollingStation = null;
-        IExitPoll_all exitPoll = null;
+        IPollingStation_Voter pollingStation = null;
+        IExitPoll_Voter exitPoll = null;
         int numVoters = -1;
 
-        // 1. Connect to RMI Registry and look up IRegister service (with retry)
         Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
@@ -51,11 +50,10 @@ public class VoterClient {
             }
         }
 
-        // 2. Look up PollingStationService via IRegister (with retry)
         while (pollingStation == null) {
             try {
                 System.out.println("VoterClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                pollingStation = (IPollingStation_all) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
+                pollingStation = (IPollingStation_Voter) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
                 System.out.println("VoterClient: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("VoterClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -71,11 +69,10 @@ public class VoterClient {
             }
         }
 
-        // 3. Look up ExitPollService via IRegister (with retry)
         while (exitPoll == null) {
             try {
                 System.out.println("VoterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
+                exitPoll = (IExitPoll_Voter) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
                 System.out.println("VoterClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("VoterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -91,13 +88,11 @@ public class VoterClient {
             }
         }
 
-        // 4. Get number of voters from PollingStation (with retry)
-        // This assumes PollingStation has a method like getNumberOfVotersConfigured()
-        // which in turn gets it from the Logger.
+        
         while (numVoters < 0) {
             try {
                 System.out.println("VoterClient: Attempting to get number of voters from '" + POLLING_STATION_SERVICE_NAME + "'...");
-                numVoters = pollingStation.getNumberOfVotersConfigured(); // Method to be added to IPollingStation_all
+                numVoters = pollingStation.getNumberOfVotersConfigured(); // Method to be added to IPollingStation_Voter
                 if (numVoters >= 0) {
                     System.out.println("VoterClient: Number of voters configured: " + numVoters);
                 } else {
@@ -132,7 +127,7 @@ public class VoterClient {
         TVoter[] voters = new TVoter[numVoters];
         for (int i = 0; i < numVoters; i++) {
             // TVoter constructor will need to be adapted to not take a logger instance.
-            // For now, assuming TVoter(int, IPollingStation_all, IExitPoll_all)
+            // For now, assuming TVoter(int, IPollingStation_Voter, IExitPoll_Voter)
             voters[i] = TVoter.getInstance(i, pollingStation, exitPoll);
             voters[i].start();
             System.out.println("VoterClient: TVoter " + i + " created and started.");

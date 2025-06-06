@@ -133,10 +133,10 @@ public class GuiComponents {
         speedLabel.setFont(GuiStyles.LABEL_FONT);
         
         // Speed slider settings:
-        // - Min value 2 (0.02x) = ultra slow motion for detailed state transition analysis
+        // - Min value 10 (0.1x) = very slow motion for detailed analysis
         // - Max value 300 (3.0x) = triple speed for quick review
-        // - Default value 50 (0.5x) = half speed for better observation of transitions
-        speedSlider = new JSlider(JSlider.HORIZONTAL, 2, 300, 50);
+        // - Default value 100 (1.0x) = normal speed for comfortable observation
+        speedSlider = new JSlider(JSlider.HORIZONTAL, 10, 300, 100);
         speedSlider.setPreferredSize(new Dimension(200, 40));
         speedSlider.setMajorTickSpacing(50);  // Show major ticks at 0.5x, 1.0x, 1.5x, 2.0x, 2.5x, 3.0x
         speedSlider.setMinorTickSpacing(10);   // Show minor ticks every 0.1x
@@ -155,9 +155,9 @@ public class GuiComponents {
             speedValueLabel.setText(String.format("%.1fx", speed));
         });
         
-        // Quick reset button to return to half speed (optimal for transition observation)
-        JButton resetSpeedButton = new JButton("Half Speed");
-        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(50)); // Set to 0.5x speed
+        // Quick reset button to return to normal speed (optimal for observation)
+        JButton resetSpeedButton = new JButton("Normal Speed");
+        resetSpeedButton.addActionListener((ActionEvent e) -> speedSlider.setValue(100)); // Set to 1.0x speed
         
         controlPanel.add(speedLabel);
         controlPanel.add(speedSlider);
@@ -193,7 +193,7 @@ public class GuiComponents {
         JLabel votesToCloseLabel = new JLabel("Votes to Close: ");
         votesToCloseLabel.setFont(GuiStyles.LABEL_FONT);
         
-        votesToCloseField = new JTextField("10", 3);
+        votesToCloseField = new JTextField("12", 3);
         votesToCloseField.setFont(GuiStyles.CONTENT_FONT);
         
         // Add components to panel
@@ -589,162 +589,90 @@ public class GuiComponents {
     }
     
     /**
-     * Load the log file into the table
+     * Load the log file into the table with improved error handling and real-time updates
      */
     public void loadLogFile() {
         try {
             // Ensure table model is initialized before loading
             if (tableModel == null) {
-                System.out.println("Table model not initialized yet - initializing now");
                 createTablePanel();
             }
             
-            // Clear current table data
-            tableModel.setRowCount(0);
-            
-            // Try multiple times with a delay if the file doesn't exist immediately
-            // This addresses the case where the log file is created during the simulation
-            File logFile = new File("../log.txt");
-            int retryCount = 0;
-            int maxRetries = 5;
-            
-            while (!logFile.exists() && retryCount < maxRetries) {
-                System.out.println("Log file not found yet, waiting... (Attempt " + (retryCount + 1) + "/" + maxRetries + ")");
-                retryCount++;
-                
-                // Wait before retrying
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                // Check again
-                logFile = new File("log.txt");
-            }
-            
-            if (!logFile.exists()) {
-                // File still doesn't exist after retries, look for alternatives
-                File currentDir = new File(".");
-                System.out.println("Looking for log.txt in: " + currentDir.getAbsolutePath());
-                
-                // Check if there's a log file with a different name or in a different location
-                File[] files = currentDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".txt"));
-                if (files != null && files.length > 0) {
-                    for (File f : files) {
-                        System.out.println("Found text file: " + f.getName());
-                    }
-                    
-                    // Ask user if they want to use one of the found files
-                    if (files.length == 1) {
-                        int response = JOptionPane.showConfirmDialog(
-                            Gui.getFrame(),
-                            "Log file not found. Use " + files[0].getName() + " instead?",
-                            "File Not Found",
-                            JOptionPane.YES_NO_OPTION
-                        );
-                        
-                        if (response == JOptionPane.YES_OPTION) {
-                            logFile = files[0];
-                        } else {
-                            return;
-                        }
-                    } else {
-                        // If there are multiple files, let the user choose
-                        String[] options = new String[files.length];
-                        for (int i = 0; i < files.length; i++) {
-                            options[i] = files[i].getName();
-                        }
-                        
-                        String selectedFile = (String) JOptionPane.showInputDialog(
-                            Gui.getFrame(),
-                            "Log.txt not found. Select a text file to use:",
-                            "Choose Log File",
-                            JOptionPane.QUESTION_MESSAGE,
-                            null,
-                            options,
-                            options[0]
-                        );
-                        
-                        if (selectedFile != null) {
-                            for (File f : files) {
-                                if (f.getName().equals(selectedFile)) {
-                                    logFile = f;
-                                    break;
-                                }
-                            }
-                        } else {
-                            return;
-                        }
-                    }
-                } else {
-                    // Log file not found - silently handle without showing error dialog
-                    System.out.println("Log file not found at startup: " + logFile.getAbsolutePath());
-                    System.out.println("Will attempt to load log file again later when simulation starts");
-                    return;
-                }
+            // Find the log file
+            File logFile = findBestLogFile();
+            if (logFile == null) {
+                // Don't show error dialogs during automatic refresh
+                return;
             }
             
             // Check if the file is empty or still being written
             if (logFile.length() == 0) {
-                System.out.println("Log file exists but is empty. Waiting for content...");
-                try {
-                    Thread.sleep(1000); // Wait a moment for content to appear
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                if (logFile.length() == 0) {
-                    // Log file exists but is empty - silently handle without dialog
-                    System.out.println("Log file exists but is empty. Will check again later when simulation generates data.");
-                    return;
-                }
+                return; // Silently skip empty files during monitoring
             }
             
-            System.out.println("Loading log file: " + logFile.getAbsolutePath());
+            // Remember current row count to avoid unnecessary clearing
+            int previousRowCount = tableModel.getRowCount();
             
             // Read the log file
-            BufferedReader reader = new BufferedReader(new FileReader(logFile));
-            String line;
-            
-            // Read and parse log entries
-            int entriesAdded = 0;
-            while ((line = reader.readLine()) != null) {
-                // Skip header lines
-                if (line.contains("Door") && line.contains("Voter") && line.contains("Clerk")) {
-                    continue;
-                }
-                // Skip delimiter lines
-                if (line.startsWith("+") || line.startsWith("-")) {
-                    continue;
-                }
-                // Skip the simulation parameters line
-                if (line.contains("Total of Voters:") || line.contains("Votes to end:")) {
-                    continue;
+            try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
+                // Clear current table data
+                tableModel.setRowCount(0);
+                
+                String line;
+                int entriesAdded = 0;
+                
+                // Read and parse log entries
+                while ((line = reader.readLine()) != null) {
+                    // Skip header lines and formatting
+                    if (line.contains("Door") && line.contains("Voter") && line.contains("Clerk")) {
+                        continue;
+                    }
+                    if (line.startsWith("+") || line.startsWith("-") || line.trim().isEmpty()) {
+                        continue;
+                    }
+                    if (line.contains("Total of Voters:") || line.contains("Votes to end:")) {
+                        continue;
+                    }
+                    
+                    if (parseLine(line)) {
+                        entriesAdded++;
+                    }
                 }
                 
-                if (parseLine(line)) {
-                    entriesAdded++;
+                // Only log successful updates when entries are actually added
+                if (entriesAdded > 0 && entriesAdded != previousRowCount) {
+                    System.out.println("Log display updated: " + entriesAdded + " entries");
                 }
-            }
-            
-            reader.close();
-            
-            // Notify user about loaded entries
-            if (entriesAdded == 0) {
-                JOptionPane.showMessageDialog(Gui.getFrame(), 
-                    "No valid log entries found in log file.",
-                    "Empty Log", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                System.out.println("Successfully loaded " + entriesAdded + " log entries");
             }
             
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(Gui.getFrame(), 
-                "Error loading log file: " + e.getMessage(),
-                "File Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            // Only show error dialogs for manual refresh, not automatic monitoring
+            if (java.awt.EventQueue.isDispatchThread()) {
+                System.err.println("Error reading log file: " + e.getMessage());
+            }
         }
+    }
+    
+    /**
+     * Find the best available log file from multiple possible locations
+     */
+    private File findBestLogFile() {
+        File[] possibleFiles = {
+            new File("log.txt"),
+            new File("../../log.txt"),
+            new File("electionDay/log.txt"),
+            new File("src/log.txt"),
+            new File("../log.txt")
+        };
+        
+        for (File file : possibleFiles) {
+            if (file.exists() && file.canRead() && file.length() > 0) {
+                return file;
+            }
+        }
+        
+        // Return the most likely location even if it doesn't exist yet
+        return new File("log.txt");
     }
     
     /**

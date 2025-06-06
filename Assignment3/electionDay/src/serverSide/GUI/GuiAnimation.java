@@ -20,8 +20,10 @@ import javax.swing.Timer;
 public class GuiAnimation {
     private ElectionAnimationPanel animationPanel;
     private Timer animationTimer;
-    // Increase base delay to slow down animation
-    private static final int ANIMATION_DELAY = 100; // Increased from 50 to 100 milliseconds
+    // Smoother animation with more reasonable delays
+    private static final int BASE_ANIMATION_DELAY = 150; // Increased base delay for smoother animation
+    private static final int MIN_ANIMATION_DELAY = 50;   // Minimum delay to prevent too fast animation
+    private static final int MAX_ANIMATION_DELAY = 500;  // Maximum delay to prevent too slow animation
     
     public GuiAnimation() {
         createAnimationPanel();
@@ -39,21 +41,9 @@ public class GuiAnimation {
         animationPanel.setBorder(GuiStyles.createTitledBorder("Voter Journey Animation", 
                                                             javax.swing.border.TitledBorder.CENTER));
         
-        // Set up the animation timer with speed-controlled refresh rate
-        animationTimer = new Timer(ANIMATION_DELAY, e -> {
-            // Adjust animation refresh rate based on simulation speed:
-            // - Slower speed = longer delay between frames = slower animation
-            // - Faster speed = shorter delay between frames = faster animation
-            // - Use inverse relationship to make speed control more responsive
-            float speed = Gui.getStaticSimulationSpeed();
-            // Improved formula for very slow speeds: minimum 10ms, maximum 2000ms
-            int newDelay = Math.max(10, Math.min(2000, Math.round(ANIMATION_DELAY / speed)));
-            
-            // Only update timer delay if it actually changed significantly
-            if (Math.abs(animationTimer.getDelay() - newDelay) > 5) {
-                animationTimer.setDelay(newDelay);
-                System.out.println("GuiAnimation: Updated animation delay to " + newDelay + "ms (speed: " + speed + "x)");
-            }
+        // Set up the animation timer for state display refresh (no smooth movement)
+        animationTimer = new Timer(BASE_ANIMATION_DELAY, e -> {
+            // Simple repaint to show current voter states clearly
             animationPanel.repaint();
         });
         animationTimer.start();
@@ -87,7 +77,13 @@ public class GuiAnimation {
      */
     public void voterArrived(int voterId) {
         if (animationPanel != null) {
-            animationPanel.voterArrived(voterId);
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(800, e -> {
+                animationPanel.voterArrived(voterId);
+                ((Timer) e.getSource()).stop(); // Stop the timer after one execution
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
     }
     
@@ -96,46 +92,58 @@ public class GuiAnimation {
      */
     public void voterEnteringQueue(int voterId) {
         if (animationPanel != null) {
-            animationPanel.voterEnteringQueue(voterId);
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(1200, e -> {
+                animationPanel.voterEnteringQueue(voterId);
+                ((Timer) e.getSource()).stop();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
     }
     
     /**
-     * Notify about voter validation result with transition delay
+     * Notify about voter validation result
      */
     public void voterValidated(int voterId, int valid) {
         if (animationPanel != null) {
-            // Add delay before state transition to make it more visible
-            new Timer(calculateStateTransitionDelay(), e -> {
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(1600, e -> {
                 animationPanel.voterValidated(voterId, valid);
-                ((Timer) e.getSource()).stop(); // Stop the timer after execution
-            }).start();
+                ((Timer) e.getSource()).stop();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
     }
     
     /**
-     * Notify about voter's vote with transition delay
+     * Notify about voter's vote
      */
     public void voterVoting(int voterId, boolean voteA) {
         if (animationPanel != null) {
-            // Add delay before state transition to make it more visible
-            new Timer(calculateStateTransitionDelay(), e -> {
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(2000, e -> {
                 animationPanel.voterVoting(voterId, voteA);
-                ((Timer) e.getSource()).stop(); // Stop the timer after execution
-            }).start();
+                ((Timer) e.getSource()).stop();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
     }
     
     /**
-     * Notify about exit poll response with transition delay
+     * Notify about exit poll response
      */
     public void voterExitPoll(int voterId, String vote) {
         if (animationPanel != null) {
-            // Add delay before state transition to make it more visible
-            new Timer(calculateStateTransitionDelay(), e -> {
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(2400, e -> {
                 animationPanel.voterExitPoll(voterId, vote);
-                ((Timer) e.getSource()).stop(); // Stop the timer after execution
-            }).start();
+                ((Timer) e.getSource()).stop();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
     }
     
@@ -144,22 +152,14 @@ public class GuiAnimation {
      */
     public void voterReborn(int oldId, int newId) {
         if (animationPanel != null) {
-            animationPanel.voterReborn(oldId, newId);
+            // Add a delay to make the transition more observable
+            Timer delayTimer = new Timer(2800, e -> {
+                animationPanel.voterReborn(oldId, newId);
+                ((Timer) e.getSource()).stop();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
         }
-    }
-
-    /**
-     * Calculate delay for state transitions based on simulation speed
-     * @return delay in milliseconds for state transitions
-     */
-    private int calculateStateTransitionDelay() {
-        float speed = Gui.getStaticSimulationSpeed();
-        // Base delay of 800ms for state transitions, inversely proportional to speed
-        // At 0.02x speed: 800/0.02 = 40000ms (40 seconds) - very slow for detailed analysis
-        // At 0.5x speed: 800/0.5 = 1600ms (1.6 seconds) - good for observation
-        // At 1.0x speed: 800ms - normal transition time
-        int delay = Math.max(200, Math.round(800 / speed));
-        return delay;
     }
     
     /**
@@ -172,8 +172,10 @@ public class GuiAnimation {
         private transient Random random = new Random();
         private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage (transient as not serializable)
         private static final int VOTER_SIZE = 30;  // Size of voter circle
-        private static final int VERTICAL_SPACING = 40;  // Minimum vertical spacing between voters
-        private static final long REMOVAL_DELAY = 3000; // Reduced from 10 to 3 seconds for faster voter transitions
+        private static final int VERTICAL_SPACING = 40;  // Clear spacing between voters
+        private static final long REMOVAL_DELAY = 2000; // Faster removal for clear state transitions
+        
+        // No smooth animation - instant position updates for clear state visibility
         
         // Stages for the animation (X positions)
         // Will be calculated dynamically in paintComponent
@@ -193,8 +195,8 @@ public class GuiAnimation {
                 stageOccupancy.put(stage, 0);
             }
             
-            // Create a timer to clean up old voters
-            new Timer(1000, e -> removeExpiredVoters()).start();
+            // Create a timer to clean up old voters more frequently
+            new Timer(500, e -> removeExpiredVoters()).start(); // Check every 500ms instead of 1000ms
         }
         
         /**
@@ -291,9 +293,15 @@ public class GuiAnimation {
                 VoterInfo voter = new VoterInfo();
                 voter.id = voterId;
                 voter.stage = VoterStage.OUTSIDE;
-                voter.x = getWidth() / 8; // Will be adjusted in paintComponent
-                // Find position that doesn't overlap with existing voters
-                voter.y = findAvailableYPosition(VoterStage.OUTSIDE, getHeight());
+                
+                // Calculate positions based on current panel dimensions
+                int panelWidth = Math.max(getWidth(), 800); // Fallback to 800 if width not set yet
+                int panelHeight = Math.max(getHeight(), 400);
+                
+                // Set position directly in the center of the outside stage area
+                voter.x = panelWidth / 7; // Center of first stage
+                voter.y = findAvailableYPosition(VoterStage.OUTSIDE, panelHeight);
+                
                 voter.color = new Color(
                     100 + random.nextInt(155),
                     100 + random.nextInt(155),
@@ -312,8 +320,12 @@ public class GuiAnimation {
                     stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
                     
                     voter.stage = VoterStage.QUEUE;
-                    voter.x = getWidth() / 8 * 2; // Will be adjusted in paintComponent
-                    voter.y = findAvailableYPosition(VoterStage.QUEUE, getHeight());
+                    int newY = findAvailableYPosition(VoterStage.QUEUE, Math.max(getHeight(), 400));
+                    
+                    // Set position directly in the center of the queue stage area
+                    int panelWidth = Math.max(getWidth(), 800);
+                    voter.x = panelWidth / 7 * 2; // Center of second stage
+                    voter.y = newY;
                 }
             }
             repaint();
@@ -329,8 +341,12 @@ public class GuiAnimation {
                     
                     VoterStage newStage = validp ? VoterStage.VALIDATION : VoterStage.REJECTED;
                     voter.stage = newStage;
-                    voter.x = getWidth() / 8 * 3; // Will be adjusted in paintComponent
-                    voter.y = findAvailableYPosition(newStage, getHeight());
+                    int newY = findAvailableYPosition(newStage, Math.max(getHeight(), 400));
+                    
+                    // Set position directly in the center of the validation stage area
+                    int panelWidth = Math.max(getWidth(), 800);
+                    voter.x = panelWidth / 7 * 3; // Center of third stage
+                    voter.y = newY;
                 }
             }
             repaint();
@@ -345,8 +361,12 @@ public class GuiAnimation {
                     
                     voter.stage = VoterStage.VOTING;
                     voter.voteA = voteA;
-                    voter.x = getWidth() / 8 * 4; // Will be adjusted in paintComponent
-                    voter.y = findAvailableYPosition(VoterStage.VOTING, getHeight());
+                    int newY = findAvailableYPosition(VoterStage.VOTING, Math.max(getHeight(), 400));
+                    
+                    // Set position directly in the center of the voting stage area
+                    int panelWidth = Math.max(getWidth(), 800);
+                    voter.x = panelWidth / 7 * 4; // Center of fourth stage
+                    voter.y = newY;
                 }
             }
             repaint();
@@ -360,8 +380,13 @@ public class GuiAnimation {
                     stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
                     
                     voter.stage = VoterStage.EXIT_POLL;
-                    voter.x = getWidth() / 8 * 5; // Will be adjusted in paintComponent
-                    voter.y = findAvailableYPosition(VoterStage.EXIT_POLL, getHeight());
+                    int newY = findAvailableYPosition(VoterStage.EXIT_POLL, Math.max(getHeight(), 400));
+                    
+                    // Set position directly in the center of the exit poll stage area
+                    int panelWidth = Math.max(getWidth(), 800);
+                    voter.x = panelWidth / 7 * 5; // Center of fifth stage
+                    voter.y = newY;
+                    
                     if (!vote.isEmpty()) {
                         voter.exitPollVote = "A".equals(vote);
                     }
@@ -380,8 +405,12 @@ public class GuiAnimation {
                     // Update stage and reduce occupancy for old stage
                     stageOccupancy.put(voter.stage, Math.max(0, stageOccupancy.get(voter.stage) - 1));
                     voter.stage = VoterStage.REBIRTH_ORIGIN;
-                    voter.x = getWidth() / 8 * 6; // Will be adjusted in paintComponent
-                    voter.y = findAvailableYPosition(VoterStage.REBIRTH_ORIGIN, getHeight());
+                    int oldY = findAvailableYPosition(VoterStage.REBIRTH_ORIGIN, Math.max(getHeight(), 400));
+                    
+                    // Set position directly in the center of the rebirth stage area
+                    int panelWidth = Math.max(getWidth(), 800);
+                    voter.x = panelWidth / 7 * 6; // Center of sixth stage
+                    voter.y = oldY;
                     
                     // Schedule the old voter for removal
                     voterRemovalTimes.put(oldId, System.currentTimeMillis());
@@ -390,8 +419,12 @@ public class GuiAnimation {
                     VoterInfo reborn = new VoterInfo();
                     reborn.id = newId;
                     reborn.stage = VoterStage.REBORN;
-                    reborn.x = getWidth() / 8 * 6; // Will be adjusted in paintComponent
-                    reborn.y = findAvailableYPosition(VoterStage.REBORN, getHeight());
+                    reborn.x = panelWidth / 7 * 6; // Start at rebirth position
+                    reborn.y = findAvailableYPosition(VoterStage.REBORN, Math.max(getHeight(), 400));
+                    
+                    // Set position directly toward the start (center of outside stage)
+                    reborn.x = panelWidth / 7; // Center of first stage
+                    
                     reborn.color = new Color(
                         100 + random.nextInt(155),
                         100 + random.nextInt(155),
@@ -405,6 +438,10 @@ public class GuiAnimation {
             }
             repaint();
         }
+        
+        /**
+         * No smooth animation - removed updateVoterPositions method
+         */
         
         @Override
         protected void paintComponent(Graphics g) {
@@ -458,19 +495,8 @@ public class GuiAnimation {
                 votersCopy = new HashMap<>(voters);
             }
             
-            // Scale all voters to match the new positions
+            // Draw all voters at their current positions (don't override their smooth movement)
             for (VoterInfo voter : votersCopy.values()) {
-                // Update voter positions based on stage
-                switch (voter.stage) {
-                    case OUTSIDE: voter.x = outsideX; break;
-                    case QUEUE: voter.x = queueX; break;
-                    case VALIDATION: case REJECTED: voter.x = validationX; break;
-                    case VOTING: voter.x = votingX; break;
-                    case EXIT_POLL: voter.x = exitPollX; break;
-                    case REBIRTH_ORIGIN: case REBORN: voter.x = rebirthX; break;
-                }
-                
-                // Draw the voter at its updated position
                 drawVoter(g2d, voter);
             }
             
@@ -573,7 +599,7 @@ public class GuiAnimation {
      */
     class VoterInfo {
         int id;
-        int x, y;
+        int x, y;              // Current position
         VoterStage stage;
         Color color;
         Boolean voteA = null;

@@ -1,13 +1,13 @@
 package serverSide.main;
 
+import interfaces.Logger.ILogger_all;
+import interfaces.PollingStation.IPollingStation_all;
+import interfaces.Register.IRegister;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.Logger.ILogger_all; // Or the specific ILogger interface MPollingStation needs
-import serverSide.interfaces.PollingStation.IPollingStation_all; // Assuming this is the remote interface for MPollingStation
-import serverSide.interfaces.Register.IRegister;
 import serverSide.sharedRegions.MPollingStation;
 
 public class PollingStationServer {
@@ -21,7 +21,7 @@ public class PollingStationServer {
 
     // Static references for cleanup
     private static IRegister registerServiceStub = null;
-    private static serverSide.interfaces.PollingStation.IPollingStation_all pollingStation = null;
+    private static IPollingStation_all pollingStation = null;
     private static volatile boolean shutdownRequested = false;
 
     public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class PollingStationServer {
         ILogger_all loggerStub = null;
 
         // 1. Look up the IRegister service (with retry)
-        Registry rmiRegistry = null;
+        Registry rmiRegistry;
         while (registerServiceStub == null && !shutdownRequested) {
             try {
                 System.out.println("PollingStationServer: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
@@ -116,16 +116,14 @@ public class PollingStationServer {
         // Keep server running until shutdown is requested
         while (!shutdownRequested) {
             try {
-                Thread.sleep(10000); // Check every second
+                Thread.sleep(1000); // Check every second
                 try {
-                    if(!pollingStation.isOpen()){
-                        System.out.println("PollingStationServer: Polling station is closed, shutting down...");
+                    if (!pollingStation.isOpen()) {
+                        System.out.println("PollingStationServer: Polling station is closed.");
                         shutdownRequested = true;
-                        break;
                     }
                 } catch (RemoteException e) {
                     System.err.println("PollingStationServer: Error checking polling station status: " + e.getMessage());
-                    shutdownRequested = true; // Exit if we can't check status
                 }
             } catch (InterruptedException e) {
                 System.out.println("PollingStationServer: Interrupted, shutting down...");
@@ -142,7 +140,7 @@ public class PollingStationServer {
      * Perform clean shutdown of the PollingStation service
      */
     private static void performShutdown() {
-        shutdownRequested = true;
+        shutdownRequested = false; // Reset shutdown flag
         
         try {
             if (registerServiceStub != null && pollingStation != null) {

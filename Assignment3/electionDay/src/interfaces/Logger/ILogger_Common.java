@@ -1,4 +1,4 @@
-package clientSide.interfaces.Logger;
+package interfaces.Logger;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -14,6 +14,5 @@ public interface ILogger_Common extends Remote { // Added extends Remote
     // It's a good place for these common methods if they are used by multiple client types
     // or for general control, ensure they are also in ILogger_all if needed by the LoggerServer directly.
     int getNumVoters() throws RemoteException; // Added throws RemoteException
-    void logGeneral(String message) throws RemoteException; // Added throws RemoteException
 
 }

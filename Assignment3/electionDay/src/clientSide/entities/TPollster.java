@@ -1,18 +1,16 @@
 package clientSide.entities;
 
+import interfaces.ExitPoll.IExitPoll_Pollster;
 import java.rmi.RemoteException;
 
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-
 public class TPollster extends Thread {
-    private final IExitPoll_all exitPoll;
-    // numVoters could be used to estimate when to stop, but relying on exitPoll.isOpen() is more direct.
+    private final IExitPoll_Pollster exitPoll;
 
-    private TPollster(IExitPoll_all exitPoll) {
+    private TPollster(IExitPoll_Pollster exitPoll) {
         this.exitPoll = exitPoll;
     }
 
-    public static TPollster getInstance(IExitPoll_all exitPoll) {
+    public static TPollster getInstance(IExitPoll_Pollster exitPoll) {
         return new TPollster(exitPoll);
     }
 
@@ -21,11 +19,8 @@ public class TPollster extends Thread {
         try {
 
 
-            while (exitPoll.isOpen()) { // Condition might need to be more robust depending on MExitPoll behavior
-                // logger.logPollsterState("INQUIRING", "Attempting to inquire next vote."); // Logged by MExitPoll
-                exitPoll.inquire(); // This method handles the logic of waiting and processing a vote
-                                  // It will also handle its own logging for vote registration.
-                // If inquire() throws an exception when poll closes while waiting, it will be caught below.
+            while (exitPoll.isOpen()) {
+                exitPoll.inquire();
             }
             
             // After the loop, it means the exit poll is no longer open for new voters.

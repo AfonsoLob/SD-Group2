@@ -1,4 +1,4 @@
-package serverSide.interfaces.Register;
+package interfaces.Register;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;

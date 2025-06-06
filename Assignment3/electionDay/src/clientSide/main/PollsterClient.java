@@ -1,12 +1,12 @@
 package clientSide.main;
 
 import clientSide.entities.TPollster; // Assuming TPollster entity exists
+import interfaces.ExitPoll.IExitPoll_Pollster;
+import interfaces.Register.IRegister;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Register.IRegister;
 
 public class PollsterClient {
 
@@ -19,16 +19,14 @@ public class PollsterClient {
     private static final String REGISTER_SERVICE_LOOKUP_NAME = "RegisterService";
     private static final String EXIT_POLL_SERVICE_NAME = "ExitPollService";
     
-    // Assuming 1 Pollster for simplicity
     private static final int NUM_POLLSTERS = 1; 
 
     public static void main(String[] args) {
         System.out.println("Pollster Client starting...");
 
         IRegister registerServiceStub = null;
-        IExitPoll_all exitPoll = null;
+        IExitPoll_Pollster exitPoll = null;
 
-        // 1. Connect to RMI Registry and look up IRegister service (with retry)
         Registry rmiRegistry = null;
         while (registerServiceStub == null) {
             try {
@@ -50,11 +48,10 @@ public class PollsterClient {
             }
         }
 
-        // 2. Look up ExitPollService via IRegister (with retry)
         while (exitPoll == null) {
             try {
                 System.out.println("PollsterClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
+                exitPoll = (IExitPoll_Pollster) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
                 System.out.println("PollsterClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("PollsterClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -77,18 +74,13 @@ public class PollsterClient {
 
         System.out.println("PollsterClient: ExitPoll service looked up. Creating pollster threads (if applicable)...");
 
-        // 3. Create and start TPollster threads (if TPollster entity is used)
-        // If PollsterClient directly interacts, this part would be different.
         TPollster[] pollsters = new TPollster[NUM_POLLSTERS];
         for (int i = 0; i < NUM_POLLSTERS; i++) {
-            // TPollster constructor will need to be adapted.
-            // It will take its ID (if any) and the exitPoll stub.
             pollsters[i] = TPollster.getInstance(exitPoll); // Fixed: TPollster only takes exitPoll parameter
             pollsters[i].start();
             System.out.println("PollsterClient: TPollster " + i + " created and started.");
         }
 
-        // Wait for all pollster threads to complete
         System.out.println("PollsterClient: Waiting for all pollster threads to complete...");
         for (int i = 0; i < NUM_POLLSTERS; i++) {
             try {

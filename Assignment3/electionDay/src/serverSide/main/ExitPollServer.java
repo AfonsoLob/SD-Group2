@@ -1,14 +1,13 @@
 package serverSide.main;
 
+import interfaces.ExitPoll.IExitPoll_all;
+import interfaces.Logger.ILogger_ExitPoll;
+import interfaces.Register.IRegister;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import serverSide.interfaces.ExitPoll.IExitPoll_all; // Assuming this is the remote interface for MExitPoll
-import serverSide.interfaces.PollingStation.IPollingStation_ExitPoll; // For polling station reference
-import serverSide.interfaces.Logger.ILogger_all; // Or the specific ILogger interface MExitPoll needs
-import serverSide.interfaces.Register.IRegister;
 import serverSide.sharedRegions.MExitPoll;
 
 public class ExitPollServer {
@@ -17,7 +16,6 @@ public class ExitPollServer {
     public static final int RMI_REGISTRY_PORT = 22350;
     public static final String REGISTER_SERVICE_LOOKUP_NAME = "RegisterService"; // To find IRegister
     public static final String LOGGER_SERVICE_NAME = "LoggerService"; // To lookup Logger via IRegister
-    public static final String POLLING_STATION_SERVICE_NAME = "PollingStationService"; // To lookup PollingStation via IRegister
     public static final String EXIT_POLL_SERVICE_NAME = "ExitPollService"; // To bind MExitPoll via IRegister
     private static final long RETRY_DELAY_MS = 5000; // 5 seconds
 
@@ -30,10 +28,8 @@ public class ExitPollServer {
         System.out.println("ExitPollServer starting...");
 
 
+        ILogger_ExitPoll loggerStub = null;
 
-        ILogger_all loggerStub = null;
-
-        // 1. Look up the IRegister service (with retry)
         while (registerServiceStub == null && !shutdownRequested) {
             try {
                 System.out.println("ExitPollServer: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
@@ -55,11 +51,10 @@ public class ExitPollServer {
             }
         }
 
-        // 2. Look up LoggerService via IRegister (with retry)
         while (loggerStub == null && !shutdownRequested) {
             try {
                 System.out.println("ExitPollServer: Attempting to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                loggerStub = (ILogger_all) registerServiceStub.lookup(LOGGER_SERVICE_NAME);
+                loggerStub = (ILogger_ExitPoll) registerServiceStub.lookup(LOGGER_SERVICE_NAME);
                 System.out.println("ExitPollServer: Successfully looked up '" + LOGGER_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("ExitPollServer: Failed to lookup '" + LOGGER_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -76,50 +71,12 @@ public class ExitPollServer {
             }
         }
 
-        // 3. Instantiate MExitPoll
         try {
             // Assuming MExitPoll constructor takes the logger stub.
             // And MExitPoll itself implements IExitPoll_all or can be cast/exported.
             MExitPoll mExitPoll = MExitPoll.getInstance(loggerStub);
             exitPoll = (IExitPoll_all) mExitPoll; // Or export if not extending UnicastRemoteObject directly
             System.out.println("ExitPollServer: MExitPoll instance created.");
-            
-            // 3.1. Look up PollingStation service and set it on the exit poll
-            IPollingStation_ExitPoll pollingStationStub = null;
-            int retryCount = 0;
-            int maxRetries = 10; // Try for up to 50 seconds (10 * 5 seconds)
-            
-            while (pollingStationStub == null && retryCount < maxRetries && !shutdownRequested) {
-                try {
-                    System.out.println("ExitPollServer: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "' (attempt " + (retryCount + 1) + "/" + maxRetries + ")...");
-                    pollingStationStub = (IPollingStation_ExitPoll) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
-                    System.out.println("ExitPollServer: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
-                    
-                    // Set the polling station reference on the exit poll for monitoring
-                    mExitPoll.setPollingStationReference(pollingStationStub);
-                    System.out.println("ExitPollServer: Polling station reference set on exit poll for monitoring.");
-                    
-                } catch (RemoteException | NotBoundException e) {
-                    System.err.println("ExitPollServer: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
-                    pollingStationStub = null;
-                    retryCount++;
-                    
-                    if (retryCount < maxRetries) {
-                        System.out.println("ExitPollServer: Retrying PollingStation lookup in " + RETRY_DELAY_MS / 1000 + " seconds...");
-                        try { Thread.sleep(RETRY_DELAY_MS); } catch (InterruptedException ie) {
-                            System.err.println("ExitPollServer: Sleep interrupted, stopping PollingStation lookup.");
-                            Thread.currentThread().interrupt();
-                            shutdownRequested = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            if (pollingStationStub == null) {
-                System.err.println("ExitPollServer: WARNING - Could not establish connection to PollingStation after " + maxRetries + " attempts. Exit poll will not automatically close when polling station closes.");
-            }
-            
         } catch (RemoteException e) { // If MExitPoll constructor throws RemoteException
             System.err.println("ExitPollServer: CRITICAL - Failed to instantiate MExitPoll: " + e.getMessage());
             e.printStackTrace();
@@ -153,22 +110,19 @@ public class ExitPollServer {
 
         System.out.println("ExitPollServer: Service is now bound and running.");
         
-        // Keep server running until shutdown is requested or exit poll closes
+        // Keep server running until shutdown is requested
         while (!shutdownRequested) {
             try {
-                Thread.sleep(2000); // Check every second
-                
-                // Check if exit poll is closed and shutdown accordingly
-                if (exitPoll != null) {
-                    try {
-                        if (!exitPoll.isOpen()) {
-                            System.out.println("ExitPollServer: Exit poll is closed, initiating shutdown...");
-                            shutdownRequested = true;
-                            break;
-                        }
-                    } catch (RemoteException e) {
-                        System.err.println("ExitPollServer: Error checking exit poll status: " + e.getMessage());
+                Thread.sleep(1000); // Check every second
+                try {
+                    boolean pollOpen = exitPoll.isOpen();
+                    System.out.println("ExitPollServer: Checking exit poll status: " + (pollOpen ? "OPEN" : "CLOSED"));
+                    if (!pollOpen) {
+                        System.out.println("ExitPollServer: Exit poll is closed.");
+                        shutdownRequested = true;
                     }
+                } catch (RemoteException e) {
+                    System.err.println("ExitPollServer: Error checking exit poll status: " + e.getMessage());
                 }
             } catch (InterruptedException e) {
                 System.out.println("ExitPollServer: Interrupted, shutting down...");
@@ -185,7 +139,7 @@ public class ExitPollServer {
      * Perform clean shutdown of the ExitPoll service
      */
     private static void performShutdown() {
-        shutdownRequested = true;
+        shutdownRequested = false; // Reset shutdown flag
         
         try {
             if (registerServiceStub != null && exitPoll != null) {

@@ -8,11 +8,11 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import serverSide.interfaces.Logger.ILogger_PollingStation;
-import serverSide.interfaces.PollingStation.IPollingStation_all;
-import serverSide.interfaces.PollingStation.IPollingStation_ExitPoll;
 
-public class MPollingStation extends UnicastRemoteObject implements IPollingStation_all, IPollingStation_ExitPoll {
+import interfaces.Logger.ILogger_PollingStation;
+import interfaces.PollingStation.IPollingStation_all;
+
+public class MPollingStation extends UnicastRemoteObject implements IPollingStation_all {
     private static final long serialVersionUID = 1L; // Added serialVersionUID
 
     private static MPollingStation instance;
@@ -22,7 +22,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     private transient ILogger_PollingStation logger; // Made transient as interface cannot be serialized
 
     // id validation
-    private HashSet<Integer> validatedIDs;
+    private final HashSet<Integer> validatedIDs;
     private boolean isAproved;
     private int aprovalId;
 
@@ -39,8 +39,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
     // voting
 
     private final ReentrantLock voting_lock;
-    private int candidateA;
-    private int candidateB;
 
 
     private MPollingStation(ILogger_PollingStation logger) throws RemoteException {
@@ -61,7 +59,7 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
             System.err.println("MPollingStation: Failed to get capacity from logger: " + e.getMessage());
         }
         this.capacity = effectiveCapacity;
-        this.isOpen = false;
+        this.isOpen = true;  // Start polling station as open
 
 
         this.isAproved = false;
@@ -80,8 +78,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
         this.clerkAprovalReady = queue_lock.newCondition();
 
         this.voting_lock = new ReentrantLock();
-        this.candidateA = 0;
-        this.candidateB = 0;
     }
 
 
@@ -276,7 +272,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
                 throw new RemoteException("Interrupted during voting delay for A", e);
             }
 
-            candidateA++;
             if (logger != null) {
                 logger.voterInBooth(voterId, true); // vote A
             }
@@ -299,7 +294,6 @@ public class MPollingStation extends UnicastRemoteObject implements IPollingStat
                 throw new RemoteException("Interrupted during voting delay for B", e);
             }
 
-            candidateB++;
             if (logger != null) {
                 logger.voterInBooth(voterId, false); // vote B
             }

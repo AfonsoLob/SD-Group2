@@ -7,9 +7,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import javax.swing.SwingUtilities;
 
+import interfaces.Logger.ILogger_all;
+import interfaces.Register.IRegister;
 import serverSide.GUI.Gui;
-import serverSide.interfaces.Logger.ILogger_all;
-import serverSide.interfaces.Register.IRegister; 
 import serverSide.sharedRegions.Logger;
 
 public class LoggerServer {

@@ -1,13 +1,13 @@
 package clientSide.main;
 
 import clientSide.entities.TClerk;
+import interfaces.ExitPoll.IExitPoll_Clerk;
+import interfaces.PollingStation.IPollingStation_Clerk;
+import interfaces.Register.IRegister;
 import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import java.rmi.RemoteException; // Assuming TClerk entity exists
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry; // Assuming TClerk entity exists
-import serverSide.interfaces.PollingStation.IPollingStation_all;
-import serverSide.interfaces.ExitPoll.IExitPoll_all;
-import serverSide.interfaces.Register.IRegister;
+import java.rmi.registry.Registry;
 
 public class ClerkClient {
 
@@ -29,10 +29,9 @@ public class ClerkClient {
         System.out.println("Clerk Client starting...");
 
         IRegister registerServiceStub = null;
-        IPollingStation_all pollingStation = null;
-        IExitPoll_all exitPoll = null;
+        IPollingStation_Clerk pollingStation = null;
+        IExitPoll_Clerk exitPoll = null;
 
-        // 1. Connect to RMI Registry and look up IRegister service (with retry)
         while (registerServiceStub == null) {
             try {
                 System.out.println("ClerkClient: Attempting to connect to RMI Registry at " + RMI_REGISTRY_HOSTNAME + ":" + RMI_REGISTRY_PORT + " to find '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
@@ -53,11 +52,10 @@ public class ClerkClient {
             }
         }
 
-        // 2. Look up PollingStationService via IRegister (with retry)
         while (pollingStation == null) {
             try {
                 System.out.println("ClerkClient: Attempting to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                pollingStation = (IPollingStation_all) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
+                pollingStation = (IPollingStation_Clerk) registerServiceStub.lookup(POLLING_STATION_SERVICE_NAME);
                 System.out.println("ClerkClient: Successfully looked up '" + POLLING_STATION_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("ClerkClient: Failed to lookup '" + POLLING_STATION_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -73,11 +71,10 @@ public class ClerkClient {
             }
         }
         
-        // 3. Look up ExitPollService via IRegister (with retry)
         while (exitPoll == null) {
             try {
                 System.out.println("ClerkClient: Attempting to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "'...");
-                exitPoll = (IExitPoll_all) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
+                exitPoll = (IExitPoll_Clerk) registerServiceStub.lookup(EXIT_POLL_SERVICE_NAME);
                 System.out.println("ClerkClient: Successfully looked up '" + EXIT_POLL_SERVICE_NAME + "'.");
             } catch (RemoteException | NotBoundException e) {
                 System.err.println("ClerkClient: Failed to lookup '" + EXIT_POLL_SERVICE_NAME + "' via '" + REGISTER_SERVICE_LOOKUP_NAME + "': " + e.getMessage());
@@ -100,16 +97,14 @@ public class ClerkClient {
 
         System.out.println("ClerkClient: PollingStation and ExitPoll services looked up. Creating clerk threads...");
 
-        // 3. Create and start TClerk threads
         TClerk[] clerks = new TClerk[NUM_CLERKS];
         for (int i = 0; i < NUM_CLERKS; i++) {
             // TClerk constructor takes only the pollingStation stub
-            clerks[i] = TClerk.getInstance(pollingStation);
-            clerks[i].start();
+            clerks[i] = TClerk.getInstance(pollingStation, exitPoll);
+            clerks[i].run();
             System.out.println("ClerkClient: TClerk " + i + " created and started.");
         }
 
-        // Wait for all clerk threads to complete
         System.out.println("ClerkClient: Waiting for all clerk threads to complete...");
         for (int i = 0; i < NUM_CLERKS; i++) {
             try {
