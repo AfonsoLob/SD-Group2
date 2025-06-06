@@ -22,8 +22,6 @@ public class GuiAnimation {
     private Timer animationTimer;
     // Smoother animation with more reasonable delays
     private static final int BASE_ANIMATION_DELAY = 150; // Increased base delay for smoother animation
-    private static final int MIN_ANIMATION_DELAY = 50;   // Minimum delay to prevent too fast animation
-    private static final int MAX_ANIMATION_DELAY = 500;  // Maximum delay to prevent too slow animation
     
     public GuiAnimation() {
         createAnimationPanel();
@@ -171,7 +169,6 @@ public class GuiAnimation {
         private transient Map<Integer, Long> voterRemovalTimes = new HashMap<>(); // Track when to remove voters (transient as not serializable)
         private transient Random random = new Random();
         private transient Map<VoterStage, Integer> stageOccupancy = new HashMap<>();  // Track occupancy for each stage (transient as not serializable)
-        private static final int VOTER_SIZE = 30;  // Size of voter circle
         private static final int VERTICAL_SPACING = 40;  // Clear spacing between voters
         private static final long REMOVAL_DELAY = 2000; // Faster removal for clear state transitions
         

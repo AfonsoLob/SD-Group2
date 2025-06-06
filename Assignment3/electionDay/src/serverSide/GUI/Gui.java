@@ -289,13 +289,6 @@ public class Gui {
         return null;
     }
     
-    private static void loadLogFile() {
-        // Delegate to GuiComponents for actual log loading
-        if (components != null) {
-            components.loadLogFile();
-        }
-    }
-    
     private static void updateDisplays() {
         if (components != null) {
             components.updateUI(scoreA, scoreB, votersProcessed, stationOpen, queueSize, currentVoterInBooth);
